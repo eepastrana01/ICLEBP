@@ -21,7 +21,11 @@ app.use((err, req, res, next) => {
     res.status(500).json({ error: 'Error interno del servidor', details: err.message });
 });
 
-// Arrancar el servidor
-app.listen(port, () => { 
-    console.log(`🚀 API REST iniciada en http://localhost:${port}`); 
-});
+// Arrancar el servidor solo si se ejecuta directamente
+if (require.main === module || !process.env.VERCEL) {
+    app.listen(port, () => { 
+        console.log(`🚀 API REST iniciada en http://localhost:${port}`); 
+    });
+}
+
+module.exports = app;
