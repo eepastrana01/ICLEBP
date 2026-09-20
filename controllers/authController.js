@@ -2,7 +2,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const prisma = require('../config/prisma');
 
-const SECRET_KEY = process.env.SECRET_KEY || 'mi_secreto_super_seguro';
+const SECRET_KEY = process.env.JWT_SECRET || process.env.SECRET_KEY || 'mi_secreto_super_seguro';
 
 exports.login = async (req, res) => {
     const { username, password } = req.body;
