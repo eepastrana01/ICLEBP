@@ -1,0 +1,121 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Usuario {
+  id              Int      @id @default(autoincrement())
+  username        String   @unique
+  password        String
+  password_plain  String?
+  rol             String
+  nombre_completo String?
+  permisos        Json?
+  activo          Boolean  @default(true)
+  correo          String?
+  telefono        String?
+  direccion       String?
+
+  @@map("usuarios")
+}
+
+model Actividad {
+  id         Int      @id @default(autoincrement())
+  fecha      DateTime
+  actividad  String
+  detalles   String?
+  completado Boolean  @default(false)
+
+  @@map("actividades")
+}
+
+model Miembro {
+  id               Int      @id @default(autoincrement())
+  nombre           String
+  fecha_nacimiento DateTime @db.Date
+  congregacion     String
+  bautizado        Boolean  @default(false)
+  confirmado       Boolean  @default(false)
+
+  @@map("miembros")
+}
+
+model EquipoPastoral {
+  id     Int     @id @default(autoincrement())
+  nombre String
+  cargo  String?
+  nivel  Int
+
+  @@map("equipo_pastoral")
+}
+
+model FinanzaTransaccion {
+  id           Int      @id @default(autoincrement())
+  fecha        DateTime
+  tipo         String
+  categoria    String
+  descripcion  String?
+  monto        Float
+  recibo_no    String?
+  asistentes   Int      @default(0)
+  comulgantes  Int      @default(0)
+  recibido_por String?
+
+  @@map("finanzas_transacciones")
+}
+
+model FinanzaTalonario {
+  id           Int     @id @default(autoincrement())
+  nombre       String
+  rango_inicio Int
+  rango_fin    Int
+  actual       Int
+  activo       Boolean @default(true)
+  tipo         String  @default("ingreso")
+
+  @@map("finanzas_talonarios")
+}
+
+model FinanzaCategoria {
+  id     Int    @id @default(autoincrement())
+  nombre String @unique
+
+  @@map("finanzas_categorias")
+}
+
+model EventoEspecial {
+  id               Int                  @id @default(autoincrement())
+  nombre           String
+  descripcion      String?
+  tipo             String               @default("rifa") // "rifa", "subasta", "colecta", "otro"
+  precio_boleto    Float                @default(0)
+  fecha_evento     DateTime?
+  meta_recaudacion Float?
+  activo           Boolean              @default(true)
+  created_at       DateTime             @default(now())
+  participantes    EventoParticipante[]
+
+  @@map("eventos_especiales")
+}
+
+model EventoParticipante {
+  id               Int            @id @default(autoincrement())
+  evento_id        Int
+  evento           EventoEspecial @relation(fields: [evento_id], references: [id], onDelete: Cascade)
+  nombre_persona   String
+  telefono         String?
+  cantidad_boletos Int            @default(1)
+  numeros_boletos  String?
+  monto_total      Float
+  pagado           Boolean        @default(false)
+  entregado        Boolean        @default(false)
+  notas            String?
+  created_at       DateTime       @default(now())
+
+  @@map("evento_participantes")
+}
+
