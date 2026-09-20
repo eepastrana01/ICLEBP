@@ -12,8 +12,9 @@ const port = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// Montaje de rutas de la API REST
+// Montaje de rutas de la API REST (admite tanto /api como raíz para Vercel)
 app.use('/api', apiRoutes);
+app.use('/', apiRoutes);
 
 // Middleware de manejo de errores global
 app.use((err, req, res, next) => {

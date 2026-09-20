@@ -1,7 +1,15 @@
 import axios from 'axios';
 
-// La URL base del API. Detecta automáticamente el host (localhost o IP de red local para teléfonos)
-const API_URL = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:3000/api`;
+// Detectar automáticamente si estamos en entorno local/red Wi-Fi o en producción (Vercel)
+const isLocal = typeof window !== 'undefined' && (
+  window.location.hostname === 'localhost' ||
+  window.location.hostname === '127.0.0.1' ||
+  window.location.hostname.startsWith('192.168.') ||
+  window.location.hostname.startsWith('172.') ||
+  window.location.hostname.startsWith('10.')
+);
+
+const API_URL = import.meta.env.VITE_API_URL || (isLocal ? `http://${window.location.hostname}:3000/api` : '/api');
 
 const api = axios.create({
   baseURL: API_URL,
