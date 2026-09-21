@@ -65,8 +65,8 @@ export default function MainLayout({ children, activeModule, onNavigate }: MainL
   });
 
   return (
-    <div className="flex h-screen bg-[#F4F6F8] overflow-hidden font-sans text-slate-900 relative selection:bg-slate-900 selection:text-white">
-      {/* Ambient background light gradients for Glassmorphism refraction (solo en desktop para no alterar el muestreo de color de Safari en iOS) */}
+    <div className="flex flex-col md:flex-row min-h-screen md:h-screen md:overflow-hidden bg-[#F4F6F8] font-sans text-slate-900 relative selection:bg-slate-900 selection:text-white">
+      {/* Ambient background light gradients for Glassmorphism refraction (solo en desktop) */}
       <div className="hidden md:block fixed -top-32 -left-32 w-96 h-96 rounded-full bg-blue-400/10 blur-[110px] pointer-events-none" />
       <div className="hidden md:block fixed top-1/2 left-1/3 w-80 h-80 rounded-full bg-slate-300/10 blur-[120px] pointer-events-none" />
       <div className="hidden md:block fixed -bottom-32 -right-32 w-96 h-96 rounded-full bg-emerald-400/10 blur-[110px] pointer-events-none" />
@@ -254,10 +254,10 @@ export default function MainLayout({ children, activeModule, onNavigate }: MainL
       )}
 
       {/* Main Content Area */}
-      <div className="flex flex-1 flex-col overflow-hidden relative z-10">
+      <div className="flex flex-1 flex-col min-h-screen md:min-h-0 md:overflow-hidden relative z-10">
         
-        {/* Mobile Compact Navbar con fondo blanco limpio para integrarse con la barra de estado de Safari iOS */}
-        <header className="flex h-16 items-center justify-between px-4 sm:px-6 md:hidden relative z-20 border-b border-slate-200/60 bg-white shadow-2xs">
+        {/* Mobile Compact Navbar pegajosa (Sticky) que se integra bajo la barra de estado de Safari */}
+        <header className="sticky top-0 z-30 flex h-14 items-center justify-between px-4 sm:px-6 md:hidden border-b border-slate-200/80 bg-white/95 backdrop-blur-md">
           <div className="flex items-center gap-2.5">
             <div className="p-1.5 rounded-xl bg-slate-50 shadow-2xs border border-slate-200/60">
               <img src="/LogoICLEB.svg" alt="Logo" className="h-6 w-auto object-contain" />
@@ -280,10 +280,10 @@ export default function MainLayout({ children, activeModule, onNavigate }: MainL
               type="button"
               onClick={() => setSidebarOpen(true)} 
               style={{ touchAction: 'manipulation' }}
-              className="w-10 h-10 flex items-center justify-center text-slate-700 bg-slate-50 active:bg-slate-100 rounded-xl shadow-xs border border-slate-200/60 active:scale-95 transition-all cursor-pointer touch-manipulation select-none"
+              className="w-9 h-9 flex items-center justify-center text-slate-700 bg-slate-50 active:bg-slate-100 rounded-xl shadow-xs border border-slate-200/60 active:scale-95 transition-all cursor-pointer touch-manipulation select-none"
               aria-label="Abrir menú"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="3" y1="12" x2="21" y2="12"></line>
                 <line x1="3" y1="6" x2="21" y2="6"></line>
                 <line x1="3" y1="18" x2="21" y2="18"></line>
@@ -292,56 +292,58 @@ export default function MainLayout({ children, activeModule, onNavigate }: MainL
           </div>
         </header>
 
-        {/* Scrollable Content Container (con espacio inferior para no chocar con la barra móvil) */}
-        <main className="flex-1 overflow-y-auto relative z-10 custom-scrollbar p-3.5 sm:p-5 md:p-6 lg:p-8 pb-24 md:pb-8">
+        {/* Scrollable Content Container (con espacio inferior amplio pb-32 para fluir detrás de la barra flotante y Safari) */}
+        <main className="flex-1 md:overflow-y-auto relative z-10 custom-scrollbar p-3.5 sm:p-5 md:p-6 lg:p-8 pb-32 md:pb-8">
           <div className="max-w-7xl mx-auto">
             {children}
           </div>
         </main>
 
-        {/* Mobile Bottom Navigation Bar (Ultra-accesible con el pulgar) */}
-        <nav className="fixed bottom-3 inset-x-3 z-40 md:hidden bg-white/95 rounded-2xl shadow-[0_8px_30px_rgba(15,23,42,0.12)] p-1 flex items-center justify-around border border-white/90 backdrop-blur-md">
-          {navItems.slice(0, 4).map((item) => {
-            const isActive = activeModule === item.id;
-            return (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => onNavigate(item.id)}
-                className={`relative flex flex-col items-center justify-center py-2 px-3 rounded-xl transition-all duration-150 cursor-pointer flex-1 touch-manipulation select-none ${
-                  isActive ? 'text-slate-900 font-extrabold' : 'text-slate-400 hover:text-slate-700 font-medium'
-                }`}
-              >
-                {isActive && (
-                  <div
-                    className="absolute inset-0 bg-white rounded-xl shadow-xs border border-white/80"
-                  />
-                )}
-                <span className="relative z-10 flex flex-col items-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={isActive ? "2.5" : "2"} strokeLinecap="round" strokeLinejoin="round" className="h-4.5 w-4.5 mb-0.5">
-                    <path d={item.icon}></path>
-                  </svg>
-                  <span className="text-[10px] leading-tight truncate max-w-[64px]">{item.label.split(' ')[0]}</span>
-                </span>
-              </button>
-            );
-          })}
-          
-          {/* Botón de Menú Completo para abrir el Drawer */}
-          <button
-            type="button"
-            onClick={() => setSidebarOpen(true)}
-            style={{ touchAction: 'manipulation' }}
-            className="flex flex-col items-center justify-center py-2 px-3 rounded-xl text-slate-400 hover:text-slate-700 active:text-slate-900 font-medium transition-colors cursor-pointer flex-1 touch-manipulation select-none"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4.5 w-4.5 mb-0.5">
-              <line x1="4" y1="12" x2="20" y2="12"></line>
-              <line x1="4" y1="6" x2="20" y2="6"></line>
-              <line x1="4" y1="18" x2="20" y2="18"></line>
-            </svg>
-            <span className="text-[10px] leading-tight">Más</span>
-          </button>
-        </nav>
+        {/* Mobile Bottom Navigation Bar (Barra flotante estilo AppFinanzas, sobre la barra de Safari) */}
+        <div className="fixed bottom-4 left-4 right-4 z-40 md:hidden">
+          <nav className="flex items-center bg-white/95 backdrop-blur-md rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.10)] px-2 py-1.5 gap-1 border border-slate-200/80">
+            {navItems.slice(0, 4).map((item) => {
+              const isActive = activeModule === item.id;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => onNavigate(item.id)}
+                  className={`relative flex flex-col items-center justify-center py-2 px-3 rounded-xl transition-all duration-150 cursor-pointer flex-1 touch-manipulation select-none ${
+                    isActive ? 'text-slate-900 font-extrabold' : 'text-slate-400 hover:text-slate-700 font-medium'
+                  }`}
+                >
+                  {isActive && (
+                    <div
+                      className="absolute inset-0 bg-white rounded-xl shadow-xs border border-white/80"
+                    />
+                  )}
+                  <span className="relative z-10 flex flex-col items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={isActive ? "2.5" : "2"} strokeLinecap="round" strokeLinejoin="round" className="h-4.5 w-4.5 mb-0.5">
+                      <path d={item.icon}></path>
+                    </svg>
+                    <span className="text-[10px] leading-tight truncate max-w-[64px]">{item.label.split(' ')[0]}</span>
+                  </span>
+                </button>
+              );
+            })}
+            
+            {/* Botón de Menú Completo para abrir el Drawer */}
+            <button
+              type="button"
+              onClick={() => setSidebarOpen(true)}
+              style={{ touchAction: 'manipulation' }}
+              className="flex flex-col items-center justify-center py-2 px-3 rounded-xl text-slate-400 hover:text-slate-700 active:text-slate-900 font-medium transition-colors cursor-pointer flex-1 touch-manipulation select-none"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4.5 w-4.5 mb-0.5">
+                <line x1="4" y1="12" x2="20" y2="12"></line>
+                <line x1="4" y1="6" x2="20" y2="6"></line>
+                <line x1="4" y1="18" x2="20" y2="18"></line>
+              </svg>
+              <span className="text-[10px] leading-tight">Más</span>
+            </button>
+          </nav>
+        </div>
 
       </div>
     </div>
