@@ -24,9 +24,9 @@ export const SPRING_BOUNCE_SUBTLE = {
 
 // Quick exit to prevent AnimatePresence mode="wait" from blocking the next view
 export const VIEW_TRANSITION = {
-  initial: { opacity: 0, y: 8, scale: 0.99 },
-  animate: { opacity: 1, y: 0, scale: 1, transition: SPRING_SNAPPY },
-  exit: { opacity: 0, y: -6, scale: 0.99, transition: { duration: 0.12, ease: [0.4, 0, 1, 1] } }
+  initial: { opacity: 0, y: 6 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.15, ease: [0.16, 1, 0.3, 1] } },
+  exit: { opacity: 0, transition: { duration: 0.06, ease: 'easeOut' } }
 };
 
 export const MODAL_TRANSITION = {

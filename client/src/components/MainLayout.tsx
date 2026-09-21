@@ -126,6 +126,112 @@ export default function MainLayout({ children, activeModule, onNavigate }: MainL
         </div>
       </aside>
 
+      {/* Mobile Slide-in Drawer (Ubicado en la raíz para evitar recortes y retrasos de stacking context en iOS/Android) */}
+      <AnimatePresence>
+        {isSidebarOpen && (
+          <div className="fixed inset-0 z-50 flex md:hidden">
+            {/* Backdrop */}
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15, ease: 'linear' }}
+              className="fixed inset-0 bg-slate-950/40 backdrop-blur-[2px]" 
+              onClick={() => setSidebarOpen(false)}
+            />
+            {/* Drawer Panel */}
+            <motion.div 
+              initial={{ x: '-100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '-100%' }}
+              transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+              className="relative flex w-80 max-w-[85vw] flex-col bg-white shadow-2xl h-full rounded-r-[2rem] overflow-hidden z-10"
+            >
+              {/* Drawer Header */}
+              <div className="flex h-20 items-center justify-between px-6 border-b border-slate-100 bg-white">
+                <div className="flex items-center gap-3">
+                  <img src="/LogoICLEB.svg" alt="Logo ICLEB" className="h-8 w-auto object-contain" />
+                  <div>
+                    <span className="block text-base font-extrabold tracking-tight text-slate-900 leading-tight">Planner</span>
+                    <span className="block text-[10px] font-extrabold tracking-widest text-slate-400 uppercase leading-tight mt-0.5">Pastoral</span>
+                  </div>
+                </div>
+                <button 
+                  type="button"
+                  onClick={() => setSidebarOpen(false)}
+                  className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-400 hover:text-slate-900 active:bg-slate-100 transition-colors cursor-pointer touch-manipulation select-none"
+                  aria-label="Cerrar menú"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+              </div>
+
+              {/* Drawer Nav Items */}
+              <div className="flex-1 overflow-y-auto px-4 py-5 custom-scrollbar bg-white">
+                <p className="px-3 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-3">Módulos</p>
+                <nav className="space-y-1.5">
+                  {navItems.map((item) => {
+                    const isActive = activeModule === item.id;
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => { 
+                          setSidebarOpen(false);
+                          onNavigate(item.id); 
+                        }}
+                        className={`flex w-full items-center rounded-2xl px-4 py-3 text-sm font-semibold transition-colors duration-150 cursor-pointer touch-manipulation select-none ${
+                          isActive 
+                            ? 'bg-slate-900 text-white shadow-md shadow-slate-900/10' 
+                            : 'text-slate-600 hover:bg-slate-100 active:bg-slate-100 hover:text-slate-900'
+                        }`}
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={isActive ? "2.5" : "2"} strokeLinecap="round" strokeLinejoin="round" className="mr-3.5 h-5 w-5">
+                          <path d={item.icon}></path>
+                        </svg>
+                        {item.label}
+                      </button>
+                    );
+                  })}
+                </nav>
+              </div>
+
+              {/* Drawer User Footer */}
+              <div className="p-4 border-t border-slate-100 bg-slate-50/90">
+                <div className="bg-white border border-slate-200/80 rounded-2xl p-3 flex flex-col gap-2.5 shadow-2xs">
+                  <button 
+                    type="button"
+                    onClick={() => { setSidebarOpen(false); onNavigate('perfil'); }}
+                    className="flex items-center gap-3 text-left hover:opacity-85 transition-opacity cursor-pointer group touch-manipulation select-none"
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-slate-900 text-white shadow-xs border border-slate-700 flex items-center justify-center font-extrabold text-xs shrink-0">
+                      {user.username?.substring(0, 2).toUpperCase() || 'US'}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-bold text-slate-900 truncate leading-tight group-hover:text-indigo-600">{user.username || 'Usuario'}</p>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-0.5 leading-tight">{user.rol || 'Rol'}</p>
+                    </div>
+                  </button>
+                  <button 
+                    type="button"
+                    onClick={() => { setSidebarOpen(false); onNavigate('login'); }}
+                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-slate-50 hover:bg-rose-50 active:bg-rose-100 px-3 py-2 text-xs font-bold text-rose-500 hover:text-rose-600 transition-colors border border-slate-200 shadow-2xs cursor-pointer touch-manipulation select-none"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                      <polyline points="16 17 21 12 16 7"></polyline>
+                      <line x1="21" y1="12" x2="9" y2="12"></line>
+                    </svg>
+                    Cerrar Sesión
+                  </button>
+                </div>
+              </div>
+
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       {/* Main Content Area */}
       <div className="flex flex-1 flex-col overflow-hidden relative z-10">
         
@@ -151,12 +257,12 @@ export default function MainLayout({ children, activeModule, onNavigate }: MainL
             </button>
             <button 
               type="button"
-              onClick={() => setSidebarOpen(!isSidebarOpen)} 
+              onClick={() => setSidebarOpen(true)} 
               style={{ touchAction: 'manipulation' }}
-              className="w-9 h-9 flex items-center justify-center text-slate-700 bg-white/90 rounded-xl shadow-xs border border-white active:scale-95 transition-transform cursor-pointer"
+              className="w-10 h-10 flex items-center justify-center text-slate-700 bg-white/95 active:bg-slate-100 rounded-xl shadow-xs border border-white active:scale-95 transition-all cursor-pointer touch-manipulation select-none"
               aria-label="Abrir menú"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="3" y1="12" x2="21" y2="12"></line>
                 <line x1="3" y1="6" x2="21" y2="6"></line>
                 <line x1="3" y1="18" x2="21" y2="18"></line>
@@ -164,102 +270,6 @@ export default function MainLayout({ children, activeModule, onNavigate }: MainL
             </button>
           </div>
         </header>
-
-        {/* Mobile Slide-in Drawer with Optimized Snappy Animation */}
-        <AnimatePresence>
-          {isSidebarOpen && (
-            <div className="fixed inset-0 z-50 flex md:hidden">
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.12 }}
-                className="fixed inset-0 bg-slate-950/45" 
-                onClick={() => setSidebarOpen(false)}
-              />
-              <motion.div 
-                initial={{ x: '-100%' }}
-                animate={{ x: 0 }}
-                exit={{ x: '-100%' }}
-                transition={{ type: 'tween', duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-                className="relative flex w-80 max-w-[85vw] flex-col bg-white shadow-2xl h-full rounded-r-[2rem] overflow-hidden will-change-transform z-10"
-              >
-                {/* Drawer Header */}
-                <div className="flex h-20 items-center justify-between px-6 border-b border-white/60">
-                  <div className="flex items-center gap-3">
-                    <img src="/LogoICLEB.svg" alt="Logo ICLEB" className="h-8 w-auto object-contain" />
-                    <div>
-                      <span className="block text-base font-extrabold tracking-tight text-slate-900 leading-tight">Planner</span>
-                      <span className="block text-[10px] font-extrabold tracking-widest text-slate-400 uppercase leading-tight mt-0.5">Pastoral</span>
-                    </div>
-                  </div>
-                  <button 
-                    onClick={() => setSidebarOpen(false)}
-                    className="w-8 h-8 rounded-xl flex items-center justify-center text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                  </button>
-                </div>
-
-                {/* Drawer Nav Items */}
-                <div className="flex-1 overflow-y-auto px-4 py-5 custom-scrollbar">
-                  <p className="px-3 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-3">Módulos</p>
-                  <nav className="space-y-1.5">
-                    {navItems.map((item) => {
-                      const isActive = activeModule === item.id;
-                      return (
-                        <button
-                          key={item.id}
-                          onClick={() => { onNavigate(item.id); setSidebarOpen(false); }}
-                          className={`flex w-full items-center rounded-2xl px-4 py-3 text-sm font-semibold transition-all duration-150 cursor-pointer ${
-                            isActive 
-                              ? 'bg-slate-900 text-white shadow-md shadow-slate-900/10' 
-                              : 'text-slate-600 hover:bg-white/70 hover:text-slate-900'
-                          }`}
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={isActive ? "2.5" : "2"} strokeLinecap="round" strokeLinejoin="round" className="mr-3.5 h-5 w-5">
-                            <path d={item.icon}></path>
-                          </svg>
-                          {item.label}
-                        </button>
-                      );
-                    })}
-                  </nav>
-                </div>
-
-                {/* Drawer User Footer */}
-                <div className="p-4 border-t border-white/60 bg-white/50 backdrop-blur-sm">
-                  <div className="glass-panel-subtle rounded-2xl p-3 flex flex-col gap-2.5">
-                    <button 
-                      onClick={() => { onNavigate('perfil'); setSidebarOpen(false); }}
-                      className="flex items-center gap-3 text-left hover:opacity-85 transition-opacity cursor-pointer group"
-                    >
-                      <div className="w-10 h-10 rounded-xl bg-slate-900 text-white shadow-xs border border-slate-700 flex items-center justify-center font-extrabold text-xs shrink-0">
-                        {user.username?.substring(0, 2).toUpperCase() || 'US'}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-bold text-slate-900 truncate leading-tight group-hover:text-indigo-600">{user.username || 'Usuario'}</p>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-0.5 leading-tight">{user.rol || 'Rol'}</p>
-                      </div>
-                    </button>
-                    <button 
-                      onClick={() => { onNavigate('login'); setSidebarOpen(false); }}
-                      className="flex w-full items-center justify-center gap-2 rounded-xl bg-white/90 hover:bg-rose-50 px-3 py-2 text-xs font-bold text-rose-500 hover:text-rose-600 transition-colors border border-white shadow-2xs cursor-pointer"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                        <polyline points="16 17 21 12 16 7"></polyline>
-                        <line x1="21" y1="12" x2="9" y2="12"></line>
-                      </svg>
-                      Cerrar Sesión
-                    </button>
-                  </div>
-                </div>
-
-              </motion.div>
-            </div>
-          )}
-        </AnimatePresence>
 
         {/* Scrollable Content Container (con espacio inferior para no chocar con la barra móvil) */}
         <main className="flex-1 overflow-y-auto relative z-10 custom-scrollbar p-3.5 sm:p-5 md:p-6 lg:p-8 pb-24 md:pb-8">
@@ -275,8 +285,9 @@ export default function MainLayout({ children, activeModule, onNavigate }: MainL
             return (
               <button
                 key={item.id}
+                type="button"
                 onClick={() => onNavigate(item.id)}
-                className={`relative flex flex-col items-center justify-center py-2 px-3 rounded-xl transition-all duration-150 cursor-pointer flex-1 ${
+                className={`relative flex flex-col items-center justify-center py-2 px-3 rounded-xl transition-all duration-150 cursor-pointer flex-1 touch-manipulation select-none ${
                   isActive ? 'text-slate-900 font-extrabold' : 'text-slate-400 hover:text-slate-700 font-medium'
                 }`}
               >
@@ -299,8 +310,10 @@ export default function MainLayout({ children, activeModule, onNavigate }: MainL
           
           {/* Botón de Menú Completo para abrir el Drawer */}
           <button
+            type="button"
             onClick={() => setSidebarOpen(true)}
-            className="flex flex-col items-center justify-center py-2 px-3 rounded-xl text-slate-400 hover:text-slate-700 font-medium transition-colors cursor-pointer flex-1"
+            style={{ touchAction: 'manipulation' }}
+            className="flex flex-col items-center justify-center py-2 px-3 rounded-xl text-slate-400 hover:text-slate-700 active:text-slate-900 font-medium transition-colors cursor-pointer flex-1 touch-manipulation select-none"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4.5 w-4.5 mb-0.5">
               <line x1="4" y1="12" x2="20" y2="12"></line>

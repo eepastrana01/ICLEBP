@@ -83,10 +83,10 @@ function App() {
       <AnimatePresence mode="wait">
         <motion.div
           key={activeModule}
-          initial={{ opacity: 0, y: 14, scale: 0.985 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: -10, scale: 0.985 }}
-          transition={{ type: "spring", stiffness: 340, damping: 28, mass: 0.8 }}
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, transition: { duration: 0.06 } }}
+          transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
           className="w-full"
         >
           {renderModule()}
