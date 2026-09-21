@@ -66,10 +66,10 @@ export default function MainLayout({ children, activeModule, onNavigate }: MainL
 
   return (
     <div className="flex h-screen bg-[#F4F6F8] overflow-hidden font-sans text-slate-900 relative selection:bg-slate-900 selection:text-white">
-      {/* Ambient background light gradients for Glassmorphism refraction */}
-      <div className="fixed -top-32 -left-32 w-96 h-96 rounded-full bg-blue-400/10 blur-[110px] pointer-events-none" />
-      <div className="fixed top-1/2 left-1/3 w-80 h-80 rounded-full bg-indigo-300/10 blur-[120px] pointer-events-none" />
-      <div className="fixed -bottom-32 -right-32 w-96 h-96 rounded-full bg-emerald-400/10 blur-[110px] pointer-events-none" />
+      {/* Ambient background light gradients for Glassmorphism refraction (solo en desktop para no alterar el muestreo de color de Safari en iOS) */}
+      <div className="hidden md:block fixed -top-32 -left-32 w-96 h-96 rounded-full bg-blue-400/10 blur-[110px] pointer-events-none" />
+      <div className="hidden md:block fixed top-1/2 left-1/3 w-80 h-80 rounded-full bg-slate-300/10 blur-[120px] pointer-events-none" />
+      <div className="hidden md:block fixed -bottom-32 -right-32 w-96 h-96 rounded-full bg-emerald-400/10 blur-[110px] pointer-events-none" />
 
       {/* Sidebar Desktop - Glassmorphism SaaS Panel */}
       <aside className="hidden md:flex w-72 flex-col shrink-0 p-4 relative z-20">
@@ -256,10 +256,10 @@ export default function MainLayout({ children, activeModule, onNavigate }: MainL
       {/* Main Content Area */}
       <div className="flex flex-1 flex-col overflow-hidden relative z-10">
         
-        {/* Mobile Compact Navbar with Glass styling */}
-        <header className="flex h-16 items-center justify-between px-4 sm:px-6 md:hidden relative z-20 border-b border-white/60 bg-white/60 backdrop-blur-md">
+        {/* Mobile Compact Navbar con fondo blanco limpio para integrarse con la barra de estado de Safari iOS */}
+        <header className="flex h-16 items-center justify-between px-4 sm:px-6 md:hidden relative z-20 border-b border-slate-200/60 bg-white shadow-2xs">
           <div className="flex items-center gap-2.5">
-            <div className="p-1.5 rounded-xl bg-white/90 shadow-xs border border-white/80">
+            <div className="p-1.5 rounded-xl bg-slate-50 shadow-2xs border border-slate-200/60">
               <img src="/LogoICLEB.svg" alt="Logo" className="h-6 w-auto object-contain" />
             </div>
             <div>
@@ -280,7 +280,7 @@ export default function MainLayout({ children, activeModule, onNavigate }: MainL
               type="button"
               onClick={() => setSidebarOpen(true)} 
               style={{ touchAction: 'manipulation' }}
-              className="w-10 h-10 flex items-center justify-center text-slate-700 bg-white/95 active:bg-slate-100 rounded-xl shadow-xs border border-white active:scale-95 transition-all cursor-pointer touch-manipulation select-none"
+              className="w-10 h-10 flex items-center justify-center text-slate-700 bg-slate-50 active:bg-slate-100 rounded-xl shadow-xs border border-slate-200/60 active:scale-95 transition-all cursor-pointer touch-manipulation select-none"
               aria-label="Abrir menú"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -300,7 +300,7 @@ export default function MainLayout({ children, activeModule, onNavigate }: MainL
         </main>
 
         {/* Mobile Bottom Navigation Bar (Ultra-accesible con el pulgar) */}
-        <nav className="fixed bottom-3 inset-x-3 z-40 md:hidden glass-panel-elevated rounded-2xl shadow-[0_8px_30px_rgba(15,23,42,0.12)] p-1 flex items-center justify-around border border-white/80 bg-white/80 backdrop-blur-lg">
+        <nav className="fixed bottom-3 inset-x-3 z-40 md:hidden bg-white/95 rounded-2xl shadow-[0_8px_30px_rgba(15,23,42,0.12)] p-1 flex items-center justify-around border border-white/90 backdrop-blur-md">
           {navItems.slice(0, 4).map((item) => {
             const isActive = activeModule === item.id;
             return (
