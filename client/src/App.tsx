@@ -1,14 +1,30 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, lazy, Suspense } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import MainLayout from './components/MainLayout'
-import FinanceDashboard from './components/FinanceDashboard'
-import CalendarView from './components/CalendarView'
-import MembersView from './components/MembersView'
-import UsersView from './components/UsersView'
-import ProfileView from './components/ProfileView'
-import TeamView from './components/TeamView'
-import EventsView from './components/EventsView'
 import Login from './components/Login'
+
+// Code Splitting: Carga diferida de módulos para reducir bundle inicial
+const FinanceDashboard = lazy(() => import('./components/FinanceDashboard'))
+const CalendarView = lazy(() => import('./components/CalendarView'))
+const MembersView = lazy(() => import('./components/MembersView'))
+const UsersView = lazy(() => import('./components/UsersView'))
+const ProfileView = lazy(() => import('./components/ProfileView'))
+const TeamView = lazy(() => import('./components/TeamView'))
+const EventsView = lazy(() => import('./components/EventsView'))
+
+function ModuleSkeleton() {
+  return (
+    <div className="w-full space-y-4 animate-pulse pt-2">
+      <div className="h-24 bg-white/70 rounded-3xl border border-white/60 shadow-2xs"></div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="h-32 bg-white/60 rounded-2xl border border-white/50"></div>
+        <div className="h-32 bg-white/60 rounded-2xl border border-white/50"></div>
+        <div className="h-32 bg-white/60 rounded-2xl border border-white/50"></div>
+      </div>
+      <div className="h-64 bg-white/70 rounded-3xl border border-white/60"></div>
+    </div>
+  )
+}
 
 const getDefaultModule = (user: any): string => {
   if (!user || user.rol === 'admin') return 'finanzas';
@@ -89,7 +105,9 @@ function App() {
           transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
           className="w-full"
         >
-          {renderModule()}
+          <Suspense fallback={<ModuleSkeleton />}>
+            {renderModule()}
+          </Suspense>
         </motion.div>
       </AnimatePresence>
     </MainLayout>
