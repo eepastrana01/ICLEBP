@@ -79,14 +79,23 @@ export function generarPDFActividades(
   const adminBoxX = pageWidth - margin - adminBoxWidth;
   const adminBoxY = 8.5;
 
+  // 1. Fondo de la tarjeta con esquinas redondeadas
   doc.setFillColor(248, 250, 252);
+  doc.roundedRect(adminBoxX, adminBoxY, adminBoxWidth, adminBoxHeight, 1.5, 1.5, 'F');
+
+  // 2. Barra de título del cuadro administrativo (con esquinas superiores redondeadas)
+  doc.setFillColor(241, 245, 249);
+  doc.roundedRect(adminBoxX, adminBoxY, adminBoxWidth, 4.5, 1.5, 1.5, 'F');
+  doc.rect(adminBoxX, adminBoxY + 2, adminBoxWidth, 2.5, 'F');
+
+  // 3. Línea divisoria formal de la cabecera
   doc.setDrawColor(...borderCol);
   doc.setLineWidth(0.3);
-  doc.roundedRect(adminBoxX, adminBoxY, adminBoxWidth, adminBoxHeight, 1.5, 1.5, 'FD');
+  doc.line(adminBoxX, adminBoxY + 4.5, adminBoxX + adminBoxWidth, adminBoxY + 4.5);
 
-  // Barra de título del cuadro administrativo
-  doc.setFillColor(241, 245, 249);
-  doc.rect(adminBoxX, adminBoxY, adminBoxWidth, 4.5, 'F');
+  // 4. Borde perimetral exterior nítido (al final para contorno perfecto)
+  doc.roundedRect(adminBoxX, adminBoxY, adminBoxWidth, adminBoxHeight, 1.5, 1.5, 'D');
+
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(6.2);
   doc.setTextColor(...textDark);
@@ -123,10 +132,10 @@ export function generarPDFActividades(
   doc.setTextColor(...textDark);
   doc.text(periodoTexto, headerTextX, 22);
 
-  doc.setFontSize(7.5);
+  doc.setFontSize(7);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(...textMuted);
-  doc.text('Consejo y Administración Pastoral • Sede Central', headerTextX, 26);
+  doc.text('Desarrollado, planeado y consensuado por el Equipo Pastoral • Col. Unión, SPS', headerTextX, 26);
 
   // Línea divisoria formal
   const dividerY = adminBoxY + adminBoxHeight + 3.5;
