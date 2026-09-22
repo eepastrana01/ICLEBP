@@ -61,9 +61,9 @@ export function generarPDFActividades(
     semFileTag = `${String(semestre).replace(/\s+/g, '_')}_${anio}`;
   }
 
-  // 2. Encabezado Oficial con Logotipo
-  const logoWidth = 18;
-  const logoHeight = 18;
+  // 2. Encabezado Oficial con Logotipo Completo
+  const logoWidth = 19;
+  const logoHeight = 19;
   const logoY = 8.5;
 
   // Insertar logotipo oficial en alta resolución a color
@@ -277,38 +277,38 @@ export function generarPDFActividades(
 
   // 6. Bloque de Firmas y Validación Pastoral
   const lastAutoTable = (doc as any).lastAutoTable;
-  let finalY = lastAutoTable ? lastAutoTable.finalY + 14 : pageHeight - 40;
+  let finalY = lastAutoTable ? lastAutoTable.finalY + 18 : pageHeight - 40;
 
   // Si no hay suficiente espacio para las firmas, agregar página
   if (finalY + 24 > pageHeight - 16) {
     doc.addPage();
-    finalY = 24;
+    finalY = 28;
   }
 
-  const signWidth = 62;
-  const leftSignX = margin + 14;
-  const rightSignX = pageWidth - margin - signWidth - 14;
+  const signWidth = 65;
+  const leftSignX = margin + 6;
+  const rightSignX = pageWidth - margin - signWidth - 6;
 
   doc.setDrawColor(...borderCol);
   doc.setLineWidth(0.35);
 
-  // Firma izquierda: Pastor
+  // Firma izquierda: Presidencia Congregacional
   doc.line(leftSignX, finalY, leftSignX + signWidth, finalY);
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(7.5);
   doc.setTextColor(...primary);
-  doc.text('PASTOR TITULAR / MINISTRO', leftSignX + signWidth / 2, finalY + 4, { align: 'center' });
+  doc.text('PRESIDENCIA CONGREGACIONAL', leftSignX + signWidth / 2, finalY + 4, { align: 'center' });
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(6.5);
   doc.setTextColor(...textLight);
-  doc.text('Firma y Sello Pastoral', leftSignX + signWidth / 2, finalY + 7.5, { align: 'center' });
+  doc.text('Firma y Sello Oficial', leftSignX + signWidth / 2, finalY + 7.5, { align: 'center' });
 
-  // Firma derecha: Secretaría / Consejo
+  // Firma derecha: Secretaría Congregacional
   doc.line(rightSignX, finalY, rightSignX + signWidth, finalY);
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(7.5);
   doc.setTextColor(...primary);
-  doc.text('SECRETARÍA / CONSEJO PASTORAL', rightSignX + signWidth / 2, finalY + 4, { align: 'center' });
+  doc.text('SECRETARÍA CONGREGACIONAL', rightSignX + signWidth / 2, finalY + 4, { align: 'center' });
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(6.5);
   doc.setTextColor(...textLight);
