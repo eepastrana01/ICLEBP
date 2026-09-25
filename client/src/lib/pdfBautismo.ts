@@ -103,11 +103,13 @@ export function generarPDFBautismo(data: BautismoPDFData): void {
   const logoY = 15;
   doc.addImage(LUTHER_ROSE_DOCX_BASE64, 'PNG', logoX, logoY, logoW, logoH);
 
-  // 4. Título "Fe de Bautismo" en fuente Vivaldi (35pt)
+  // 4. Título "Fe de Bautismo" en fuente Vivaldi (35pt, negrita rica)
   doc.setFont('Vivaldi', 'bold');
   doc.setFontSize(35);
   doc.setTextColor(0, 0, 0);
-  doc.text('Fe de Bautismo', pageWidth / 2, 54, { align: 'center' });
+  doc.setDrawColor(0, 0, 0);
+  doc.setLineWidth(0.2);
+  doc.text('Fe de Bautismo', pageWidth / 2, 54, { align: 'center', renderingMode: 'fillThenStroke' });
 
   // 5. Citas Bíblicas en Goudy Old Style (11.5pt, texto justificado dentro de márgenes seguros)
   const boxLeft = 18;
@@ -153,18 +155,20 @@ export function generarPDFBautismo(data: BautismoPDFData): void {
   doc.text('El que no naciere de agua y del Espíritu, no puede entrar en el reino de Dios.', boxLeft, yText);
   doc.text('San Juan 3:5', boxRight, yText, { align: 'right' });
 
-  // 6. Nombre de la persona en Monotype Corsiva Negrita Subrayado (27pt)
+  // 6. Nombre de la persona en Monotype Corsiva Negrita Subrayado (28pt, trazo negrita pleno)
   yText = 100;
   doc.setFont('Corsiva', 'bold');
-  doc.setFontSize(27);
+  doc.setFontSize(28);
   doc.setTextColor(0, 0, 0);
-  doc.text(data.nombre_persona, pageWidth / 2, yText, { align: 'center' });
+  doc.setDrawColor(0, 0, 0);
+  doc.setLineWidth(0.22);
+  doc.text(data.nombre_persona, pageWidth / 2, yText, { align: 'center', renderingMode: 'fillThenStroke' });
 
   const nameWidth = doc.getTextWidth(data.nombre_persona);
   doc.setLineWidth(0.4);
-  doc.line(pageWidth / 2 - nameWidth / 2, yText + 1.2, pageWidth / 2 + nameWidth / 2, yText + 1.2);
+  doc.line(pageWidth / 2 - nameWidth / 2, yText + 1.3, pageWidth / 2 + nameWidth / 2, yText + 1.3);
 
-  // 7. Bloque de Nacimiento, Padres y Sacramento SIN espacios verticales extras (fiel a la imagen original)
+  // 7. Bloque de Nacimiento, Padres y Sacramento SIN espacios extras (fiel a la imagen 2 del original)
   doc.setFont('Goudy', 'normal');
   doc.setFontSize(13);
   const fechaNac = formatearFechaEspanol(data.fecha_nacimiento);
@@ -174,7 +178,7 @@ export function generarPDFBautismo(data: BautismoPDFData): void {
   yText += 5.2;
   doc.text(`${data.lugar_nacimiento}.`, pageWidth / 2, yText, { align: 'center' });
 
-  // Padres continuos inmediatamente
+  // Padres continuos inmediatamente en Corsiva negrita
   yText += 6.2;
   const labelPadres = `${hijoTexto} de: `;
   const padres = data.padre && data.madre ? `${data.padre} y ${data.madre}` : (data.padre || data.madre || '');
@@ -184,7 +188,7 @@ export function generarPDFBautismo(data: BautismoPDFData): void {
   const wLabel = doc.getTextWidth(labelPadres);
 
   doc.setFont('Corsiva', 'bold');
-  doc.setFontSize(18);
+  doc.setFontSize(19);
   const wPadres = doc.getTextWidth(padres);
 
   const totalPadresW = wLabel + wPadres;
@@ -195,8 +199,10 @@ export function generarPDFBautismo(data: BautismoPDFData): void {
   doc.text(labelPadres, startPadresX, yText);
 
   doc.setFont('Corsiva', 'bold');
-  doc.setFontSize(18);
-  doc.text(padres, startPadresX + wLabel, yText);
+  doc.setFontSize(19);
+  doc.setDrawColor(0, 0, 0);
+  doc.setLineWidth(0.18);
+  doc.text(padres, startPadresX + wLabel, yText, { renderingMode: 'fillThenStroke' });
 
   // Sacramento fecha continuo
   yText += 6.2;
@@ -214,12 +220,14 @@ export function generarPDFBautismo(data: BautismoPDFData): void {
   yText += 11;
   doc.setFont('Vivaldi', 'bold');
   doc.setFontSize(28);
-  doc.text('Santo Bautismo', pageWidth / 2, yText, { align: 'center' });
+  doc.setDrawColor(0, 0, 0);
+  doc.setLineWidth(0.2);
+  doc.text('Santo Bautismo', pageWidth / 2, yText, { align: 'center', renderingMode: 'fillThenStroke' });
   const wSanto = doc.getTextWidth('Santo Bautismo');
   doc.setLineWidth(0.4);
-  doc.line(pageWidth / 2 - wSanto / 2, yText + 1.2, pageWidth / 2 + wSanto / 2, yText + 1.2);
+  doc.line(pageWidth / 2 - wSanto / 2, yText + 1.3, pageWidth / 2 + wSanto / 2, yText + 1.3);
 
-  // 9. Iglesia en Goudy Old Style Negrita (13.5pt, cabe con amplio margen dentro del marco)
+  // 9. Iglesia en Goudy Old Style Negrita (13.5pt, cabe holgadamente dentro del marco)
   yText += 11;
   doc.setFont('Goudy', 'bold');
   doc.setFontSize(13.5);
@@ -286,10 +294,12 @@ export function generarPDFBautismo(data: BautismoPDFData): void {
   yText += 7;
   doc.setFont('Corsiva', 'bold');
   doc.setFontSize(16);
+  doc.setDrawColor(0, 0, 0);
+  doc.setLineWidth(0.18);
   const pastorNombre = data.pastor_oficiante.startsWith('Pr.') || data.pastor_oficiante.startsWith('Pastor')
     ? data.pastor_oficiante
     : `Pr. ${data.pastor_oficiante}`;
-  doc.text(pastorNombre, pageWidth / 2, yText, { align: 'center' });
+  doc.text(pastorNombre, pageWidth / 2, yText, { align: 'center', renderingMode: 'fillThenStroke' });
 
   yText += 6;
   doc.setFont('Corsiva', 'normal');
