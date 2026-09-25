@@ -1,8 +1,9 @@
 import { useState, useEffect, lazy, Suspense } from 'react'
 import { Routes, Route, Navigate, useLocation, useNavigate, Outlet } from 'react-router-dom'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import MainLayout from './components/MainLayout'
 import Login from './components/Login'
+import ErrorBoundary from './components/ErrorBoundary'
 
 // Code Splitting: Carga diferida de módulos para reducir bundle inicial
 const FinanceDashboard = lazy(() => import('./components/FinanceDashboard'))
@@ -28,6 +29,14 @@ function ModuleSkeleton() {
   )
 }
 
+const getUser = () => {
+  try {
+    return JSON.parse(localStorage.getItem('user') || '{}');
+  } catch {
+    return {};
+  }
+};
+
 const getDefaultModule = (user: any): string => {
   if (!user || user.rol === 'admin') return 'finanzas';
   const perms = user.permisos || {};
@@ -50,7 +59,7 @@ function ProtectedRoute({ module, children }: ProtectedRouteProps) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const user = getUser();
 
   if (module && module !== 'perfil') {
     if (user.rol !== 'admin') {
@@ -65,14 +74,16 @@ function ProtectedRoute({ module, children }: ProtectedRouteProps) {
   }
 
   return (
-    <Suspense fallback={<ModuleSkeleton />}>
-      {children}
-    </Suspense>
+    <ErrorBoundary>
+      <Suspense fallback={<ModuleSkeleton />}>
+        {children}
+      </Suspense>
+    </ErrorBoundary>
   );
 }
 
 function RootRedirect() {
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const user = getUser();
   return <Navigate to={`/${getDefaultModule(user)}`} replace />;
 }
 
@@ -95,7 +106,7 @@ function App() {
 
   const handleLoginSuccess = () => {
     setIsAuthenticated(true);
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const user = getUser();
     window.dispatchEvent(new Event('user_updated'));
     const from = (location.state as any)?.from?.pathname || `/${getDefaultModule(user)}`;
     navigate(from, { replace: true });
@@ -107,7 +118,7 @@ function App() {
         path="/login"
         element={
           isAuthenticated ? (
-            <Navigate to={`/${getDefaultModule(JSON.parse(localStorage.getItem('user') || '{}'))}`} replace />
+            <Navigate to={`/${getDefaultModule(getUser())}`} replace />
           ) : (
             <Login onLoginSuccess={handleLoginSuccess} />
           )
@@ -118,18 +129,17 @@ function App() {
         element={
           isAuthenticated ? (
             <MainLayout>
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={location.pathname}
-                  initial={{ opacity: 0, y: 6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, transition: { duration: 0.06 } }}
-                  transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
-                  className="w-full"
-                >
+              <motion.div
+                key={location.pathname}
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.12, ease: 'easeOut' }}
+                className="w-full"
+              >
+                <ErrorBoundary>
                   <Outlet />
-                </motion.div>
-              </AnimatePresence>
+                </ErrorBoundary>
+              </motion.div>
             </MainLayout>
           ) : (
             <Navigate to="/login" state={{ from: location }} replace />

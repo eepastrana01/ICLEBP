@@ -70,10 +70,13 @@ export default function MainLayout({ children, activeModule: propActiveModule, o
       window.dispatchEvent(new Event('auth_error'));
       if (onNavigate) onNavigate('login');
       navigate('/login');
-    } else {
-      if (onNavigate) onNavigate(moduleId);
-      navigate('/' + moduleId);
+      return;
     }
+    if (moduleId === currentModule) {
+      return;
+    }
+    if (onNavigate) onNavigate(moduleId);
+    navigate('/' + moduleId);
   };
 
   const navItems = allNavItems.filter((item) => {
