@@ -119,3 +119,26 @@ model EventoParticipante {
   @@map("evento_participantes")
 }
 
+model Bautismo {
+  id               Int      @id @default(autoincrement())
+  numero_registro  String   @unique
+  nombre_persona   String
+  genero           String   @default("M")
+  fecha_nacimiento DateTime @db.Date
+  lugar_nacimiento String
+  padre            String?
+  madre            String?
+  padrinos         String?
+  fecha_bautismo   DateTime @db.Date
+  pastor_oficiante String
+  lugar_bautismo   String?  @default("Iglesia Cristiana Luterana El Buen Pastor, SPS")
+  es_reposicion    Boolean  @default(false)
+  nota_reposicion  String?
+  miembro_id       Int?
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
+
+  @@map("bautismos")
+}
+
+

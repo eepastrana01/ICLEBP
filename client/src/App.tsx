@@ -11,6 +11,7 @@ const UsersView = lazy(() => import('./components/UsersView'))
 const ProfileView = lazy(() => import('./components/ProfileView'))
 const TeamView = lazy(() => import('./components/TeamView'))
 const EventsView = lazy(() => import('./components/EventsView'))
+const BaptismsView = lazy(() => import('./components/BaptismsView'))
 
 function ModuleSkeleton() {
   return (
@@ -30,7 +31,7 @@ const getDefaultModule = (user: any): string => {
   if (!user || user.rol === 'admin') return 'finanzas';
   const perms = user.permisos || {};
   if (perms.finanzas && perms.finanzas !== 'ninguno') return 'finanzas';
-  const order = ['agenda', 'miembros', 'equipo', 'eventos', 'usuarios', 'perfil'];
+  const order = ['agenda', 'miembros', 'bautismos', 'equipo', 'eventos', 'usuarios', 'perfil'];
   const found = order.find(m => m === 'perfil' || (perms[m] && perms[m] !== 'ninguno'));
   return found || 'perfil';
 };
@@ -82,6 +83,7 @@ function App() {
       case 'finanzas': return <FinanceDashboard />;
       case 'agenda': return <CalendarView />;
       case 'miembros': return <MembersView />;
+      case 'bautismos': return <BaptismsView />;
       case 'equipo': return <TeamView />;
       case 'eventos': return <EventsView />;
       case 'usuarios': return <UsersView />;

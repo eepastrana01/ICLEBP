@@ -46,6 +46,7 @@ export default function MainLayout({ children, activeModule, onNavigate }: MainL
     { id: 'finanzas', label: 'Finanzas', icon: 'M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6' },
     { id: 'agenda', label: 'Agenda Pastoral', icon: 'M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10z' },
     { id: 'miembros', label: 'Miembros', icon: 'M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75' },
+    { id: 'bautismos', label: 'Fe de Bautismo', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' },
     { id: 'equipo', label: 'Equipo Pastoral', icon: 'M12 2a3 3 0 1 0 0 6 3 3 0 0 0 0-6z M6 16a3 3 0 1 0 0 6 3 3 0 0 0 0-6z M18 16a3 3 0 1 0 0 6 3 3 0 0 0 0-6z M12 8v4 M12 12l-6 4 M12 12l6 4' },
     { id: 'eventos', label: 'Rifas & Eventos', icon: 'M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v2z M13 5v2 M13 11v2 M13 17v2' },
     { id: 'usuarios', label: 'Usuarios', icon: 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z' },
