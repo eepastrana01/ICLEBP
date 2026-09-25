@@ -1,20 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 
 interface MainLayoutProps {
-  children: React.ReactNode;
-  activeModule: string;
-  onNavigate: (module: string) => void;
+  children?: React.ReactNode;
+  activeModule?: string;
+  onNavigate?: (module: string) => void;
 }
 
-export default function MainLayout({ children, activeModule, onNavigate }: MainLayoutProps) {
+export default function MainLayout({ children, activeModule: propActiveModule, onNavigate }: MainLayoutProps) {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [user, setUser] = useState(() => JSON.parse(localStorage.getItem('user') || '{}'));
   const [mounted, setMounted] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const currentModule = propActiveModule || location.pathname.replace(/^\//, '') || 'finanzas';
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    setSidebarOpen(false);
+  }, [location.pathname]);
 
   useEffect(() => {
     const handleUserUpdated = () => {
@@ -52,6 +61,20 @@ export default function MainLayout({ children, activeModule, onNavigate }: MainL
     { id: 'usuarios', label: 'Usuarios', icon: 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z' },
     { id: 'perfil', label: 'Mi Perfil', icon: 'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z' }
   ];
+
+  const handleNav = (moduleId: string) => {
+    setSidebarOpen(false);
+    if (moduleId === 'login') {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      window.dispatchEvent(new Event('auth_error'));
+      if (onNavigate) onNavigate('login');
+      navigate('/login');
+    } else {
+      if (onNavigate) onNavigate(moduleId);
+      navigate('/' + moduleId);
+    }
+  };
 
   const navItems = allNavItems.filter((item) => {
     if (user.rol === 'admin') return true;
@@ -92,11 +115,11 @@ export default function MainLayout({ children, activeModule, onNavigate }: MainL
             <p className="px-3 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-3">Menú Principal</p>
             <nav className="space-y-1.5">
               {navItems.map((item) => {
-                const isActive = activeModule === item.id;
+                const isActive = currentModule === item.id;
                 return (
                   <button
                     key={item.id}
-                    onClick={() => onNavigate(item.id)}
+                    onClick={() => handleNav(item.id)}
                     className={`group flex w-full items-center rounded-2xl px-4 py-3 text-sm font-semibold transition-all duration-200 cursor-pointer ${
                       isActive 
                         ? 'bg-slate-900 text-white shadow-[0_4px_14px_rgba(15,23,42,0.18)]' 
@@ -121,7 +144,7 @@ export default function MainLayout({ children, activeModule, onNavigate }: MainL
           <div className="p-3.5 mt-auto border-t border-white/60">
             <div className="glass-panel-subtle rounded-2xl p-3.5 flex flex-col gap-3">
               <button 
-                onClick={() => onNavigate('perfil')}
+                onClick={() => handleNav('perfil')}
                 className="flex items-center gap-3 text-left hover:opacity-80 transition-opacity cursor-pointer group"
               >
                 <div className="w-10 h-10 rounded-xl bg-slate-900 text-white shadow-sm border border-slate-700 flex items-center justify-center font-extrabold text-xs shrink-0 group-hover:scale-105 transition-transform">
@@ -134,7 +157,7 @@ export default function MainLayout({ children, activeModule, onNavigate }: MainL
               </button>
               
               <button 
-                onClick={() => onNavigate('login')}
+                onClick={() => handleNav('login')}
                 className="group flex w-full items-center justify-center gap-2 rounded-xl bg-white/70 hover:bg-rose-50 px-3 py-2 text-xs font-bold text-rose-500 hover:text-rose-600 transition-colors border border-white shadow-xs cursor-pointer"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="transition-transform group-hover:-translate-x-0.5">
@@ -193,15 +216,12 @@ export default function MainLayout({ children, activeModule, onNavigate }: MainL
               <p className="px-3 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-3">Módulos</p>
               <nav className="space-y-1.5">
                 {navItems.map((item) => {
-                  const isActive = activeModule === item.id;
+                  const isActive = currentModule === item.id;
                   return (
                     <button
                       key={item.id}
                       type="button"
-                      onClick={() => { 
-                        setSidebarOpen(false);
-                        onNavigate(item.id); 
-                      }}
+                      onClick={() => handleNav(item.id)}
                       className={`flex w-full items-center rounded-2xl px-4 py-3 text-sm font-semibold transition-colors duration-150 cursor-pointer touch-manipulation select-none ${
                         isActive 
                           ? 'bg-slate-900 text-white shadow-md shadow-slate-900/10' 
@@ -223,7 +243,7 @@ export default function MainLayout({ children, activeModule, onNavigate }: MainL
               <div className="bg-white border border-slate-200/80 rounded-2xl p-3 flex flex-col gap-2.5 shadow-2xs">
                 <button 
                   type="button"
-                  onClick={() => { setSidebarOpen(false); onNavigate('perfil'); }}
+                  onClick={() => handleNav('perfil')}
                   className="flex items-center gap-3 text-left hover:opacity-85 transition-opacity cursor-pointer group touch-manipulation select-none"
                 >
                   <div className="w-10 h-10 rounded-xl bg-slate-900 text-white shadow-xs border border-slate-700 flex items-center justify-center font-extrabold text-xs shrink-0">
@@ -236,7 +256,7 @@ export default function MainLayout({ children, activeModule, onNavigate }: MainL
                 </button>
                 <button 
                   type="button"
-                  onClick={() => { setSidebarOpen(false); onNavigate('login'); }}
+                  onClick={() => handleNav('login')}
                   className="flex w-full items-center justify-center gap-2 rounded-xl bg-slate-50 hover:bg-rose-50 active:bg-rose-100 px-3 py-2 text-xs font-bold text-rose-500 hover:text-rose-600 transition-colors border border-slate-200 shadow-2xs cursor-pointer touch-manipulation select-none"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -271,7 +291,8 @@ export default function MainLayout({ children, activeModule, onNavigate }: MainL
 
           <div className="flex items-center gap-2">
             <button 
-              onClick={() => onNavigate('perfil')}
+              type="button"
+              onClick={() => handleNav('perfil')}
               className="w-8 h-8 rounded-xl bg-slate-900 text-white flex items-center justify-center font-extrabold text-xs shadow-2xs cursor-pointer active:scale-95 transition-transform"
               title="Mi Perfil"
             >
@@ -296,7 +317,7 @@ export default function MainLayout({ children, activeModule, onNavigate }: MainL
         {/* Scrollable Content Container (con espacio inferior amplio pb-32 para fluir detrás de la barra flotante y Safari) */}
         <main className="flex-1 md:overflow-y-auto relative z-10 custom-scrollbar p-3.5 sm:p-5 md:p-6 lg:p-8 pb-32 md:pb-8">
           <div className="max-w-7xl mx-auto">
-            {children}
+            {children || <Outlet />}
           </div>
         </main>
 
@@ -304,12 +325,12 @@ export default function MainLayout({ children, activeModule, onNavigate }: MainL
         <div className="fixed bottom-4 left-4 right-4 z-40 md:hidden">
           <nav className="flex items-center bg-white/95 backdrop-blur-md rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.10)] px-2 py-1.5 gap-1 border border-slate-200/80">
             {navItems.slice(0, 4).map((item) => {
-              const isActive = activeModule === item.id;
+              const isActive = currentModule === item.id;
               return (
                 <button
                   key={item.id}
                   type="button"
-                  onClick={() => onNavigate(item.id)}
+                  onClick={() => handleNav(item.id)}
                   className={`relative flex flex-col items-center justify-center py-2 px-3 rounded-xl transition-all duration-150 cursor-pointer flex-1 touch-manipulation select-none ${
                     isActive ? 'text-slate-900 font-extrabold' : 'text-slate-400 hover:text-slate-700 font-medium'
                   }`}

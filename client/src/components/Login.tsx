@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import api from '../lib/api';
 
 interface LoginProps {
-  onLoginSuccess: () => void;
+  onLoginSuccess?: () => void;
 }
 
 export default function Login({ onLoginSuccess }: LoginProps) {
@@ -44,7 +44,9 @@ export default function Login({ onLoginSuccess }: LoginProps) {
         localStorage.removeItem('saved_username');
       }
       
-      onLoginSuccess();
+      if (onLoginSuccess) {
+        onLoginSuccess();
+      }
     } catch (err: any) {
       setError(err.response?.data?.error || 'Credenciales incorrectas. Verifica tu usuario y contraseña.');
     } finally {

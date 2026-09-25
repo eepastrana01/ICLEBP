@@ -1,4 +1,5 @@
 import { useState, useEffect, lazy, Suspense } from 'react'
+import { Routes, Route, Navigate, useLocation, useNavigate, Outlet } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import MainLayout from './components/MainLayout'
 import Login from './components/Login'
@@ -36,85 +37,119 @@ const getDefaultModule = (user: any): string => {
   return found || 'perfil';
 };
 
-function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [activeModule, setActiveModule] = useState(() => {
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
-    return getDefaultModule(user);
-  })
+interface ProtectedRouteProps {
+  module?: string;
+  children: React.ReactNode;
+}
 
-  useEffect(() => {
-    const token = localStorage.getItem('token')
-    if (token) {
-      setIsAuthenticated(true)
-      const user = JSON.parse(localStorage.getItem('user') || '{}');
-      setActiveModule(getDefaultModule(user));
-    }
+function ProtectedRoute({ module, children }: ProtectedRouteProps) {
+  const token = localStorage.getItem('token');
+  const location = useLocation();
 
-    const handleAuthError = () => setIsAuthenticated(false)
-    window.addEventListener('auth_error', handleAuthError)
-    return () => window.removeEventListener('auth_error', handleAuthError)
-  }, [])
-
-  const handleLogout = () => {
-    localStorage.removeItem('token')
-    localStorage.removeItem('user')
-    setIsAuthenticated(false)
+  if (!token) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  const handleNavigate = (module: string) => {
-    if (module === 'login') {
-      handleLogout()
-    } else {
-      setActiveModule(module)
-    }
-  }
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
 
-  if (!isAuthenticated) {
-    return <Login onLoginSuccess={() => {
-      setIsAuthenticated(true);
-      const user = JSON.parse(localStorage.getItem('user') || '{}');
-      setActiveModule(getDefaultModule(user));
-    }} />
-  }
-
-  const renderModule = () => {
-    switch (activeModule) {
-      case 'finanzas': return <FinanceDashboard />;
-      case 'agenda': return <CalendarView />;
-      case 'miembros': return <MembersView />;
-      case 'bautismos': return <BaptismsView />;
-      case 'equipo': return <TeamView />;
-      case 'eventos': return <EventsView />;
-      case 'usuarios': return <UsersView />;
-      case 'perfil': return <ProfileView />;
-      default: return (
-        <div className="flex items-center justify-center h-full text-slate-500">
-          Módulo en construcción
-        </div>
-      );
+  if (module && module !== 'perfil') {
+    if (user.rol !== 'admin') {
+      if (module === 'usuarios') {
+        return <Navigate to={`/${getDefaultModule(user)}`} replace />;
+      }
+      const perms = user.permisos || {};
+      if (perms[module] === 'ninguno') {
+        return <Navigate to={`/${getDefaultModule(user)}`} replace />;
+      }
     }
   }
 
   return (
-    <MainLayout activeModule={activeModule} onNavigate={handleNavigate}>
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={activeModule}
-          initial={{ opacity: 0, y: 6 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, transition: { duration: 0.06 } }}
-          transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
-          className="w-full"
-        >
-          <Suspense fallback={<ModuleSkeleton />}>
-            {renderModule()}
-          </Suspense>
-        </motion.div>
-      </AnimatePresence>
-    </MainLayout>
-  )
+    <Suspense fallback={<ModuleSkeleton />}>
+      {children}
+    </Suspense>
+  );
 }
 
-export default App
+function RootRedirect() {
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  return <Navigate to={`/${getDefaultModule(user)}`} replace />;
+}
 
+function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(() => Boolean(localStorage.getItem('token')));
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const handleAuthError = () => {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      setIsAuthenticated(false);
+      navigate('/login', { replace: true });
+    };
+
+    window.addEventListener('auth_error', handleAuthError);
+    return () => window.removeEventListener('auth_error', handleAuthError);
+  }, [navigate]);
+
+  const handleLoginSuccess = () => {
+    setIsAuthenticated(true);
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    window.dispatchEvent(new Event('user_updated'));
+    const from = (location.state as any)?.from?.pathname || `/${getDefaultModule(user)}`;
+    navigate(from, { replace: true });
+  };
+
+  return (
+    <Routes>
+      <Route
+        path="/login"
+        element={
+          isAuthenticated ? (
+            <Navigate to={`/${getDefaultModule(JSON.parse(localStorage.getItem('user') || '{}'))}`} replace />
+          ) : (
+            <Login onLoginSuccess={handleLoginSuccess} />
+          )
+        }
+      />
+
+      <Route
+        element={
+          isAuthenticated ? (
+            <MainLayout>
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={location.pathname}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, transition: { duration: 0.06 } }}
+                  transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
+                  className="w-full"
+                >
+                  <Outlet />
+                </motion.div>
+              </AnimatePresence>
+            </MainLayout>
+          ) : (
+            <Navigate to="/login" state={{ from: location }} replace />
+          )
+        }
+      >
+        <Route index element={<RootRedirect />} />
+        <Route path="/finanzas" element={<ProtectedRoute module="finanzas"><FinanceDashboard /></ProtectedRoute>} />
+        <Route path="/agenda" element={<ProtectedRoute module="agenda"><CalendarView /></ProtectedRoute>} />
+        <Route path="/miembros" element={<ProtectedRoute module="miembros"><MembersView /></ProtectedRoute>} />
+        <Route path="/bautismos" element={<ProtectedRoute module="bautismos"><BaptismsView /></ProtectedRoute>} />
+        <Route path="/equipo" element={<ProtectedRoute module="equipo"><TeamView /></ProtectedRoute>} />
+        <Route path="/eventos" element={<ProtectedRoute module="eventos"><EventsView /></ProtectedRoute>} />
+        <Route path="/usuarios" element={<ProtectedRoute module="usuarios"><UsersView /></ProtectedRoute>} />
+        <Route path="/perfil" element={<ProtectedRoute module="perfil"><ProfileView /></ProtectedRoute>} />
+      </Route>
+
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
+}
+
+export default App;
