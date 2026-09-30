@@ -1,8 +1,11 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import api from '../lib/api';
 import { SPRING_SNAPPY, SPRING_FAST } from '../lib/animations';
+
+const CAT_COLORS = ['#6366f1', '#8b5cf6', '#3b82f6', '#14b8a6', '#f59e0b'];
 
 interface Categoria { id: number; nombre: string; }
 interface Talonario { id: number; nombre: string; rango_inicio: number; rango_fin: number; actual: number; activo: boolean; tipo: string; }
@@ -21,11 +24,11 @@ interface Transaccion {
 
 const IOS_SPRING_FAST = SPRING_FAST;
 
-// Categorías oficiales según el talonario físico de Comprobante de Ingresos
+// CategorÃ­as oficiales segÃºn el talonario fÃ­sico de Comprobante de Ingresos
 const OFFICIAL_INGRESO_SOURCES = [
   "Culto de Damas",
   "Culto de Caballeros",
-  "Culto de Jóvenes",
+  "Culto de JÃ³venes",
   "Escuela Dominical",
   "Misa Dominical"
 ];
@@ -40,6 +43,7 @@ export default function FinanceDashboard() {
   const [activeView, setActiveView] = useState<'dashboard' | 'form' | 'configuracion'>('dashboard');
   const [activeTab, setActiveTab] = useState<'ingreso' | 'egreso'>('ingreso');
   const [configSubTab, setConfigSubTab] = useState<'todos' | 'ingreso' | 'egreso' | 'categorias'>('todos');
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Transaction Form State
   const [editingTx, setEditingTx] = useState<Transaccion | null>(null);
@@ -77,27 +81,54 @@ export default function FinanceDashboard() {
   const categorias: Categoria[] = data?.categorias || [];
   const talonarios: Talonario[] = data?.talonarios || [];
 
-  // Metrics calculation
-  const { saldo, ingresosMes, egresosMes, balanceMes, asistentesMes, comulgantesMes } = useMemo(() => {
-    let saldo = 0, ingresosMes = 0, egresosMes = 0, asistentesMes = 0, comulgantesMes = 0;
+  // Metrics + chart data computation
+  const { saldo, ingresosMes, egresosMes, balanceMes, asistentesMes, comulgantesMes, txCountMes, monthlyChartData, categoryBreakdown } = useMemo(() => {
+    let saldo = 0, ingresosMes = 0, egresosMes = 0, asistentesMes = 0, comulgantesMes = 0, txCountMes = 0;
     const now = new Date();
     const currMonth = now.getMonth(), currYear = now.getFullYear();
+    const dayMap: Record<string, { dia: string; ingresos: number; egresos: number }> = {};
+    const catMap: Record<string, number> = {};
+
     transacciones.forEach(tx => {
       const txDate = new Date(tx.fecha);
-      const isCurr = txDate.getMonth() === currMonth && txDate.getFullYear() === currYear;
+      const local = new Date(txDate.getTime() + txDate.getTimezoneOffset() * 60000);
+      const isCurr = local.getMonth() === currMonth && local.getFullYear() === currYear;
+      const dayKey = local.toISOString().split('T')[0];
+      const dayLabel = local.toLocaleDateString('es-HN', { day: '2-digit', month: 'short' });
+
       if (tx.tipo === 'ingreso') {
         saldo += tx.monto;
         if (isCurr) {
           ingresosMes += tx.monto;
           asistentesMes += tx.asistentes || 0;
           comulgantesMes += tx.comulgantes || 0;
+          txCountMes++;
+          if (!dayMap[dayKey]) dayMap[dayKey] = { dia: dayLabel, ingresos: 0, egresos: 0 };
+          dayMap[dayKey].ingresos += tx.monto;
+          catMap[tx.categoria] = (catMap[tx.categoria] || 0) + tx.monto;
         }
       } else {
         saldo -= tx.monto;
-        if (isCurr) egresosMes += tx.monto;
+        if (isCurr) {
+          egresosMes += tx.monto;
+          txCountMes++;
+          if (!dayMap[dayKey]) dayMap[dayKey] = { dia: dayLabel, ingresos: 0, egresos: 0 };
+          dayMap[dayKey].egresos += tx.monto;
+        }
       }
     });
-    return { saldo, ingresosMes, egresosMes, balanceMes: ingresosMes - egresosMes, asistentesMes, comulgantesMes };
+
+    const monthlyChartData = Object.entries(dayMap)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([, v]) => v);
+
+    const catTotal = Object.values(catMap).reduce((s, v) => s + v, 0);
+    const categoryBreakdown = Object.entries(catMap)
+      .map(([name, value]) => ({ name, value, pct: catTotal > 0 ? Math.round(value / catTotal * 100) : 0 }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 5);
+
+    return { saldo, ingresosMes, egresosMes, balanceMes: ingresosMes - egresosMes, asistentesMes, comulgantesMes, txCountMes, monthlyChartData, categoryBreakdown };
   }, [transacciones]);
 
   const formatLps = (val: number) => `L. ${val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -112,7 +143,7 @@ export default function FinanceDashboard() {
     if (!val) return '000000';
     const str = String(val).trim();
     const isPureNum = /^\d+$/.test(str);
-    return isPureNum ? `№ ${str.padStart(6, '0')}` : str;
+    return isPureNum ? `â„– ${str.padStart(6, '0')}` : str;
   };
 
   // Transactions mutations
@@ -123,7 +154,7 @@ export default function FinanceDashboard() {
       setActiveView('dashboard');
       setEditingTx(null);
     },
-    onError: (err: any) => setFormError(err.response?.data?.error || 'Error al guardar la transacción.')
+    onError: (err: any) => setFormError(err.response?.data?.error || 'Error al guardar la transacciÃ³n.')
   });
 
   const updateTxMutation = useMutation({
@@ -133,7 +164,7 @@ export default function FinanceDashboard() {
       setActiveView('dashboard');
       setEditingTx(null);
     },
-    onError: (err: any) => setFormError(err.response?.data?.error || 'Error al actualizar la transacción.')
+    onError: (err: any) => setFormError(err.response?.data?.error || 'Error al actualizar la transacciÃ³n.')
   });
 
   const deleteTxMutation = useMutation({
@@ -189,7 +220,7 @@ export default function FinanceDashboard() {
   const openCreate = (tipo: 'ingreso' | 'egreso' = activeTab) => {
     setEditingTx(null);
     const sug = getSiguienteRecibo(tipo);
-    const defaultCat = tipo === 'ingreso' ? 'Misa Dominical' : (categorias[0]?.nombre || 'Servicios Públicos');
+    const defaultCat = tipo === 'ingreso' ? 'Misa Dominical' : (categorias[0]?.nombre || 'Servicios PÃºblicos');
     setTxForm({
       tipo,
       fecha: new Date().toISOString().split('T')[0],
@@ -199,7 +230,7 @@ export default function FinanceDashboard() {
       recibo_no: sug,
       asistentes: '',
       comulgantes: '',
-      recibido_por: tipo === 'ingreso' ? 'Dilcia Sáenz' : ''
+      recibido_por: tipo === 'ingreso' ? 'Dilcia SÃ¡enz' : ''
     });
     setIsCustomCategory(false);
     setCustomCategoryText('');
@@ -225,7 +256,7 @@ export default function FinanceDashboard() {
       recibo_no: tx.recibo_no || '',
       asistentes: tx.asistentes ? tx.asistentes.toString() : '',
       comulgantes: tx.comulgantes ? tx.comulgantes.toString() : '',
-      recibido_por: tx.tipo === 'ingreso' ? 'Dilcia Sáenz' : (tx.recibido_por || '')
+      recibido_por: tx.tipo === 'ingreso' ? 'Dilcia SÃ¡enz' : (tx.recibido_por || '')
     });
 
     if (tx.tipo === 'ingreso' && !isOfficial) {
@@ -254,13 +285,13 @@ export default function FinanceDashboard() {
       : txForm.categoria;
 
     if (!finalCategory || !txForm.monto) {
-      setFormError('La categoría y el monto son requeridos.');
+      setFormError('La categorÃ­a y el monto son requeridos.');
       return;
     }
 
     const payload = {
       ...txForm,
-      recibido_por: txForm.tipo === 'ingreso' ? 'Dilcia Sáenz' : txForm.recibido_por,
+      recibido_por: txForm.tipo === 'ingreso' ? 'Dilcia SÃ¡enz' : txForm.recibido_por,
       categoria: finalCategory,
       monto: parseFloat(txForm.monto),
       asistentes: parseInt(txForm.asistentes, 10) || 0,
@@ -272,7 +303,7 @@ export default function FinanceDashboard() {
     } else {
       const talActivo = talonarios.find(t => t.tipo === txForm.tipo && t.activo);
       if (!talActivo) {
-        setFormError(`No hay talonario activo para "${txForm.tipo === 'ingreso' ? 'Ingresos' : 'Egresos'}". Ve a Configuración de Talonarios.`);
+        setFormError(`No hay talonario activo para "${txForm.tipo === 'ingreso' ? 'Ingresos' : 'Egresos'}". Ve a ConfiguraciÃ³n de Talonarios.`);
         return;
       }
       if (txForm.recibo_no) {
@@ -304,7 +335,16 @@ export default function FinanceDashboard() {
     }
   };
 
-  const filteredTxs = transacciones.filter(tx => tx.tipo === activeTab);
+  const filteredTxs = transacciones.filter(tx => {
+    if (tx.tipo !== activeTab) return false;
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      return tx.categoria.toLowerCase().includes(q) ||
+             (tx.descripcion || '').toLowerCase().includes(q) ||
+             String(tx.recibo_no || '').toLowerCase().includes(q);
+    }
+    return true;
+  });
   const talIngreso = talonarios.filter(t => t.tipo === 'ingreso');
   const talEgreso = talonarios.filter(t => t.tipo === 'egreso');
 
@@ -338,7 +378,7 @@ export default function FinanceDashboard() {
                 Finanzas
               </button>
               <span className="text-slate-300">/</span>
-              <span className="text-xs font-bold text-slate-900">Configuración Independiente</span>
+              <span className="text-xs font-bold text-slate-900">ConfiguraciÃ³n Independiente</span>
             </div>
           ) : (
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/60 border border-white/80 shadow-xs mb-2.5 backdrop-blur-md">
@@ -352,9 +392,9 @@ export default function FinanceDashboard() {
           </h1>
           <p className="text-xs sm:text-sm font-medium text-slate-500 mt-0.5">
             {activeView === 'form'
-              ? 'Emisión y registro oficial de comprobantes según talonario físico.'
+              ? 'EmisiÃ³n y registro oficial de comprobantes segÃºn talonario fÃ­sico.'
               : activeView === 'configuracion'
-              ? 'Edita y administra talonarios correlativos y categorías en paneles dedicados.'
+              ? 'Edita y administra talonarios correlativos y categorÃ­as en paneles dedicados.'
               : 'Control de ingresos, egresos, talonarios oficiales y balance mensual.'}
           </p>
         </div>
@@ -370,7 +410,7 @@ export default function FinanceDashboard() {
                 className="glass-button-secondary flex-1 sm:flex-initial inline-flex items-center justify-center rounded-2xl text-xs font-bold text-slate-700 h-11 px-4 gap-2 cursor-pointer shadow-xs"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-500"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                Configuración
+                ConfiguraciÃ³n
               </motion.button>
               {canWrite && (
                 <motion.button
@@ -402,182 +442,354 @@ export default function FinanceDashboard() {
 
       <AnimatePresence mode="wait">
 
-        {/* ==================== VISTA DASHBOARD (LISTADO) ==================== */}
+        {/* ==================== VISTA DASHBOARD ==================== */}
         {activeView === 'dashboard' && (
           <motion.div
             key="dashboard"
-            initial={{ opacity: 0, y: 6, scale: 0.995 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -4, transition: { duration: 0.1, ease: 'easeOut' } }}
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, transition: { duration: 0.1, ease: 'easeOut' } }}
             transition={SPRING_SNAPPY}
+            className="space-y-5"
           >
-            {/* Metric Cards */}
-            <div className="grid gap-3.5 sm:gap-4 md:grid-cols-2 lg:grid-cols-4 mb-8">
-              <MetricGlassCard title="Saldo Actual" amount={formatLps(saldo)} trend="Balance acumulado global" trendType="neutral" iconType="wallet" colorTheme="emerald" />
-              <MetricGlassCard
-                title="Ingresos del Mes"
-                amount={formatLps(ingresosMes)}
-                trend={`${asistentesMes} asist. • ${comulgantesMes} comulg.`}
-                trendType="positive"
-                iconType="trending-up"
-                colorTheme="blue"
-              />
-              <MetricGlassCard title="Egresos del Mes" amount={formatLps(egresosMes)} trend="Total gastos este mes" trendType="negative" iconType="trending-down" colorTheme="rose" />
-              <MetricGlassCard title="Balance Mensual" amount={formatLps(balanceMes)} trend={balanceMes >= 0 ? '+ Superávit del mes' : '- Déficit del mes'} trendType={balanceMes >= 0 ? 'positive' : 'negative'} iconType="scale" colorTheme={balanceMes >= 0 ? 'indigo' : 'rose'} />
+
+            {/* â”€â”€ Monthly Context Banner â”€â”€ */}
+            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-3.5">
+                <div className="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center shrink-0 text-indigo-500">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                </div>
+                <div>
+                  <p className="text-base font-bold text-slate-900 leading-tight capitalize">
+                    {new Date().toLocaleDateString('es-HN', { month: 'long', year: 'numeric' })}
+                  </p>
+                  <p className="text-xs text-slate-400 mt-0.5 font-medium">{txCountMes} transacciones registradas este mes</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2.5 flex-wrap">
+                <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${balanceMes >= 0 ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-rose-50 text-rose-600 border-rose-100'}`}>
+                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${balanceMes >= 0 ? 'bg-emerald-500' : 'bg-rose-400'}`}></span>
+                  {balanceMes >= 0 ? 'SuperÃ¡vit' : 'DÃ©ficit'} {formatLps(Math.abs(balanceMes))}
+                </span>
+                {canWrite && (
+                  <div className="flex items-center gap-2">
+                    <button type="button" onClick={() => openCreate('ingreso')} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-emerald-600 text-white hover:bg-emerald-700 transition-colors cursor-pointer shadow-sm">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                      Ingreso
+                    </button>
+                    <button type="button" onClick={() => openCreate('egreso')} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-slate-800 text-white hover:bg-slate-700 transition-colors cursor-pointer shadow-sm">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                      Egreso
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
 
-            {/* Transactions Table Panel */}
-            <div className="glass-panel rounded-2xl sm:rounded-[2rem] overflow-hidden">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between px-4 sm:px-6 py-4 sm:py-5 border-b border-white/60 gap-4">
-                <div className="glass-panel-subtle flex p-1.5 rounded-2xl gap-1 w-full sm:w-auto">
-                  <button onClick={() => setActiveTab('ingreso')} className={`flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 rounded-xl px-3 sm:px-5 py-2 text-xs font-bold transition-all duration-150 cursor-pointer ${activeTab === 'ingreso' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900 hover:bg-white/40'}`}>
-                    <span className={`w-2 h-2 rounded-full ${activeTab === 'ingreso' ? 'bg-emerald-500' : 'bg-slate-300'}`}></span>
-                    Comprobantes de Ingresos
-                  </button>
-                  <button onClick={() => setActiveTab('egreso')} className={`flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 rounded-xl px-3 sm:px-5 py-2 text-xs font-bold transition-all duration-150 cursor-pointer ${activeTab === 'egreso' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900 hover:bg-white/40'}`}>
-                    <span className={`w-2 h-2 rounded-full ${activeTab === 'egreso' ? 'bg-rose-500' : 'bg-slate-300'}`}></span>
-                    Comprobantes de Egresos
-                  </button>
+            {/* â”€â”€ 4 KPI Cards â”€â”€ */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              {([
+                {
+                  label: 'Saldo Actual', value: formatLps(saldo), sub: 'Balance acumulado global', color: 'emerald',
+                  icon: <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>,
+                  trend: null as null | string,
+                },
+                {
+                  label: 'Ingresos del Mes', value: formatLps(ingresosMes), sub: `${asistentesMes} asist. Â· ${comulgantesMes} comulg.`, color: 'indigo',
+                  icon: <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>,
+                  trend: 'positive' as string,
+                },
+                {
+                  label: 'Egresos del Mes', value: formatLps(egresosMes), sub: 'Total gastos del mes', color: 'rose',
+                  icon: <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>,
+                  trend: 'negative' as string,
+                },
+                {
+                  label: 'Balance Mensual', value: formatLps(balanceMes), sub: balanceMes >= 0 ? 'SuperÃ¡vit del mes' : 'DÃ©ficit del mes',
+                  color: balanceMes >= 0 ? 'emerald' : 'rose',
+                  icon: <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 16l3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1z"/><path d="M2 16l3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1z"/><path d="M7 21h10"/><path d="M12 3v18"/><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/></svg>,
+                  trend: balanceMes >= 0 ? 'positive' : 'negative',
+                },
+              ] as const).map((card) => {
+                const colorMap: Record<string, string> = {
+                  emerald: 'bg-emerald-50 border-emerald-100 text-emerald-600',
+                  indigo: 'bg-indigo-50 border-indigo-100 text-indigo-600',
+                  rose: 'bg-rose-50 border-rose-100 text-rose-500',
+                };
+                return (
+                  <div key={card.label} className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
+                    <div className="flex items-start justify-between mb-3">
+                      <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest leading-tight max-w-[80%]">{card.label}</p>
+                      <div className={`w-8 h-8 rounded-xl border flex items-center justify-center shrink-0 ${colorMap[card.color]}`}>
+                        {card.icon}
+                      </div>
+                    </div>
+                    <p className="text-xl font-extrabold text-slate-900 tracking-tight leading-none mb-2">{card.value}</p>
+                    <p className={`text-[11px] font-semibold flex items-center gap-1.5 ${card.trend === 'positive' ? 'text-emerald-600' : card.trend === 'negative' ? 'text-rose-500' : 'text-slate-400'}`}>
+                      {card.trend === 'positive' && <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4l8 8H4z"/></svg>}
+                      {card.trend === 'negative' && <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 20l-8-8h16z"/></svg>}
+                      <span className="truncate">{card.sub}</span>
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* â”€â”€ Chart + Right Panel â”€â”€ */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+
+              {/* Area Chart */}
+              <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-100 shadow-sm p-5 sm:p-6">
+                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-5">
+                  <div>
+                    <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Actividad Financiera</p>
+                    <p className="text-lg font-extrabold text-slate-900 mt-1 capitalize">
+                      {new Date().toLocaleDateString('es-HN', { month: 'long', year: 'numeric' })}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-4 text-xs text-slate-500 shrink-0">
+                    <span className="flex items-center gap-1.5 font-semibold"><span className="w-8 h-[3px] rounded-full bg-indigo-500 inline-block"></span>Ingresos</span>
+                    <span className="flex items-center gap-1.5 font-semibold"><span className="w-8 h-[3px] rounded-full bg-rose-400 inline-block"></span>Egresos</span>
+                  </div>
                 </div>
-                <div className="text-xs font-bold text-slate-500 text-right sm:text-left">Mostrando <span className="text-slate-900">{filteredTxs.length}</span> registros</div>
+                {monthlyChartData.length === 0 ? (
+                  <div className="h-[200px] flex flex-col items-center justify-center text-slate-300">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                    <p className="text-xs mt-2 font-medium text-slate-400">Sin datos para el mes actual</p>
+                  </div>
+                ) : (
+                  <ResponsiveContainer width="100%" height={220}>
+                    <AreaChart data={monthlyChartData} margin={{ top: 4, right: 4, left: -18, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="gradIngresos" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#6366f1" stopOpacity={0.15} />
+                          <stop offset="100%" stopColor="#6366f1" stopOpacity={0} />
+                        </linearGradient>
+                        <linearGradient id="gradEgresos" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#f43f5e" stopOpacity={0.10} />
+                          <stop offset="100%" stopColor="#f43f5e" stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="4 4" stroke="#f1f5f9" vertical={false} />
+                      <XAxis dataKey="dia" tick={{ fontSize: 10, fill: '#94a3b8', fontWeight: 600 }} axisLine={false} tickLine={false} />
+                      <YAxis tick={{ fontSize: 10, fill: '#94a3b8', fontWeight: 600 }} axisLine={false} tickLine={false} tickFormatter={(v: number) => v >= 1000 ? `L.${(v / 1000).toFixed(0)}k` : `L.${v}`} />
+                      <Tooltip
+                        contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 20px rgba(0,0,0,0.08)', fontSize: 12, fontWeight: 600, padding: '10px 14px' }}
+                        formatter={((value: any, name: any) => [formatLps(Number(value)), name === 'ingresos' ? 'Ingresos' : 'Egresos']) as any}
+                        labelStyle={{ color: '#475569', fontWeight: 700, marginBottom: 4 }}
+                      />
+                      <Area type="monotone" dataKey="ingresos" stroke="#6366f1" strokeWidth={2.5} fill="url(#gradIngresos)" dot={false} activeDot={{ r: 4, fill: '#6366f1', strokeWidth: 0 }} />
+                      <Area type="monotone" dataKey="egresos" stroke="#f43f5e" strokeWidth={2.5} fill="url(#gradEgresos)" dot={false} activeDot={{ r: 4, fill: '#f43f5e', strokeWidth: 0 }} />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                )}
               </div>
 
-              <div className="p-2 sm:p-4">
-                <div className="relative w-full overflow-auto custom-scrollbar">
-                  <table className="w-full text-left min-w-[660px]">
-                    <thead>
-                      <tr className="border-b border-white/60">
-                        <th className="h-11 px-5 font-bold text-slate-400 uppercase tracking-wider text-[11px] w-[120px]">Fecha</th>
-                        <th className="h-11 px-5 font-bold text-slate-400 uppercase tracking-wider text-[11px]">No. Recibo</th>
-                        <th className="h-11 px-5 font-bold text-slate-400 uppercase tracking-wider text-[11px]">Concepto / Servicio</th>
-                        {activeTab === 'ingreso' && (
-                          <th className="h-11 px-5 font-bold text-slate-400 uppercase tracking-wider text-[11px]">Asistencia / Comunión</th>
-                        )}
-                        <th className="h-11 px-5 font-bold text-slate-400 uppercase tracking-wider text-[11px]">
-                          {activeTab === 'ingreso' ? 'Recibido Por' : 'Descripción / Beneficiario'}
-                        </th>
-                        <th className="h-11 px-5 font-bold text-slate-400 uppercase tracking-wider text-[11px] text-right">Monto (L.)</th>
-                        {canWrite && <th className="h-11 px-5 w-24 text-right font-bold text-slate-400 uppercase tracking-wider text-[11px]">Acciones</th>}
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-white/40">
-                      {isLoading ? (
-                        <tr><td colSpan={canWrite ? 7 : 6} className="py-20 text-center text-xs font-medium text-slate-400">Cargando transacciones...</td></tr>
-                      ) : filteredTxs.length === 0 ? (
-                        <tr><td colSpan={canWrite ? 7 : 6} className="py-20 text-center">
-                          <div className="mx-auto w-14 h-14 rounded-2xl bg-white/70 border border-white flex items-center justify-center mb-3 text-slate-400 shadow-xs">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              {/* Right Panel */}
+              <div className="space-y-4">
+
+                {/* Category Breakdown */}
+                <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
+                  <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-4">Ingresos por CategorÃ­a</p>
+                  {categoryBreakdown.length === 0 ? (
+                    <p className="text-xs text-slate-300 py-6 text-center font-medium">Sin ingresos registrados este mes</p>
+                  ) : (
+                    <div className="space-y-3.5">
+                      {categoryBreakdown.map((cat, i) => (
+                        <div key={cat.name}>
+                          <div className="flex items-center justify-between mb-1.5">
+                            <span className="text-xs font-semibold text-slate-700 truncate max-w-[130px]">{cat.name}</span>
+                            <div className="flex items-center gap-2 shrink-0 ml-1">
+                              <span className="text-[10px] text-slate-400 font-bold">{cat.pct}%</span>
+                              <span className="text-xs font-extrabold text-slate-900">{formatLps(cat.value)}</span>
+                            </div>
                           </div>
-                          <p className="text-base font-bold text-slate-800">No hay {activeTab}s registrados</p>
-                          <p className="text-xs font-medium text-slate-400 mt-0.5">Registra un nuevo comprobante para comenzar.</p>
-                          {canWrite && (
-                            <button onClick={() => openCreate(activeTab)} className="mt-4 px-4 py-2 rounded-xl bg-slate-900 text-white text-xs font-bold shadow-xs hover:bg-slate-800 transition-colors">
-                              + Crear primer {activeTab}
-                            </button>
-                          )}
-                        </td></tr>
-                      ) : (
-                        filteredTxs.map((tx) => (
-                          <tr key={tx.id} className="group transition-colors duration-150 hover:bg-white/70 rounded-2xl">
-                            <td className="px-5 py-4 align-middle font-semibold text-xs text-slate-600 rounded-l-2xl">
-                              {formatDate(tx.fecha)}
-                            </td>
-                            <td className="px-5 py-4 align-middle">
-                              {tx.recibo_no ? (
-                                <span className="inline-flex items-center rounded-xl bg-white/90 px-2.5 py-1 text-xs font-semibold text-slate-700 border border-white/80 shadow-2xs">
-                                  {formatReceiptNo(tx.recibo_no)}
-                                </span>
-                              ) : (
-                                <span className="text-slate-300 text-xs">-</span>
-                              )}
-                            </td>
-                            <td className="px-5 py-4 align-middle">
-                              <span className={`inline-flex items-center rounded-xl px-2.5 py-1 text-xs font-semibold border ${
-                                tx.tipo === 'ingreso'
-                                  ? 'bg-emerald-50/80 text-emerald-800 border-emerald-200/70'
-                                  : 'bg-slate-100 text-slate-700 border-white/80'
-                              }`}>
-                                {tx.categoria}
-                              </span>
-                            </td>
-
-                            {activeTab === 'ingreso' && (
-                              <td className="px-5 py-4 align-middle">
-                                <div className="flex items-center gap-2">
-                                  {(tx.asistentes !== undefined && tx.asistentes > 0) ? (
-                                    <span className="inline-flex items-center gap-1.5 rounded-lg bg-sky-50 px-2 py-0.5 text-xs font-semibold text-sky-700 border border-sky-100" title="Asistentes al Culto">
-                                      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="text-sky-600"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                                      <span>{tx.asistentes}</span>
-                                    </span>
-                                  ) : null}
-                                  {(tx.comulgantes !== undefined && tx.comulgantes > 0) ? (
-                                    <span className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-50 px-2 py-0.5 text-xs font-semibold text-indigo-700 border border-indigo-100" title="Comulgantes (Santa Cena)">
-                                      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="text-indigo-600"><path d="M8 2h8l-1 9a4 4 0 0 1-8 0L6 2h2z"/><line x1="12" y1="15" x2="12" y2="22"/><line x1="8" y1="22" x2="16" y2="22"/></svg>
-                                      <span>{tx.comulgantes}</span>
-                                    </span>
-                                  ) : null}
-                                  {(!tx.asistentes && !tx.comulgantes) && (
-                                    <span className="text-slate-300 text-xs">-</span>
-                                  )}
-                                </div>
-                              </td>
-                            )}
-
-                            <td className="px-5 py-4 align-middle text-slate-600 max-w-[240px] truncate text-xs">
-                              {activeTab === 'ingreso' ? (
-                                <span className="font-semibold text-slate-700 inline-flex items-center gap-1.5">
-                                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-400 shrink-0"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/></svg>
-                                  <span>{tx.recibido_por || 'Dilcia Sáenz'}</span>
-                                </span>
-                              ) : tx.recibido_por ? (
-                                <span className="font-semibold text-slate-700 inline-flex items-center gap-1.5">
-                                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-400 shrink-0"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/></svg>
-                                  <span>{tx.recibido_por}</span>
-                                </span>
-                              ) : tx.descripcion ? (
-                                <span className="font-medium text-slate-600">{tx.descripcion}</span>
-                              ) : (
-                                <span className="text-slate-300 text-xs">-</span>
-                              )}
-                            </td>
-
-                            <td className="px-5 py-4 align-middle text-right text-xs font-bold">
-                              <span className={tx.tipo === 'ingreso' ? 'text-emerald-600' : 'text-rose-600'}>
-                                {tx.tipo === 'ingreso' ? '+ ' : '- '}
-                                {formatLps(tx.monto)}
-                              </span>
-                            </td>
-
-                            {canWrite && (
-                              <td className="px-5 py-4 align-middle text-right rounded-r-2xl">
-                                <div className="flex items-center justify-end gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
-                                  <button
-                                    onClick={() => openEdit(tx)}
-                                    className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-900 hover:bg-white transition-colors cursor-pointer"
-                                    title="Editar comprobante"
-                                  >
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                                  </button>
-                                  <button
-                                    onClick={() => confirmAction('Eliminar Comprobante', `¿Estás seguro de eliminar el registro de ${tx.categoria} por ${formatLps(tx.monto)}?`, () => deleteTxMutation.mutate(tx.id))}
-                                    className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-300 hover:text-rose-500 hover:bg-rose-50 transition-colors cursor-pointer"
-                                    title="Eliminar"
-                                  >
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-                                  </button>
-                                </div>
-                              </td>
-                            )}
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
+                          <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                            <div className="h-full rounded-full transition-all duration-700" style={{ width: `${cat.pct}%`, backgroundColor: CAT_COLORS[i] || '#94a3b8' }} />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
+
+                {/* Talonario Activo */}
+                {(() => {
+                  const tal = talonarios.find(t => t.activo && t.tipo === 'ingreso');
+                  const totalRng = tal ? tal.rango_fin - tal.rango_inicio + 1 : 0;
+                  const used = tal ? Math.max(0, (tal.actual || tal.rango_inicio) - tal.rango_inicio) : 0;
+                  const pct = totalRng > 0 ? Math.min(100, Math.round(used / totalRng * 100)) : 0;
+                  return (
+                    <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
+                      <div className="flex items-center justify-between mb-3">
+                        <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Talonario Activo</p>
+                        {tal && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-100">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Activo
+                          </span>
+                        )}
+                      </div>
+                      {tal ? (
+                        <>
+                          <p className="text-sm font-extrabold text-slate-900 mb-0.5 truncate">{tal.nombre}</p>
+                          <p className="text-[11px] text-slate-400 mb-3 font-medium">Recibos {tal.rango_inicio} â€” {tal.rango_fin}</p>
+                          <div className="h-2 bg-slate-100 rounded-full overflow-hidden mb-1.5">
+                            <div className="h-full bg-emerald-500 rounded-full transition-all duration-700" style={{ width: `${pct}%` }} />
+                          </div>
+                          <div className="flex justify-between text-[10px] text-slate-400 font-bold mb-3">
+                            <span>{used} emitidos</span>
+                            <span>{pct}% de {totalRng}</span>
+                          </div>
+                          <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+                            <span className="text-[11px] text-slate-500 font-medium">PrÃ³ximo recibo</span>
+                            <span className="text-sm font-extrabold text-slate-900 font-mono">NÂ° {String(tal.actual || tal.rango_inicio).padStart(6, '0')}</span>
+                          </div>
+                        </>
+                      ) : (
+                        <div className="text-center py-4">
+                          <p className="text-xs text-slate-400 font-medium">Sin talonario activo de ingresos</p>
+                          <button onClick={() => setActiveView('configuracion')} className="mt-2 text-xs font-bold text-indigo-600 hover:underline cursor-pointer">Configurar â†’</button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+
               </div>
             </div>
+
+            {/* â”€â”€ Transaction Table â”€â”€ */}
+            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between px-5 py-3.5 border-b border-slate-100 gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="bg-slate-50 flex p-1 rounded-xl gap-0.5">
+                    <button onClick={() => setActiveTab('ingreso')} className={`inline-flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-xs font-bold transition-all cursor-pointer ${activeTab === 'ingreso' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}>
+                      <span className={`w-1.5 h-1.5 rounded-full ${activeTab === 'ingreso' ? 'bg-emerald-500' : 'bg-slate-300'}`}></span>
+                      Ingresos
+                    </button>
+                    <button onClick={() => setActiveTab('egreso')} className={`inline-flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-xs font-bold transition-all cursor-pointer ${activeTab === 'egreso' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}>
+                      <span className={`w-1.5 h-1.5 rounded-full ${activeTab === 'egreso' ? 'bg-rose-500' : 'bg-slate-300'}`}></span>
+                      Egresos
+                    </button>
+                  </div>
+                  <span className="text-xs text-slate-400 font-semibold">{filteredTxs.length} registros</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="relative">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <input
+                      type="search"
+                      placeholder="Buscar por categorÃ­a, recibo..."
+                      value={searchQuery}
+                      onChange={e => setSearchQuery(e.target.value)}
+                      className="pl-8 pr-3 py-1.5 rounded-xl text-xs font-semibold text-slate-700 bg-slate-50 border border-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-200 w-44 sm:w-52 transition-all placeholder:text-slate-300"
+                    />
+                  </div>
+                  {canWrite && (
+                    <button onClick={() => openCreate(activeTab)} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 text-white text-xs font-bold hover:bg-slate-800 transition-colors cursor-pointer">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                      Nuevo
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left min-w-[680px]">
+                  <thead>
+                    <tr className="border-b border-slate-100">
+                      <th className="h-10 px-5 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider w-[110px]">Fecha</th>
+                      <th className="h-10 px-5 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">No. Recibo</th>
+                      <th className="h-10 px-5 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Concepto</th>
+                      {activeTab === 'ingreso' && <th className="h-10 px-5 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Asistencia</th>}
+                      <th className="h-10 px-5 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">{activeTab === 'ingreso' ? 'Recibido Por' : 'DescripciÃ³n'}</th>
+                      <th className="h-10 px-5 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider text-right">Monto</th>
+                      {canWrite && <th className="h-10 px-5 w-20 text-right text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Acc.</th>}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {isLoading ? (
+                      <tr><td colSpan={canWrite ? 7 : 6} className="py-16 text-center text-xs text-slate-400">Cargando transacciones...</td></tr>
+                    ) : filteredTxs.length === 0 ? (
+                      <tr>
+                        <td colSpan={canWrite ? 7 : 6} className="py-14 text-center">
+                          <div className="w-11 h-11 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center mx-auto mb-3 text-slate-300">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                          </div>
+                          <p className="text-sm font-bold text-slate-700">{searchQuery ? 'Sin resultados' : `No hay ${activeTab}s registrados`}</p>
+                          <p className="text-xs text-slate-400 mt-0.5">{searchQuery ? `No coincide con "${searchQuery}"` : 'Registra el primer comprobante.'}</p>
+                          {!searchQuery && canWrite && <button onClick={() => openCreate(activeTab)} className="mt-3 px-4 py-1.5 rounded-xl bg-slate-900 text-white text-xs font-bold cursor-pointer hover:bg-slate-800 transition-colors">+ Crear</button>}
+                        </td>
+                      </tr>
+                    ) : (
+                      filteredTxs.map((tx) => (
+                        <tr key={tx.id} className="group border-b border-slate-50 hover:bg-slate-50/70 transition-colors duration-100">
+                          <td className="px-5 py-3.5 text-xs font-semibold text-slate-500">{formatDate(tx.fecha)}</td>
+                          <td className="px-5 py-3.5">
+                            {tx.recibo_no ? (
+                              <span className="inline-flex items-center rounded-lg bg-slate-50 border border-slate-100 px-2.5 py-0.5 text-xs font-bold text-slate-600">{formatReceiptNo(tx.recibo_no)}</span>
+                            ) : <span className="text-slate-300 text-xs">â€”</span>}
+                          </td>
+                          <td className="px-5 py-3.5">
+                            <span className={`inline-flex items-center rounded-lg px-2.5 py-1 text-xs font-semibold border ${tx.tipo === 'ingreso' ? 'bg-emerald-50 text-emerald-800 border-emerald-100' : 'bg-slate-50 text-slate-700 border-slate-100'}`}>
+                              {tx.categoria}
+                            </span>
+                          </td>
+                          {activeTab === 'ingreso' && (
+                            <td className="px-5 py-3.5">
+                              <div className="flex items-center gap-1.5">
+                                {(tx.asistentes || 0) > 0 && (
+                                  <span className="inline-flex items-center gap-1 rounded-lg bg-sky-50 px-2 py-0.5 text-[11px] font-bold text-sky-700 border border-sky-100">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                                    {tx.asistentes}
+                                  </span>
+                                )}
+                                {(tx.comulgantes || 0) > 0 && (
+                                  <span className="inline-flex items-center gap-1 rounded-lg bg-indigo-50 px-2 py-0.5 text-[11px] font-bold text-indigo-700 border border-indigo-100">
+                                    {tx.comulgantes}
+                                  </span>
+                                )}
+                                {(!tx.asistentes && !tx.comulgantes) && <span className="text-slate-300 text-xs">â€”</span>}
+                              </div>
+                            </td>
+                          )}
+                          <td className="px-5 py-3.5 text-xs text-slate-600 max-w-[200px] truncate">
+                            {activeTab === 'ingreso' ? (
+                              <span className="font-semibold text-slate-700">{tx.recibido_por || 'Dilcia SÃ¡enz'}</span>
+                            ) : tx.recibido_por ? (
+                              <span className="font-semibold text-slate-700">{tx.recibido_por}</span>
+                            ) : tx.descripcion ? (
+                              <span>{tx.descripcion}</span>
+                            ) : <span className="text-slate-300">â€”</span>}
+                          </td>
+                          <td className="px-5 py-3.5 text-right">
+                            <span className={`text-sm font-extrabold ${tx.tipo === 'ingreso' ? 'text-emerald-600' : 'text-rose-500'}`}>
+                              {tx.tipo === 'ingreso' ? '+' : 'âˆ’'} {formatLps(tx.monto)}
+                            </span>
+                          </td>
+                          {canWrite && (
+                            <td className="px-5 py-3.5 text-right">
+                              <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button onClick={() => openEdit(tx)} className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer" title="Editar">
+                                  <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                </button>
+                                <button onClick={() => confirmAction('Eliminar Comprobante', `Â¿EstÃ¡s seguro de eliminar el registro de ${tx.categoria} por ${formatLps(tx.monto)}?`, () => deleteTxMutation.mutate(tx.id))} className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-300 hover:text-rose-500 hover:bg-rose-50 transition-colors cursor-pointer" title="Eliminar">
+                                  <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                                </button>
+                              </div>
+                            </td>
+                          )}
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
           </motion.div>
         )}
+
 
         {/* ==================== VISTA FORMULARIO INLINE (COMPROBANTE BENTO) ==================== */}
         {activeView === 'form' && (
@@ -603,7 +815,7 @@ export default function FinanceDashboard() {
                 </motion.div>
               )}
 
-              {/* Selector de Tipo (Ingreso / Egreso) si no está editando */}
+              {/* Selector de Tipo (Ingreso / Egreso) si no estÃ¡ editando */}
               {!editingTx && (
                 <div className="glass-panel-subtle flex items-center rounded-2xl p-1 gap-1 max-w-sm mx-auto w-full">
                   <button
@@ -630,7 +842,7 @@ export default function FinanceDashboard() {
                       setTxForm({
                         ...txForm,
                         tipo: 'egreso',
-                        categoria: categorias[0]?.nombre || 'Servicios Públicos',
+                        categoria: categorias[0]?.nombre || 'Servicios PÃºblicos',
                         recibo_no: getSiguienteRecibo('egreso')
                       });
                       setIsCustomCategory(false);
@@ -645,10 +857,10 @@ export default function FinanceDashboard() {
                 </div>
               )}
 
-              {/* TARJETA PRINCIPAL TIPO COMPROBANTE FÍSICO */}
+              {/* TARJETA PRINCIPAL TIPO COMPROBANTE FÃSICO */}
               <div className="glass-panel rounded-2xl sm:rounded-[2rem] p-4 sm:p-8 border border-white/90 space-y-5 sm:space-y-6 shadow-sm relative overflow-hidden">
 
-                {/* Encabezado inspirado en el talonario físico */}
+                {/* Encabezado inspirado en el talonario fÃ­sico */}
                 <div className="border-b border-slate-200/80 pb-5 text-center relative">
                   <div className="flex items-center justify-center gap-2 text-[11px] font-extrabold uppercase tracking-widest text-slate-400 mb-1">
                     <span>Iglesia Cristiana Luterana &ldquo;El Buen Pastor&rdquo;</span>
@@ -659,13 +871,13 @@ export default function FinanceDashboard() {
                     {txForm.tipo === 'ingreso' ? 'Comprobante de Ingresos' : 'Comprobante de Egresos'}
                   </h2>
 
-                  {/* Número de comprobante correlativo */}
+                  {/* NÃºmero de comprobante correlativo */}
                   <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 font-bold text-xs shadow-2xs">
                     <span>{formatReceiptNo(txForm.recibo_no)}</span>
                   </div>
                 </div>
 
-                {/* SECCIÓN 1: FUENTE DE INGRESOS (CHECKBOXES / BOTONES DIRECTOS) */}
+                {/* SECCIÃ“N 1: FUENTE DE INGRESOS (CHECKBOXES / BOTONES DIRECTOS) */}
                 {txForm.tipo === 'ingreso' ? (
                   <div>
                     <label className="block text-[11px] font-extrabold text-slate-500 uppercase tracking-wider mb-2">
@@ -700,7 +912,7 @@ export default function FinanceDashboard() {
                         );
                       })}
 
-                      {/* Opción Otros */}
+                      {/* OpciÃ³n Otros */}
                       <button
                         type="button"
                         onClick={() => {
@@ -724,7 +936,7 @@ export default function FinanceDashboard() {
                       </button>
                     </div>
 
-                    {/* Campo de texto si seleccionó Otros */}
+                    {/* Campo de texto si seleccionÃ³ Otros */}
                     {isCustomCategory && (
                       <motion.div
                         initial={{ opacity: 0, height: 0 }}
@@ -735,7 +947,7 @@ export default function FinanceDashboard() {
                         <input
                           type="text"
                           required
-                          placeholder="Especifica el concepto (Ej. Ofrenda Pro-Templo, Donación, etc.)..."
+                          placeholder="Especifica el concepto (Ej. Ofrenda Pro-Templo, DonaciÃ³n, etc.)..."
                           value={customCategoryText}
                           onChange={e => {
                             setCustomCategoryText(e.target.value);
@@ -749,7 +961,7 @@ export default function FinanceDashboard() {
                 ) : (
                   <div>
                     <label className="block text-[11px] font-extrabold text-slate-500 uppercase tracking-wider mb-2">
-                      Categoría de Egreso / Gasto: <span className="text-rose-500">*</span>
+                      CategorÃ­a de Egreso / Gasto: <span className="text-rose-500">*</span>
                     </label>
                     <select
                       value={txForm.categoria}
@@ -763,7 +975,7 @@ export default function FinanceDashboard() {
                   </div>
                 )}
 
-                {/* SECCIÓN 2: MONTO, FECHA Y NO. RECIBO */}
+                {/* SECCIÃ“N 2: MONTO, FECHA Y NO. RECIBO */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
                   {/* Lempiras */}
                   <div>
@@ -824,7 +1036,7 @@ export default function FinanceDashboard() {
                   </div>
                 </div>
 
-                {/* SECCIÓN 3: ASISTENTES & COMULGANTES (CAMPOS DEL TALONARIO OFICIAL) */}
+                {/* SECCIÃ“N 3: ASISTENTES & COMULGANTES (CAMPOS DEL TALONARIO OFICIAL) */}
                 {txForm.tipo === 'ingreso' && (
                   <div className="p-4 rounded-2xl bg-white/60 border border-white/80 grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                     <div>
@@ -858,7 +1070,7 @@ export default function FinanceDashboard() {
                   </div>
                 )}
 
-                {/* SECCIÓN 4: FIRMA / RECIBIDO POR Y DETALLES */}
+                {/* SECCIÃ“N 4: FIRMA / RECIBIDO POR Y DETALLES */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                   {txForm.tipo === 'ingreso' ? (
                     <div>
@@ -869,7 +1081,7 @@ export default function FinanceDashboard() {
                       <div className="glass-panel-subtle flex items-center justify-between px-4 py-2.5 rounded-2xl border border-white/80 bg-white/50 cursor-default select-none shadow-2xs">
                         <div className="flex items-center gap-2">
                           <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
-                          <span className="text-xs font-bold text-slate-900">Dilcia Sáenz</span>
+                          <span className="text-xs font-bold text-slate-900">Dilcia SÃ¡enz</span>
                         </div>
                         <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 bg-white/90 px-2.5 py-0.5 rounded-lg border border-slate-200/70 shadow-2xs">
                           Tesorera
@@ -906,7 +1118,7 @@ export default function FinanceDashboard() {
                   </div>
                 </div>
 
-                {/* BOTONES DE ACCIÓN */}
+                {/* BOTONES DE ACCIÃ“N */}
                 <div className="pt-4 border-t border-slate-200/80 flex flex-col-reverse sm:flex-row items-center justify-between gap-3">
                   <button
                     type="button"
@@ -939,7 +1151,7 @@ export default function FinanceDashboard() {
           </motion.div>
         )}
 
-        {/* ==================== VISTA CONFIGURACIÓN DEDICADA ==================== */}
+        {/* ==================== VISTA CONFIGURACIÃ“N DEDICADA ==================== */}
         {activeView === 'configuracion' && (
           <motion.div
             key="configuracion"
@@ -982,11 +1194,11 @@ export default function FinanceDashboard() {
                 className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${configSubTab === 'categorias' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'}`}
               >
                 <span className="w-2 h-2 rounded-full bg-indigo-500"></span>
-                Categorías ({categorias.length})
+                CategorÃ­as ({categorias.length})
               </button>
             </div>
 
-            {/* SECCIÓN 1: TALONARIOS DE INGRESOS */}
+            {/* SECCIÃ“N 1: TALONARIOS DE INGRESOS */}
             {(configSubTab === 'todos' || configSubTab === 'ingreso') && (
               <TalonarioSection
                 titulo="Talonarios de Ingresos"
@@ -1003,12 +1215,12 @@ export default function FinanceDashboard() {
                 onSubmit={handleTalSubmit}
                 onToggle={(id, activo, tipo) => toggleTalMutation.mutate({ id, activo, tipo })}
                 onUpdate={(id, data) => updateTalMutation.mutate({ id, data })}
-                onDelete={(id) => confirmAction('Eliminar Talonario', '¿Deseas eliminar este talonario del sistema permanentemente?', () => deleteTalMutation.mutate(id))}
+                onDelete={(id) => confirmAction('Eliminar Talonario', 'Â¿Deseas eliminar este talonario del sistema permanentemente?', () => deleteTalMutation.mutate(id))}
                 isPending={createTalMutation.isPending}
               />
             )}
 
-            {/* SECCIÓN 2: TALONARIOS DE EGRESOS */}
+            {/* SECCIÃ“N 2: TALONARIOS DE EGRESOS */}
             {(configSubTab === 'todos' || configSubTab === 'egreso') && (
               <TalonarioSection
                 titulo="Talonarios de Egresos"
@@ -1025,12 +1237,12 @@ export default function FinanceDashboard() {
                 onSubmit={handleTalSubmit}
                 onToggle={(id, activo, tipo) => toggleTalMutation.mutate({ id, activo, tipo })}
                 onUpdate={(id, data) => updateTalMutation.mutate({ id, data })}
-                onDelete={(id) => confirmAction('Eliminar Talonario', '¿Deseas eliminar este talonario del sistema permanentemente?', () => deleteTalMutation.mutate(id))}
+                onDelete={(id) => confirmAction('Eliminar Talonario', 'Â¿Deseas eliminar este talonario del sistema permanentemente?', () => deleteTalMutation.mutate(id))}
                 isPending={createTalMutation.isPending}
               />
             )}
 
-            {/* SECCIÓN 3: CATEGORÍAS CONTABLES */}
+            {/* SECCIÃ“N 3: CATEGORÃAS CONTABLES */}
             {(configSubTab === 'todos' || configSubTab === 'categorias') && (
               <section>
                 <div className="flex items-center justify-between mb-4">
@@ -1039,8 +1251,8 @@ export default function FinanceDashboard() {
                       <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
                     </div>
                     <div>
-                      <h2 className="text-lg font-extrabold text-slate-900">Categorías Contables</h2>
-                      <p className="text-xs font-medium text-slate-400">Clasificación de transacciones &bull; Edita o renombra directamente</p>
+                      <h2 className="text-lg font-extrabold text-slate-900">CategorÃ­as Contables</h2>
+                      <p className="text-xs font-medium text-slate-400">ClasificaciÃ³n de transacciones &bull; Edita o renombra directamente</p>
                     </div>
                   </div>
                 </div>
@@ -1050,7 +1262,7 @@ export default function FinanceDashboard() {
                     <form onSubmit={handleCatSubmit} className="flex gap-2.5 max-w-md">
                       <input
                         type="text"
-                        placeholder="Nombre de nueva categoría..."
+                        placeholder="Nombre de nueva categorÃ­a..."
                         value={newCatName}
                         onChange={e => setNewCatName(e.target.value)}
                         className="glass-input flex-1 rounded-2xl px-4 py-2.5 text-xs font-semibold focus:outline-none"
@@ -1066,7 +1278,7 @@ export default function FinanceDashboard() {
                   )}
 
                   {categorias.length === 0 ? (
-                    <p className="text-xs font-medium text-slate-400 text-center py-8">No hay categorías registradas.</p>
+                    <p className="text-xs font-medium text-slate-400 text-center py-8">No hay categorÃ­as registradas.</p>
                   ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                       <AnimatePresence>
@@ -1122,7 +1334,7 @@ export default function FinanceDashboard() {
                                         <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
                                       </button>
                                       <button
-                                        onClick={() => confirmAction('Eliminar Categoría', `¿Deseas eliminar la categoría "${c.nombre}"?`, () => deleteCatMutation.mutate(c.id))}
+                                        onClick={() => confirmAction('Eliminar CategorÃ­a', `Â¿Deseas eliminar la categorÃ­a "${c.nombre}"?`, () => deleteCatMutation.mutate(c.id))}
                                         className="w-6 h-6 rounded-lg flex items-center justify-center text-slate-300 hover:text-rose-500 hover:bg-rose-50 transition-colors cursor-pointer"
                                         title="Eliminar"
                                       >
@@ -1157,7 +1369,7 @@ export default function FinanceDashboard() {
   );
 }
 
-// ========== SUBCOMPONENTE: SECCIÓN DE TALONARIOS CON EDICIÓN INLINE ==========
+// ========== SUBCOMPONENTE: SECCIÃ“N DE TALONARIOS CON EDICIÃ“N INLINE ==========
 interface TalonarioSectionProps {
   titulo: string;
   subtitulo: string;
@@ -1260,7 +1472,7 @@ function TalonarioSection({
                   <input type="text" required placeholder="Nombre (Ej. Diezmos 2026)" value={talonarioForm.nombre} onChange={e => setTalonarioForm({...talonarioForm, nombre: e.target.value})} className="glass-input sm:col-span-2 rounded-xl px-3.5 py-2 text-xs font-semibold focus:outline-none" />
                   <input type="number" required placeholder="Rango Inicio (Ej. 1)" value={talonarioForm.inicio} onChange={e => setTalonarioForm({...talonarioForm, inicio: e.target.value})} className="glass-input rounded-xl px-3.5 py-2 text-xs font-semibold focus:outline-none" />
                   <input type="number" required placeholder="Rango Fin (Ej. 500)" value={talonarioForm.fin} onChange={e => setTalonarioForm({...talonarioForm, fin: e.target.value})} className="glass-input rounded-xl px-3.5 py-2 text-xs font-semibold focus:outline-none" />
-                  <input type="number" required placeholder="Número Actual Inicial (Ej. 1)" value={talonarioForm.actual} onChange={e => setTalonarioForm({...talonarioForm, actual: e.target.value})} className="glass-input sm:col-span-2 rounded-xl px-3.5 py-2 text-xs font-semibold focus:outline-none" />
+                  <input type="number" required placeholder="NÃºmero Actual Inicial (Ej. 1)" value={talonarioForm.actual} onChange={e => setTalonarioForm({...talonarioForm, actual: e.target.value})} className="glass-input sm:col-span-2 rounded-xl px-3.5 py-2 text-xs font-semibold focus:outline-none" />
                 </div>
                 <div className="flex gap-2.5 pt-1">
                   <button type="button" onClick={onCloseForm} className="glass-button-secondary flex-1 rounded-xl text-slate-700 text-xs font-bold py-2.5 cursor-pointer">Cancelar</button>
@@ -1422,39 +1634,6 @@ function TalonarioSection({
         )}
       </div>
     </section>
-  );
-}
-
-// ========== SUBCOMPONENTE: METRIC GLASS CARD ==========
-function MetricGlassCard({ title, amount, trend, trendType, colorTheme, iconType }: {
-  title: string; amount: string; trend?: string; trendType?: 'positive' | 'negative' | 'neutral';
-  colorTheme: 'emerald' | 'blue' | 'rose' | 'indigo'; iconType: 'wallet' | 'trending-up' | 'trending-down' | 'scale';
-}) {
-  const getTheme = () => {
-    switch (colorTheme) {
-      case 'emerald': return { bg: 'bg-emerald-50/70', text: 'text-emerald-600', border: 'border-emerald-100' };
-      case 'blue': return { bg: 'bg-blue-50/70', text: 'text-blue-600', border: 'border-blue-100' };
-      case 'rose': return { bg: 'bg-rose-50/70', text: 'text-rose-600', border: 'border-rose-100' };
-      case 'indigo': return { bg: 'bg-indigo-50/70', text: 'text-indigo-600', border: 'border-indigo-100' };
-    }
-  };
-  const t = getTheme();
-  return (
-    <motion.div whileHover={{ y: -3, scale: 1.008 }} transition={IOS_SPRING_FAST} className="glass-panel rounded-[1.75rem] p-6 flex flex-col justify-between cursor-default">
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">{title}</h3>
-        <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${t.bg} ${t.text} border ${t.border} shadow-xs`}>
-          {iconType === 'wallet' && <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>}
-          {iconType === 'trending-up' && <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>}
-          {iconType === 'trending-down' && <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>}
-          {iconType === 'scale' && <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 16l3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1z"/><path d="M2 16l3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1z"/><path d="M7 21h10"/><path d="M12 3v18"/><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/></svg>}
-        </div>
-      </div>
-      <div>
-        <p className="text-2xl lg:text-[26px] font-extrabold tracking-tight text-slate-900 leading-none mb-2">{amount}</p>
-        {trend && <p className={`text-[11px] font-semibold flex items-center gap-1.5 ${trendType === 'positive' ? 'text-emerald-600' : trendType === 'negative' ? 'text-rose-500' : 'text-slate-500'}`}><span className={`w-1.5 h-1.5 rounded-full inline-block ${trendType === 'positive' ? 'bg-emerald-500' : trendType === 'negative' ? 'bg-rose-400' : 'bg-slate-400'}`}></span>{trend}</p>}
-      </div>
-    </motion.div>
   );
 }
 
