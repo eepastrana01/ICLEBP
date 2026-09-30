@@ -1,8 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import api from '../lib/api';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { SPRING_SNAPPY, SPRING_FAST } from '../lib/animations';
 
 const CAT_COLORS = ['#6366f1', '#8b5cf6', '#3b82f6', '#14b8a6', '#f59e0b'];
@@ -24,11 +24,11 @@ interface Transaccion {
 
 const IOS_SPRING_FAST = SPRING_FAST;
 
-// CategorÃ­as oficiales segÃºn el talonario fÃ­sico de Comprobante de Ingresos
+// Categorías oficiales según el talonario físico de Comprobante de Ingresos
 const OFFICIAL_INGRESO_SOURCES = [
   "Culto de Damas",
   "Culto de Caballeros",
-  "Culto de JÃ³venes",
+  "Culto de Jóvenes",
   "Escuela Dominical",
   "Misa Dominical"
 ];
@@ -143,7 +143,7 @@ export default function FinanceDashboard() {
     if (!val) return '000000';
     const str = String(val).trim();
     const isPureNum = /^\d+$/.test(str);
-    return isPureNum ? `â„– ${str.padStart(6, '0')}` : str;
+    return isPureNum ? `N° ${str.padStart(6, '0')}` : str;
   };
 
   // Transactions mutations
@@ -154,7 +154,7 @@ export default function FinanceDashboard() {
       setActiveView('dashboard');
       setEditingTx(null);
     },
-    onError: (err: any) => setFormError(err.response?.data?.error || 'Error al guardar la transacciÃ³n.')
+    onError: (err: any) => setFormError(err.response?.data?.error || 'Error al guardar la transacción.')
   });
 
   const updateTxMutation = useMutation({
@@ -164,7 +164,7 @@ export default function FinanceDashboard() {
       setActiveView('dashboard');
       setEditingTx(null);
     },
-    onError: (err: any) => setFormError(err.response?.data?.error || 'Error al actualizar la transacciÃ³n.')
+    onError: (err: any) => setFormError(err.response?.data?.error || 'Error al actualizar la transacción.')
   });
 
   const deleteTxMutation = useMutation({
@@ -220,7 +220,7 @@ export default function FinanceDashboard() {
   const openCreate = (tipo: 'ingreso' | 'egreso' = activeTab) => {
     setEditingTx(null);
     const sug = getSiguienteRecibo(tipo);
-    const defaultCat = tipo === 'ingreso' ? 'Misa Dominical' : (categorias[0]?.nombre || 'Servicios PÃºblicos');
+    const defaultCat = tipo === 'ingreso' ? 'Misa Dominical' : (categorias[0]?.nombre || 'Servicios Públicos');
     setTxForm({
       tipo,
       fecha: new Date().toISOString().split('T')[0],
@@ -230,7 +230,7 @@ export default function FinanceDashboard() {
       recibo_no: sug,
       asistentes: '',
       comulgantes: '',
-      recibido_por: tipo === 'ingreso' ? 'Dilcia SÃ¡enz' : ''
+      recibido_por: tipo === 'ingreso' ? 'Dilcia Sáenz' : ''
     });
     setIsCustomCategory(false);
     setCustomCategoryText('');
@@ -256,7 +256,7 @@ export default function FinanceDashboard() {
       recibo_no: tx.recibo_no || '',
       asistentes: tx.asistentes ? tx.asistentes.toString() : '',
       comulgantes: tx.comulgantes ? tx.comulgantes.toString() : '',
-      recibido_por: tx.tipo === 'ingreso' ? 'Dilcia SÃ¡enz' : (tx.recibido_por || '')
+      recibido_por: tx.tipo === 'ingreso' ? 'Dilcia Sáenz' : (tx.recibido_por || '')
     });
 
     if (tx.tipo === 'ingreso' && !isOfficial) {
@@ -285,13 +285,13 @@ export default function FinanceDashboard() {
       : txForm.categoria;
 
     if (!finalCategory || !txForm.monto) {
-      setFormError('La categorÃ­a y el monto son requeridos.');
+      setFormError('La categoría y el monto son requeridos.');
       return;
     }
 
     const payload = {
       ...txForm,
-      recibido_por: txForm.tipo === 'ingreso' ? 'Dilcia SÃ¡enz' : txForm.recibido_por,
+      recibido_por: txForm.tipo === 'ingreso' ? 'Dilcia Sáenz' : txForm.recibido_por,
       categoria: finalCategory,
       monto: parseFloat(txForm.monto),
       asistentes: parseInt(txForm.asistentes, 10) || 0,
@@ -303,7 +303,7 @@ export default function FinanceDashboard() {
     } else {
       const talActivo = talonarios.find(t => t.tipo === txForm.tipo && t.activo);
       if (!talActivo) {
-        setFormError(`No hay talonario activo para "${txForm.tipo === 'ingreso' ? 'Ingresos' : 'Egresos'}". Ve a ConfiguraciÃ³n de Talonarios.`);
+        setFormError(`No hay talonario activo para "${txForm.tipo === 'ingreso' ? 'Ingresos' : 'Egresos'}". Ve a Configuración de Talonarios.`);
         return;
       }
       if (txForm.recibo_no) {
@@ -378,7 +378,7 @@ export default function FinanceDashboard() {
                 Finanzas
               </button>
               <span className="text-slate-300">/</span>
-              <span className="text-xs font-bold text-slate-900">ConfiguraciÃ³n Independiente</span>
+              <span className="text-xs font-bold text-slate-900">Configuración Independiente</span>
             </div>
           ) : (
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/60 border border-white/80 shadow-xs mb-2.5 backdrop-blur-md">
@@ -392,9 +392,9 @@ export default function FinanceDashboard() {
           </h1>
           <p className="text-xs sm:text-sm font-medium text-slate-500 mt-0.5">
             {activeView === 'form'
-              ? 'EmisiÃ³n y registro oficial de comprobantes segÃºn talonario fÃ­sico.'
+              ? 'Emisión y registro oficial de comprobantes según talonario físico.'
               : activeView === 'configuracion'
-              ? 'Edita y administra talonarios correlativos y categorÃ­as en paneles dedicados.'
+              ? 'Edita y administra talonarios correlativos y categorías en paneles dedicados.'
               : 'Control de ingresos, egresos, talonarios oficiales y balance mensual.'}
           </p>
         </div>
@@ -410,7 +410,7 @@ export default function FinanceDashboard() {
                 className="glass-button-secondary flex-1 sm:flex-initial inline-flex items-center justify-center rounded-2xl text-xs font-bold text-slate-700 h-11 px-4 gap-2 cursor-pointer shadow-xs"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-500"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                ConfiguraciÃ³n
+                Configuración
               </motion.button>
               {canWrite && (
                 <motion.button
@@ -453,7 +453,7 @@ export default function FinanceDashboard() {
             className="space-y-5"
           >
 
-            {/* â”€â”€ Monthly Context Banner â”€â”€ */}
+            {/* ── Monthly Context Banner ── */}
             <div className="bg-white rounded-2xl border border-slate-100 shadow-sm px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="flex items-center gap-3.5">
                 <div className="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center shrink-0 text-indigo-500">
@@ -469,7 +469,7 @@ export default function FinanceDashboard() {
               <div className="flex items-center gap-2.5 flex-wrap">
                 <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${balanceMes >= 0 ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-rose-50 text-rose-600 border-rose-100'}`}>
                   <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${balanceMes >= 0 ? 'bg-emerald-500' : 'bg-rose-400'}`}></span>
-                  {balanceMes >= 0 ? 'SuperÃ¡vit' : 'DÃ©ficit'} {formatLps(Math.abs(balanceMes))}
+                  {balanceMes >= 0 ? 'Superávit' : 'Déficit'} {formatLps(Math.abs(balanceMes))}
                 </span>
                 {canWrite && (
                   <div className="flex items-center gap-2">
@@ -486,7 +486,7 @@ export default function FinanceDashboard() {
               </div>
             </div>
 
-            {/* â”€â”€ 4 KPI Cards â”€â”€ */}
+            {/* ── 4 KPI Cards ── */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               {([
                 {
@@ -495,7 +495,7 @@ export default function FinanceDashboard() {
                   trend: null as null | string,
                 },
                 {
-                  label: 'Ingresos del Mes', value: formatLps(ingresosMes), sub: `${asistentesMes} asist. Â· ${comulgantesMes} comulg.`, color: 'indigo',
+                  label: 'Ingresos del Mes', value: formatLps(ingresosMes), sub: `${asistentesMes} asist. • ${comulgantesMes} comulg.`, color: 'indigo',
                   icon: <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>,
                   trend: 'positive' as string,
                 },
@@ -505,7 +505,7 @@ export default function FinanceDashboard() {
                   trend: 'negative' as string,
                 },
                 {
-                  label: 'Balance Mensual', value: formatLps(balanceMes), sub: balanceMes >= 0 ? 'SuperÃ¡vit del mes' : 'DÃ©ficit del mes',
+                  label: 'Balance Mensual', value: formatLps(balanceMes), sub: balanceMes >= 0 ? 'Superávit del mes' : 'Déficit del mes',
                   color: balanceMes >= 0 ? 'emerald' : 'rose',
                   icon: <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 16l3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1z"/><path d="M2 16l3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1z"/><path d="M7 21h10"/><path d="M12 3v18"/><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/></svg>,
                   trend: balanceMes >= 0 ? 'positive' : 'negative',
@@ -535,7 +535,7 @@ export default function FinanceDashboard() {
               })}
             </div>
 
-            {/* â”€â”€ Chart + Right Panel â”€â”€ */}
+            {/* ── Chart + Right Panel ── */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
 
               {/* Area Chart */}
@@ -590,7 +590,7 @@ export default function FinanceDashboard() {
 
                 {/* Category Breakdown */}
                 <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
-                  <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-4">Ingresos por CategorÃ­a</p>
+                  <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-4">Ingresos por Categoría</p>
                   {categoryBreakdown.length === 0 ? (
                     <p className="text-xs text-slate-300 py-6 text-center font-medium">Sin ingresos registrados este mes</p>
                   ) : (
@@ -632,7 +632,7 @@ export default function FinanceDashboard() {
                       {tal ? (
                         <>
                           <p className="text-sm font-extrabold text-slate-900 mb-0.5 truncate">{tal.nombre}</p>
-                          <p className="text-[11px] text-slate-400 mb-3 font-medium">Recibos {tal.rango_inicio} â€” {tal.rango_fin}</p>
+                          <p className="text-[11px] text-slate-400 mb-3 font-medium">Recibos {tal.rango_inicio} — {tal.rango_fin}</p>
                           <div className="h-2 bg-slate-100 rounded-full overflow-hidden mb-1.5">
                             <div className="h-full bg-emerald-500 rounded-full transition-all duration-700" style={{ width: `${pct}%` }} />
                           </div>
@@ -641,14 +641,14 @@ export default function FinanceDashboard() {
                             <span>{pct}% de {totalRng}</span>
                           </div>
                           <div className="flex items-center justify-between pt-3 border-t border-slate-100">
-                            <span className="text-[11px] text-slate-500 font-medium">PrÃ³ximo recibo</span>
-                            <span className="text-sm font-extrabold text-slate-900 font-mono">NÂ° {String(tal.actual || tal.rango_inicio).padStart(6, '0')}</span>
+                            <span className="text-[11px] text-slate-500 font-medium">Próximo recibo</span>
+                            <span className="text-sm font-extrabold text-slate-900 font-mono">N° {String(tal.actual || tal.rango_inicio).padStart(6, '0')}</span>
                           </div>
                         </>
                       ) : (
                         <div className="text-center py-4">
                           <p className="text-xs text-slate-400 font-medium">Sin talonario activo de ingresos</p>
-                          <button onClick={() => setActiveView('configuracion')} className="mt-2 text-xs font-bold text-indigo-600 hover:underline cursor-pointer">Configurar â†’</button>
+                          <button onClick={() => setActiveView('configuracion')} className="mt-2 text-xs font-bold text-indigo-600 hover:underline cursor-pointer">Configurar →</button>
                         </div>
                       )}
                     </div>
@@ -658,7 +658,7 @@ export default function FinanceDashboard() {
               </div>
             </div>
 
-            {/* â”€â”€ Transaction Table â”€â”€ */}
+            {/* ── Transaction Table ── */}
             <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between px-5 py-3.5 border-b border-slate-100 gap-3">
                 <div className="flex items-center gap-3">
@@ -679,7 +679,7 @@ export default function FinanceDashboard() {
                     <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                     <input
                       type="search"
-                      placeholder="Buscar por categorÃ­a, recibo..."
+                      placeholder="Buscar por categoría, recibo..."
                       value={searchQuery}
                       onChange={e => setSearchQuery(e.target.value)}
                       className="pl-8 pr-3 py-1.5 rounded-xl text-xs font-semibold text-slate-700 bg-slate-50 border border-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-200 w-44 sm:w-52 transition-all placeholder:text-slate-300"
@@ -702,7 +702,7 @@ export default function FinanceDashboard() {
                       <th className="h-10 px-5 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">No. Recibo</th>
                       <th className="h-10 px-5 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Concepto</th>
                       {activeTab === 'ingreso' && <th className="h-10 px-5 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Asistencia</th>}
-                      <th className="h-10 px-5 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">{activeTab === 'ingreso' ? 'Recibido Por' : 'DescripciÃ³n'}</th>
+                      <th className="h-10 px-5 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">{activeTab === 'ingreso' ? 'Recibido Por' : 'Descripción'}</th>
                       <th className="h-10 px-5 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider text-right">Monto</th>
                       {canWrite && <th className="h-10 px-5 w-20 text-right text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Acc.</th>}
                     </tr>
@@ -728,7 +728,7 @@ export default function FinanceDashboard() {
                           <td className="px-5 py-3.5">
                             {tx.recibo_no ? (
                               <span className="inline-flex items-center rounded-lg bg-slate-50 border border-slate-100 px-2.5 py-0.5 text-xs font-bold text-slate-600">{formatReceiptNo(tx.recibo_no)}</span>
-                            ) : <span className="text-slate-300 text-xs">â€”</span>}
+                            ) : <span className="text-slate-300 text-xs">—</span>}
                           </td>
                           <td className="px-5 py-3.5">
                             <span className={`inline-flex items-center rounded-lg px-2.5 py-1 text-xs font-semibold border ${tx.tipo === 'ingreso' ? 'bg-emerald-50 text-emerald-800 border-emerald-100' : 'bg-slate-50 text-slate-700 border-slate-100'}`}>
@@ -749,22 +749,22 @@ export default function FinanceDashboard() {
                                     {tx.comulgantes}
                                   </span>
                                 )}
-                                {(!tx.asistentes && !tx.comulgantes) && <span className="text-slate-300 text-xs">â€”</span>}
+                                {(!tx.asistentes && !tx.comulgantes) && <span className="text-slate-300 text-xs">—</span>}
                               </div>
                             </td>
                           )}
                           <td className="px-5 py-3.5 text-xs text-slate-600 max-w-[200px] truncate">
                             {activeTab === 'ingreso' ? (
-                              <span className="font-semibold text-slate-700">{tx.recibido_por || 'Dilcia SÃ¡enz'}</span>
+                              <span className="font-semibold text-slate-700">{tx.recibido_por || 'Dilcia Sáenz'}</span>
                             ) : tx.recibido_por ? (
                               <span className="font-semibold text-slate-700">{tx.recibido_por}</span>
                             ) : tx.descripcion ? (
                               <span>{tx.descripcion}</span>
-                            ) : <span className="text-slate-300">â€”</span>}
+                            ) : <span className="text-slate-300">—</span>}
                           </td>
                           <td className="px-5 py-3.5 text-right">
                             <span className={`text-sm font-extrabold ${tx.tipo === 'ingreso' ? 'text-emerald-600' : 'text-rose-500'}`}>
-                              {tx.tipo === 'ingreso' ? '+' : 'âˆ’'} {formatLps(tx.monto)}
+                              {tx.tipo === 'ingreso' ? '+' : '−'} {formatLps(tx.monto)}
                             </span>
                           </td>
                           {canWrite && (
@@ -773,7 +773,7 @@ export default function FinanceDashboard() {
                                 <button onClick={() => openEdit(tx)} className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer" title="Editar">
                                   <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                                 </button>
-                                <button onClick={() => confirmAction('Eliminar Comprobante', `Â¿EstÃ¡s seguro de eliminar el registro de ${tx.categoria} por ${formatLps(tx.monto)}?`, () => deleteTxMutation.mutate(tx.id))} className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-300 hover:text-rose-500 hover:bg-rose-50 transition-colors cursor-pointer" title="Eliminar">
+                                <button onClick={() => confirmAction('Eliminar Comprobante', `¿Estás seguro de eliminar el registro de ${tx.categoria} por ${formatLps(tx.monto)}?`, () => deleteTxMutation.mutate(tx.id))} className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-300 hover:text-rose-500 hover:bg-rose-50 transition-colors cursor-pointer" title="Eliminar">
                                   <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
                                 </button>
                               </div>
@@ -789,7 +789,6 @@ export default function FinanceDashboard() {
 
           </motion.div>
         )}
-
 
         {/* ==================== VISTA FORMULARIO INLINE (COMPROBANTE BENTO) ==================== */}
         {activeView === 'form' && (
@@ -815,7 +814,7 @@ export default function FinanceDashboard() {
                 </motion.div>
               )}
 
-              {/* Selector de Tipo (Ingreso / Egreso) si no estÃ¡ editando */}
+              {/* Selector de Tipo (Ingreso / Egreso) si no está editando */}
               {!editingTx && (
                 <div className="glass-panel-subtle flex items-center rounded-2xl p-1 gap-1 max-w-sm mx-auto w-full">
                   <button
@@ -842,7 +841,7 @@ export default function FinanceDashboard() {
                       setTxForm({
                         ...txForm,
                         tipo: 'egreso',
-                        categoria: categorias[0]?.nombre || 'Servicios PÃºblicos',
+                        categoria: categorias[0]?.nombre || 'Servicios Públicos',
                         recibo_no: getSiguienteRecibo('egreso')
                       });
                       setIsCustomCategory(false);
@@ -857,10 +856,10 @@ export default function FinanceDashboard() {
                 </div>
               )}
 
-              {/* TARJETA PRINCIPAL TIPO COMPROBANTE FÃSICO */}
+              {/* TARJETA PRINCIPAL TIPO COMPROBANTE FÍSICO */}
               <div className="glass-panel rounded-2xl sm:rounded-[2rem] p-4 sm:p-8 border border-white/90 space-y-5 sm:space-y-6 shadow-sm relative overflow-hidden">
 
-                {/* Encabezado inspirado en el talonario fÃ­sico */}
+                {/* Encabezado inspirado en el talonario físico */}
                 <div className="border-b border-slate-200/80 pb-5 text-center relative">
                   <div className="flex items-center justify-center gap-2 text-[11px] font-extrabold uppercase tracking-widest text-slate-400 mb-1">
                     <span>Iglesia Cristiana Luterana &ldquo;El Buen Pastor&rdquo;</span>
@@ -871,13 +870,13 @@ export default function FinanceDashboard() {
                     {txForm.tipo === 'ingreso' ? 'Comprobante de Ingresos' : 'Comprobante de Egresos'}
                   </h2>
 
-                  {/* NÃºmero de comprobante correlativo */}
+                  {/* Número de comprobante correlativo */}
                   <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 font-bold text-xs shadow-2xs">
                     <span>{formatReceiptNo(txForm.recibo_no)}</span>
                   </div>
                 </div>
 
-                {/* SECCIÃ“N 1: FUENTE DE INGRESOS (CHECKBOXES / BOTONES DIRECTOS) */}
+                {/* SECCIÓN 1: FUENTE DE INGRESOS (CHECKBOXES / BOTONES DIRECTOS) */}
                 {txForm.tipo === 'ingreso' ? (
                   <div>
                     <label className="block text-[11px] font-extrabold text-slate-500 uppercase tracking-wider mb-2">
@@ -912,7 +911,7 @@ export default function FinanceDashboard() {
                         );
                       })}
 
-                      {/* OpciÃ³n Otros */}
+                      {/* Opción Otros */}
                       <button
                         type="button"
                         onClick={() => {
@@ -936,7 +935,7 @@ export default function FinanceDashboard() {
                       </button>
                     </div>
 
-                    {/* Campo de texto si seleccionÃ³ Otros */}
+                    {/* Campo de texto si seleccionó Otros */}
                     {isCustomCategory && (
                       <motion.div
                         initial={{ opacity: 0, height: 0 }}
@@ -947,7 +946,7 @@ export default function FinanceDashboard() {
                         <input
                           type="text"
                           required
-                          placeholder="Especifica el concepto (Ej. Ofrenda Pro-Templo, DonaciÃ³n, etc.)..."
+                          placeholder="Especifica el concepto (Ej. Ofrenda Pro-Templo, Donación, etc.)..."
                           value={customCategoryText}
                           onChange={e => {
                             setCustomCategoryText(e.target.value);
@@ -961,7 +960,7 @@ export default function FinanceDashboard() {
                 ) : (
                   <div>
                     <label className="block text-[11px] font-extrabold text-slate-500 uppercase tracking-wider mb-2">
-                      CategorÃ­a de Egreso / Gasto: <span className="text-rose-500">*</span>
+                      Categoría de Egreso / Gasto: <span className="text-rose-500">*</span>
                     </label>
                     <select
                       value={txForm.categoria}
@@ -975,7 +974,7 @@ export default function FinanceDashboard() {
                   </div>
                 )}
 
-                {/* SECCIÃ“N 2: MONTO, FECHA Y NO. RECIBO */}
+                {/* SECCIÓN 2: MONTO, FECHA Y NO. RECIBO */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
                   {/* Lempiras */}
                   <div>
@@ -1036,7 +1035,7 @@ export default function FinanceDashboard() {
                   </div>
                 </div>
 
-                {/* SECCIÃ“N 3: ASISTENTES & COMULGANTES (CAMPOS DEL TALONARIO OFICIAL) */}
+                {/* SECCIÓN 3: ASISTENTES & COMULGANTES (CAMPOS DEL TALONARIO OFICIAL) */}
                 {txForm.tipo === 'ingreso' && (
                   <div className="p-4 rounded-2xl bg-white/60 border border-white/80 grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                     <div>
@@ -1070,7 +1069,7 @@ export default function FinanceDashboard() {
                   </div>
                 )}
 
-                {/* SECCIÃ“N 4: FIRMA / RECIBIDO POR Y DETALLES */}
+                {/* SECCIÓN 4: FIRMA / RECIBIDO POR Y DETALLES */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                   {txForm.tipo === 'ingreso' ? (
                     <div>
@@ -1081,7 +1080,7 @@ export default function FinanceDashboard() {
                       <div className="glass-panel-subtle flex items-center justify-between px-4 py-2.5 rounded-2xl border border-white/80 bg-white/50 cursor-default select-none shadow-2xs">
                         <div className="flex items-center gap-2">
                           <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
-                          <span className="text-xs font-bold text-slate-900">Dilcia SÃ¡enz</span>
+                          <span className="text-xs font-bold text-slate-900">Dilcia Sáenz</span>
                         </div>
                         <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 bg-white/90 px-2.5 py-0.5 rounded-lg border border-slate-200/70 shadow-2xs">
                           Tesorera
@@ -1118,7 +1117,7 @@ export default function FinanceDashboard() {
                   </div>
                 </div>
 
-                {/* BOTONES DE ACCIÃ“N */}
+                {/* BOTONES DE ACCIÓN */}
                 <div className="pt-4 border-t border-slate-200/80 flex flex-col-reverse sm:flex-row items-center justify-between gap-3">
                   <button
                     type="button"
@@ -1151,7 +1150,7 @@ export default function FinanceDashboard() {
           </motion.div>
         )}
 
-        {/* ==================== VISTA CONFIGURACIÃ“N DEDICADA ==================== */}
+        {/* ==================== VISTA CONFIGURACIÓN DEDICADA ==================== */}
         {activeView === 'configuracion' && (
           <motion.div
             key="configuracion"
@@ -1194,11 +1193,11 @@ export default function FinanceDashboard() {
                 className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${configSubTab === 'categorias' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'}`}
               >
                 <span className="w-2 h-2 rounded-full bg-indigo-500"></span>
-                CategorÃ­as ({categorias.length})
+                Categorías ({categorias.length})
               </button>
             </div>
 
-            {/* SECCIÃ“N 1: TALONARIOS DE INGRESOS */}
+            {/* SECCIÓN 1: TALONARIOS DE INGRESOS */}
             {(configSubTab === 'todos' || configSubTab === 'ingreso') && (
               <TalonarioSection
                 titulo="Talonarios de Ingresos"
@@ -1215,12 +1214,12 @@ export default function FinanceDashboard() {
                 onSubmit={handleTalSubmit}
                 onToggle={(id, activo, tipo) => toggleTalMutation.mutate({ id, activo, tipo })}
                 onUpdate={(id, data) => updateTalMutation.mutate({ id, data })}
-                onDelete={(id) => confirmAction('Eliminar Talonario', 'Â¿Deseas eliminar este talonario del sistema permanentemente?', () => deleteTalMutation.mutate(id))}
+                onDelete={(id) => confirmAction('Eliminar Talonario', '¿Deseas eliminar este talonario del sistema permanentemente?', () => deleteTalMutation.mutate(id))}
                 isPending={createTalMutation.isPending}
               />
             )}
 
-            {/* SECCIÃ“N 2: TALONARIOS DE EGRESOS */}
+            {/* SECCIÓN 2: TALONARIOS DE EGRESOS */}
             {(configSubTab === 'todos' || configSubTab === 'egreso') && (
               <TalonarioSection
                 titulo="Talonarios de Egresos"
@@ -1237,12 +1236,12 @@ export default function FinanceDashboard() {
                 onSubmit={handleTalSubmit}
                 onToggle={(id, activo, tipo) => toggleTalMutation.mutate({ id, activo, tipo })}
                 onUpdate={(id, data) => updateTalMutation.mutate({ id, data })}
-                onDelete={(id) => confirmAction('Eliminar Talonario', 'Â¿Deseas eliminar este talonario del sistema permanentemente?', () => deleteTalMutation.mutate(id))}
+                onDelete={(id) => confirmAction('Eliminar Talonario', '¿Deseas eliminar este talonario del sistema permanentemente?', () => deleteTalMutation.mutate(id))}
                 isPending={createTalMutation.isPending}
               />
             )}
 
-            {/* SECCIÃ“N 3: CATEGORÃAS CONTABLES */}
+            {/* SECCIÓN 3: CATEGORÍAS CONTABLES */}
             {(configSubTab === 'todos' || configSubTab === 'categorias') && (
               <section>
                 <div className="flex items-center justify-between mb-4">
@@ -1251,8 +1250,8 @@ export default function FinanceDashboard() {
                       <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
                     </div>
                     <div>
-                      <h2 className="text-lg font-extrabold text-slate-900">CategorÃ­as Contables</h2>
-                      <p className="text-xs font-medium text-slate-400">ClasificaciÃ³n de transacciones &bull; Edita o renombra directamente</p>
+                      <h2 className="text-lg font-extrabold text-slate-900">Categorías Contables</h2>
+                      <p className="text-xs font-medium text-slate-400">Clasificación de transacciones &bull; Edita o renombra directamente</p>
                     </div>
                   </div>
                 </div>
@@ -1262,7 +1261,7 @@ export default function FinanceDashboard() {
                     <form onSubmit={handleCatSubmit} className="flex gap-2.5 max-w-md">
                       <input
                         type="text"
-                        placeholder="Nombre de nueva categorÃ­a..."
+                        placeholder="Nombre de nueva categoría..."
                         value={newCatName}
                         onChange={e => setNewCatName(e.target.value)}
                         className="glass-input flex-1 rounded-2xl px-4 py-2.5 text-xs font-semibold focus:outline-none"
@@ -1278,7 +1277,7 @@ export default function FinanceDashboard() {
                   )}
 
                   {categorias.length === 0 ? (
-                    <p className="text-xs font-medium text-slate-400 text-center py-8">No hay categorÃ­as registradas.</p>
+                    <p className="text-xs font-medium text-slate-400 text-center py-8">No hay categorías registradas.</p>
                   ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                       <AnimatePresence>
@@ -1334,7 +1333,7 @@ export default function FinanceDashboard() {
                                         <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
                                       </button>
                                       <button
-                                        onClick={() => confirmAction('Eliminar CategorÃ­a', `Â¿Deseas eliminar la categorÃ­a "${c.nombre}"?`, () => deleteCatMutation.mutate(c.id))}
+                                        onClick={() => confirmAction('Eliminar Categoría', `¿Deseas eliminar la categoría "${c.nombre}"?`, () => deleteCatMutation.mutate(c.id))}
                                         className="w-6 h-6 rounded-lg flex items-center justify-center text-slate-300 hover:text-rose-500 hover:bg-rose-50 transition-colors cursor-pointer"
                                         title="Eliminar"
                                       >
@@ -1369,7 +1368,7 @@ export default function FinanceDashboard() {
   );
 }
 
-// ========== SUBCOMPONENTE: SECCIÃ“N DE TALONARIOS CON EDICIÃ“N INLINE ==========
+// ========== SUBCOMPONENTE: SECCIÓN DE TALONARIOS CON EDICIÓN INLINE ==========
 interface TalonarioSectionProps {
   titulo: string;
   subtitulo: string;
@@ -1472,7 +1471,7 @@ function TalonarioSection({
                   <input type="text" required placeholder="Nombre (Ej. Diezmos 2026)" value={talonarioForm.nombre} onChange={e => setTalonarioForm({...talonarioForm, nombre: e.target.value})} className="glass-input sm:col-span-2 rounded-xl px-3.5 py-2 text-xs font-semibold focus:outline-none" />
                   <input type="number" required placeholder="Rango Inicio (Ej. 1)" value={talonarioForm.inicio} onChange={e => setTalonarioForm({...talonarioForm, inicio: e.target.value})} className="glass-input rounded-xl px-3.5 py-2 text-xs font-semibold focus:outline-none" />
                   <input type="number" required placeholder="Rango Fin (Ej. 500)" value={talonarioForm.fin} onChange={e => setTalonarioForm({...talonarioForm, fin: e.target.value})} className="glass-input rounded-xl px-3.5 py-2 text-xs font-semibold focus:outline-none" />
-                  <input type="number" required placeholder="NÃºmero Actual Inicial (Ej. 1)" value={talonarioForm.actual} onChange={e => setTalonarioForm({...talonarioForm, actual: e.target.value})} className="glass-input sm:col-span-2 rounded-xl px-3.5 py-2 text-xs font-semibold focus:outline-none" />
+                  <input type="number" required placeholder="Número Actual Inicial (Ej. 1)" value={talonarioForm.actual} onChange={e => setTalonarioForm({...talonarioForm, actual: e.target.value})} className="glass-input sm:col-span-2 rounded-xl px-3.5 py-2 text-xs font-semibold focus:outline-none" />
                 </div>
                 <div className="flex gap-2.5 pt-1">
                   <button type="button" onClick={onCloseForm} className="glass-button-secondary flex-1 rounded-xl text-slate-700 text-xs font-bold py-2.5 cursor-pointer">Cancelar</button>
