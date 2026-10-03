@@ -1,6 +1,22 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  Wrench,
+  Ticket,
+  PartyPopper,
+  Users,
+  Church,
+  Tag,
+  Calendar,
+  Clock,
+  MapPin,
+  Target,
+  Layers,
+  UserCheck,
+  X,
+  Check
+} from 'lucide-react';
 import api from '../lib/api';
 import { SPRING_FAST } from '../lib/animations';
 
@@ -16,6 +32,7 @@ export interface AdminCategory {
   id: string;
   label: string;
   shortLabel: string;
+  icon: React.ComponentType<{ className?: string }>;
   badgeBg: string;
   badgeText: string;
   badgeBorder: string;
@@ -29,6 +46,7 @@ export const ADMIN_CATEGORIES: AdminCategory[] = [
     id: 'mantenimiento',
     label: 'Aseo y Mantenimiento',
     shortLabel: 'Aseo / Limpieza',
+    icon: Wrench,
     badgeBg: 'bg-emerald-50',
     badgeText: 'text-emerald-700',
     badgeBorder: 'border-emerald-200',
@@ -46,6 +64,7 @@ export const ADMIN_CATEGORIES: AdminCategory[] = [
     id: 'recaudacion',
     label: 'Rifas y Pro-Fondos',
     shortLabel: 'Rifas / Sorteos',
+    icon: Ticket,
     badgeBg: 'bg-amber-50',
     badgeText: 'text-amber-700',
     badgeBorder: 'border-amber-200',
@@ -63,6 +82,7 @@ export const ADMIN_CATEGORIES: AdminCategory[] = [
     id: 'celebracion',
     label: 'Celebración y Convivio',
     shortLabel: 'Celebraciones',
+    icon: PartyPopper,
     badgeBg: 'bg-purple-50',
     badgeText: 'text-purple-700',
     badgeBorder: 'border-purple-200',
@@ -81,6 +101,7 @@ export const ADMIN_CATEGORIES: AdminCategory[] = [
     id: 'reunion',
     label: 'Reunión y Asamblea',
     shortLabel: 'Reunión / Junta',
+    icon: Users,
     badgeBg: 'bg-sky-50',
     badgeText: 'text-sky-700',
     badgeBorder: 'border-sky-200',
@@ -98,6 +119,7 @@ export const ADMIN_CATEGORIES: AdminCategory[] = [
     id: 'culto',
     label: 'Culto y Liturgia',
     shortLabel: 'Culto Especial',
+    icon: Church,
     badgeBg: 'bg-indigo-50',
     badgeText: 'text-indigo-700',
     badgeBorder: 'border-indigo-200',
@@ -114,6 +136,7 @@ export const ADMIN_CATEGORIES: AdminCategory[] = [
     id: 'otro',
     label: 'Otro / Especial',
     shortLabel: 'Otro',
+    icon: Tag,
     badgeBg: 'bg-slate-100',
     badgeText: 'text-slate-700',
     badgeBorder: 'border-slate-200',
@@ -175,6 +198,14 @@ interface ActivityModalProps {
   initialDate?: string;
   onSuccess?: () => void;
 }
+
+const DETAIL_CHIPS = [
+  { label: 'Responsable:', icon: UserCheck, snippet: 'Responsable: ' },
+  { label: 'Lugar:', icon: MapPin, snippet: 'Lugar: ' },
+  { label: 'Horario:', icon: Clock, snippet: 'Horario: ' },
+  { label: 'Meta:', icon: Target, snippet: 'Meta: ' },
+  { label: 'Materiales:', icon: Layers, snippet: 'Materiales: ' }
+];
 
 export function ActivityModal({
   isOpen,
@@ -325,7 +356,7 @@ export function ActivityModal({
             <div className="flex items-start justify-between p-5 sm:p-6 border-b border-slate-100 bg-gradient-to-b from-slate-50/70 to-white">
               <div className="flex items-center gap-3.5">
                 <div className="w-11 h-11 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 shrink-0 shadow-2xs">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="m9 16 2 2 4-4"/></svg>
+                  <Calendar className="w-5 h-5" />
                 </div>
                 <div>
                   <h2 className="text-base sm:text-lg font-extrabold text-slate-900 tracking-tight leading-snug">
@@ -342,7 +373,7 @@ export function ActivityModal({
                 className="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-900 transition-colors flex items-center justify-center shrink-0 cursor-pointer"
                 title="Cerrar (Esc)"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                <X className="w-4 h-4" />
               </button>
             </div>
 
@@ -356,7 +387,7 @@ export function ActivityModal({
                   animate={{ opacity: 1, y: 0 }}
                   className="p-3 rounded-2xl bg-rose-50 border border-rose-200/80 text-rose-700 text-xs font-bold flex items-center gap-2"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                  <X className="w-4 h-4 shrink-0" />
                   <span>{formError}</span>
                 </motion.div>
               )}
@@ -384,7 +415,7 @@ export function ActivityModal({
                       className="w-full rounded-2xl px-4 py-2.5 pl-10 text-xs font-bold text-slate-900 bg-slate-50 border border-slate-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-400/30 focus:border-indigo-400 transition-all cursor-pointer"
                     />
                     <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                      <Calendar className="w-4 h-4" />
                     </div>
                   </div>
 
@@ -397,7 +428,7 @@ export function ActivityModal({
                 </div>
               </div>
 
-              {/* 2. SELECTOR DE CATEGORÍA ADMINISTRATIVA */}
+              {/* 2. SELECTOR DE CATEGORÍA ADMINISTRATIVA CON ICONOS */}
               <div>
                 <label className="block text-[11px] font-extrabold text-slate-500 uppercase tracking-wider mb-2">
                   Tipo de Actividad
@@ -405,18 +436,23 @@ export function ActivityModal({
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   {ADMIN_CATEGORIES.map(cat => {
                     const isSelected = selectedCategory === cat.id;
+                    const IconComp = cat.icon;
                     return (
                       <button
                         key={cat.id}
                         type="button"
                         onClick={() => setSelectedCategory(cat.id)}
-                        className={`flex items-center gap-2 p-2.5 rounded-2xl border text-xs font-bold transition-all text-left cursor-pointer ${
+                        className={`flex items-center gap-2.5 p-2.5 rounded-2xl border text-xs font-bold transition-all text-left cursor-pointer ${
                           isSelected
                             ? cat.activeRing
                             : 'bg-white text-slate-700 border-slate-200/80 hover:bg-slate-50 hover:border-slate-300'
                         }`}
                       >
-                        <span className={`w-2 h-2 rounded-full shrink-0 ${cat.dotColor}`} />
+                        <div className={`w-7 h-7 rounded-xl flex items-center justify-center shrink-0 ${
+                          isSelected ? 'bg-white/80 shadow-2xs' : 'bg-slate-100 text-slate-500'
+                        }`}>
+                          <IconComp className="w-3.5 h-3.5" />
+                        </div>
                         <span className="truncate">{cat.shortLabel}</span>
                       </button>
                     );
@@ -447,7 +483,7 @@ export function ActivityModal({
                         >
                           <span>{preset}</span>
                           {isSelected && (
-                            <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                            <Check className="w-3 h-3" />
                           )}
                         </button>
                       );
@@ -471,12 +507,12 @@ export function ActivityModal({
                     className="w-full rounded-2xl px-4 py-2.5 pl-10 text-xs font-bold text-slate-900 bg-slate-50 border border-slate-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-400/30 focus:border-indigo-400 transition-all placeholder:text-slate-400"
                   />
                   <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                    <Tag className="w-4 h-4" />
                   </div>
                 </div>
               </div>
 
-              {/* 4. DETALLES Y ORGANIZACIÓN (CON ASISTENTE DE PLANTILLAS) */}
+              {/* 4. DETALLES Y ORGANIZACIÓN (CON ASISTENTE DE PLANTILLAS E ICONOS LUCIDE) */}
               <div>
                 <label className="block text-[11px] font-extrabold text-slate-500 uppercase tracking-wider mb-1.5">
                   Detalles y Organización <span className="font-normal normal-case text-slate-400">(opcional)</span>
@@ -490,28 +526,25 @@ export function ActivityModal({
                   className="w-full rounded-2xl p-3.5 text-xs font-semibold text-slate-800 bg-slate-50 border border-slate-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-400/30 focus:border-indigo-400 transition-all resize-none placeholder:text-slate-400 leading-relaxed"
                 />
 
-                {/* Chips de inserción rápida */}
+                {/* Chips de inserción rápida con iconos Lucide */}
                 <div className="flex flex-wrap items-center gap-1.5 mt-2">
                   <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mr-0.5">
                     Insertar:
                   </span>
-                  {[
-                    { label: '👤 Responsable:', snippet: 'Responsable: ' },
-                    { label: '📍 Lugar:', snippet: 'Lugar: ' },
-                    { label: '⏰ Horario:', snippet: 'Horario: ' },
-                    { label: '🎯 Meta / Objetivo:', snippet: 'Meta: ' },
-                    { label: '🧹 Materiales:', snippet: 'Materiales: ' }
-                  ].map(chip => (
-                    <button
-                      key={chip.label}
-                      type="button"
-                      onClick={() => handleInsertDetailChip(chip.snippet)}
-                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-slate-100/80 hover:bg-slate-200/80 border border-slate-200/70 text-[11px] font-bold text-slate-700 transition-colors cursor-pointer"
-                    >
-                      <span className="text-slate-400 text-xs leading-none">+</span>
-                      <span>{chip.label}</span>
-                    </button>
-                  ))}
+                  {DETAIL_CHIPS.map(chip => {
+                    const ChipIcon = chip.icon;
+                    return (
+                      <button
+                        key={chip.label}
+                        type="button"
+                        onClick={() => handleInsertDetailChip(chip.snippet)}
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-100/80 hover:bg-slate-200/80 border border-slate-200/70 text-[11px] font-bold text-slate-700 transition-colors cursor-pointer"
+                      >
+                        <ChipIcon className="w-3 h-3 text-slate-500" />
+                        <span>{chip.label}</span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -536,7 +569,7 @@ export function ActivityModal({
                     </>
                   ) : (
                     <>
-                      <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                      <Check className="w-4 h-4" />
                       <span>{editingItem ? 'Guardar Cambios' : 'Crear Actividad'}</span>
                     </>
                   )}

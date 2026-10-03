@@ -5,6 +5,7 @@ import api from '../lib/api';
 import { generarPDFActividades } from '../lib/pdfActividades';
 import { ConfirmModal, useConfirm } from './ConfirmModal';
 import { SPRING_SNAPPY, SPRING_FAST } from '../lib/animations';
+import { Gift } from 'lucide-react';
 import { ActivityModal, getCategoryTag, type Actividad } from './ActivityModal';
 
 interface Miembro { id: number; nombre: string; fecha_nacimiento: string; }
@@ -564,8 +565,8 @@ function CalendarTab({
                     )}
 
                     {hasBdays && (
-                      <div className="text-[10px] sm:text-xs leading-none">
-                        <span>🎁</span>
+                      <div className="flex items-center text-sky-500">
+                        <Gift className="w-3.5 h-3.5" />
                       </div>
                     )}
                   </div>
@@ -584,7 +585,7 @@ function CalendarTab({
             <span className="w-2.5 h-2.5 rounded-full bg-indigo-500" /> Actividad Programada
           </span>
           <span className="flex items-center gap-2">
-            <span>🎁</span> Cumpleaños del día
+            <Gift className="w-3.5 h-3.5 text-sky-500" /> Cumpleaños del día
           </span>
         </div>
       </div>
@@ -632,7 +633,9 @@ function CalendarTab({
               {/* Birthdays Section */}
               {selectedBirthdays.map(m => (
                 <div key={`bday-inspect-${m.id}`} className="flex items-center gap-3 p-3.5 bg-sky-50/80 border border-sky-200/80 rounded-2xl text-sky-900 shadow-2xs">
-                  <span className="text-xl">🎁</span>
+                  <div className="w-9 h-9 rounded-xl bg-sky-100 flex items-center justify-center text-sky-600 shrink-0">
+                    <Gift className="w-5 h-5" />
+                  </div>
                   <div>
                     <p className="text-xs font-extrabold">Cumpleaños de {m.nombre}</p>
                     <p className="text-[10px] font-medium text-sky-700">Congregante de la iglesia</p>
