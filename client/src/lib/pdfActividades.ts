@@ -29,17 +29,17 @@ export function generarPDFActividades(
   const doc = new jsPDF({ format: 'letter', unit: 'mm' });
 
   // Paleta de colores ejecutivos de alto contraste y confort visual (Anti-AI)
-  const cTitle: [number, number, number]     = [15, 23, 42];     // Slate-900 (Titular principal)
-  const cTextDark: [number, number, number]  = [30, 41, 59];     // Slate-800 (Cuerpo de texto nítido)
-  const cTextMuted: [number, number, number] = [71, 85, 105];    // Slate-600 (Gris lectura confortable)
-  const cTextLight: [number, number, number] = [100, 116, 139];  // Slate-500 (Etiquetas y metadatos)
-  const cNavy: [number, number, number]      = [30, 58, 138];    // Blue-900 (Acento institucional sobrio)
-  const cBorderLight: [number, number, number]= [226, 232, 240]; // Slate-200 (Separadores finos)
-  const cBorderMid: [number, number, number] = [203, 213, 225];  // Slate-300 (Bordes estructurados)
-  const cBgStrip: [number, number, number]   = [248, 250, 252];  // Slate-50 (Franja de síntesis suave)
-  const cBgHead: [number, number, number]    = [241, 245, 249];  // Slate-100 (Cabecera de tabla clara)
-  const cBgRowAlt: [number, number, number]  = [249, 250, 251];  // Fila alterna casi imperceptible
-  const cGreenDone: [number, number, number] = [21, 128, 61];    // Green-700 (Completada sobria)
+  const cTitle: [number, number, number]      = [15, 23, 42];     // Slate-900 (Titular principal)
+  const cTextDark: [number, number, number]   = [30, 41, 59];     // Slate-800 (Cuerpo de texto nítido)
+  const cTextMuted: [number, number, number]  = [71, 85, 105];    // Slate-600 (Gris lectura confortable)
+  const cTextLight: [number, number, number]  = [100, 116, 139];  // Slate-500 (Etiquetas y metadatos)
+  const cNavy: [number, number, number]       = [30, 58, 138];    // Blue-900 (Acento institucional sobrio)
+  const cBorderLight: [number, number, number]= [226, 232, 240];  // Slate-200 (Separadores finos)
+  const cBorderMid: [number, number, number]  = [203, 213, 225];  // Slate-300 (Bordes estructurados)
+  const cBgStrip: [number, number, number]    = [248, 250, 252];  // Slate-50 (Franja de síntesis suave)
+  const cBgHead: [number, number, number]     = [241, 245, 249];  // Slate-100 (Cabecera de tabla clara)
+  const cBgRowAlt: [number, number, number]   = [249, 250, 251];  // Fila alterna sutil
+  const cGreenDone: [number, number, number]  = [21, 128, 61];    // Green-700 (Completada sobria)
 
   // Dimensiones y márgenes
   const margin = 14;
@@ -67,10 +67,10 @@ export function generarPDFActividades(
     semFileTag = `${String(semestre).replace(/\s+/g, '_')}_${anio}`;
   }
 
-  // 1. Encabezado Oficial Editorial (Sin barras gruesas de adorno)
-  const logoWidth = 19;
-  const logoHeight = 19;
-  const logoY = 12;
+  // 1. Encabezado Oficial Editorial Compacto
+  const logoWidth = 18;
+  const logoHeight = 18;
+  const logoY = 11;
 
   try {
     doc.addImage(LOGO_ICLEB_BASE64, 'PNG', margin, logoY, logoWidth, logoHeight);
@@ -79,8 +79,8 @@ export function generarPDFActividades(
   }
 
   // Bloque de Control Administrativo a la derecha
-  const adminBoxWidth = 47;
-  const adminBoxHeight = 18.5;
+  const adminBoxWidth = 46;
+  const adminBoxHeight = 17.5;
   const adminBoxX = pageWidth - margin - adminBoxWidth;
   const adminBoxY = logoY;
 
@@ -93,11 +93,11 @@ export function generarPDFActividades(
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(6);
   doc.setTextColor(...cTextMuted);
-  doc.text('CONTROL ADMINISTRATIVO', adminBoxX + adminBoxWidth / 2, adminBoxY + 3.8, { align: 'center' });
+  doc.text('CONTROL ADMINISTRATIVO', adminBoxX + adminBoxWidth / 2, adminBoxY + 3.6, { align: 'center' });
 
   doc.setDrawColor(...cBorderLight);
   doc.setLineWidth(0.2);
-  doc.line(adminBoxX, adminBoxY + 5.2, adminBoxX + adminBoxWidth, adminBoxY + 5.2);
+  doc.line(adminBoxX, adminBoxY + 5.0, adminBoxX + adminBoxWidth, adminBoxY + 5.0);
 
   const fechaHoy = new Date().toLocaleDateString('es-HN', {
     day: '2-digit',
@@ -108,42 +108,42 @@ export function generarPDFActividades(
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(6.5);
   doc.setTextColor(...cTextDark);
-  doc.text(`CÓDIGO: ACT-${anio}-S${semNum || 1}`, adminBoxX + 3.5, adminBoxY + 9.2);
-  doc.text(`PERÍODO: ${periodoCorto}`, adminBoxX + 3.5, adminBoxY + 13.0);
-  doc.text(`EMISIÓN: ${fechaHoy}`, adminBoxX + 3.5, adminBoxY + 16.5);
+  doc.text(`CÓDIGO: ACT-${anio}-S${semNum || 1}`, adminBoxX + 3.5, adminBoxY + 8.8);
+  doc.text(`PERÍODO: ${periodoCorto}`, adminBoxX + 3.5, adminBoxY + 12.4);
+  doc.text(`EMISIÓN: ${fechaHoy}`, adminBoxX + 3.5, adminBoxY + 15.8);
 
   // Textos institucionales centrales
-  const headerTextX = margin + logoWidth + 4.5;
+  const headerTextX = margin + logoWidth + 4;
 
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(7.5);
+  doc.setFontSize(7.2);
   doc.setTextColor(...cTextLight);
-  doc.text('IGLESIA CRISTIANA LUTERANA EL BUEN PASTOR', headerTextX, logoY + 4);
+  doc.text('IGLESIA CRISTIANA LUTERANA EL BUEN PASTOR', headerTextX, logoY + 3.5);
 
-  doc.setFontSize(13);
+  doc.setFontSize(12.5);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(...cTitle);
-  doc.text('Plan Pastoral y Agenda de Actividades', headerTextX, logoY + 9.8);
+  doc.text('Plan Pastoral y Agenda de Actividades', headerTextX, logoY + 9.0);
 
-  doc.setFontSize(7.2);
+  doc.setFontSize(7);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(...cTextMuted);
-  doc.text('San Pedro Sula, Cortés, Honduras • Colonia Unión', headerTextX, logoY + 14.2);
+  doc.text('San Pedro Sula, Cortés, Honduras • Colonia Unión', headerTextX, logoY + 13.2);
 
-  doc.setFontSize(8);
+  doc.setFontSize(7.8);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(...cNavy);
-  doc.text(periodoTexto, headerTextX, logoY + 18.2);
+  doc.text(periodoTexto, headerTextX, logoY + 17.2);
 
   // Línea divisoria formal
-  const dividerY = logoY + 22.5;
+  const dividerY = logoY + 20.5;
   doc.setDrawColor(...cBorderLight);
   doc.setLineWidth(0.25);
   doc.line(margin, dividerY, pageWidth - margin, dividerY);
 
-  // 2. Franja de Síntesis Ejecutiva (Reemplazo total de las 4 cajitas KPI estilo IA)
-  const stripY = dividerY + 3.5;
-  const stripHeight = 10.5;
+  // 2. Franja de Síntesis Ejecutiva Horizontal
+  const stripY = dividerY + 2.5;
+  const stripHeight = 9.8;
   const totalActividades = actividades.length;
   const completadas = actividades.filter(a => a.completado).length;
   const pendientes = totalActividades - completadas;
@@ -168,22 +168,21 @@ export function generarPDFActividades(
     const colX = margin + idx * colW;
     const colCenter = colX + colW / 2;
 
-    // Línea vertical separadora entre columnas (excepto antes de la primera)
     if (idx > 0) {
       doc.setDrawColor(...cBorderLight);
       doc.setLineWidth(0.2);
-      doc.line(colX, stripY + 2, colX, stripY + stripHeight - 2);
+      doc.line(colX, stripY + 1.8, colX, stripY + stripHeight - 1.8);
     }
 
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(9.5);
+    doc.setFontSize(9.2);
     doc.setTextColor(...m.col);
-    doc.text(m.num, colCenter, stripY + 4.8, { align: 'center' });
+    doc.text(m.num, colCenter, stripY + 4.5, { align: 'center' });
 
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(5.8);
+    doc.setFontSize(5.6);
     doc.setTextColor(...cTextLight);
-    doc.text(m.label, colCenter, stripY + 8.5, { align: 'center' });
+    doc.text(m.label, colCenter, stripY + 8.0, { align: 'center' });
   });
 
   // 3. Preparación de datos ordenados cronológicamente
@@ -214,10 +213,10 @@ export function generarPDFActividades(
     ];
   });
 
-  // 4. Tabla Editorial Limpia (Encabezado claro, sin bloques negros pesados)
+  // 4. Tabla Editorial Limpia y Optimizada para Evitar Páginas Huérfanas
   autoTable(doc, {
-    startY: stripY + stripHeight + 4.5,
-    margin: { left: margin, right: margin, top: 14, bottom: 22 },
+    startY: stripY + stripHeight + 3.5,
+    margin: { left: margin, right: margin, top: 12, bottom: 28 },
     pageBreak: 'auto',
     showHead: 'everyPage',
     head: [['N°', 'FECHA Y DÍA', 'ACTIVIDAD / PROGRAMA', 'ÁREA', 'RESPONSABLE / LUGAR / NOTAS', 'ESTADO']],
@@ -228,15 +227,15 @@ export function generarPDFActividades(
       textColor: cTitle,
       fontStyle: 'bold',
       fontSize: 7.2,
-      cellPadding: { top: 3.2, bottom: 3.2, left: 3, right: 3 },
+      cellPadding: { top: 2.8, bottom: 2.8, left: 2.5, right: 2.5 },
       valign: 'middle',
       lineWidth: { top: 0.35, bottom: 0.35 },
       lineColor: cBorderMid
     },
     styles: {
       font: 'helvetica',
-      fontSize: 8.2, // Legibilidad óptima y descansada
-      cellPadding: { top: 3.2, bottom: 3.2, left: 3, right: 3 },
+      fontSize: 8.0,
+      cellPadding: { top: 2.2, bottom: 2.2, left: 2.5, right: 2.5 },
       valign: 'middle',
       textColor: cTextDark,
       lineWidth: { bottom: 0.15 },
@@ -248,8 +247,8 @@ export function generarPDFActividades(
     },
     columnStyles: {
       0: { cellWidth: 8, halign: 'center', textColor: cTextLight, fontStyle: 'bold', fontSize: 7.5 },
-      1: { cellWidth: 28, halign: 'left', fontStyle: 'bold', textColor: cTitle, fontSize: 8 },
-      2: { cellWidth: 53, fontStyle: 'bold', textColor: cTitle, fontSize: 8.2 },
+      1: { cellWidth: 28, halign: 'left', fontStyle: 'bold', textColor: cTitle, fontSize: 7.8 },
+      2: { cellWidth: 53, fontStyle: 'bold', textColor: cTitle, fontSize: 8.0 },
       3: { cellWidth: 26, halign: 'left', fontStyle: 'normal', textColor: cTextMuted, fontSize: 7.5 },
       4: { cellWidth: 50.9, textColor: cTextMuted, fontStyle: 'normal', fontSize: 7.8 },
       5: { cellWidth: 22, halign: 'center' }
@@ -264,13 +263,12 @@ export function generarPDFActividades(
         const text = (data.row.raw as string[])[5];
         const isDone = text === 'Completada';
 
-        // Píldoras sutiles editoriales (no plásticas fosforescentes)
         const pillBg: [number, number, number]   = isDone ? [240, 253, 244] : [248, 250, 252];
         const pillBdr: [number, number, number]  = isDone ? [187, 247, 208] : [226, 232, 240];
         const pillText: [number, number, number] = isDone ? [21, 128, 61]   : [100, 116, 139];
 
-        const w = 19;
-        const h = 4.8;
+        const w = 18;
+        const h = 4.4;
         const pillX = data.cell.x + (data.cell.width - w) / 2;
         const pillY = data.cell.y + (data.cell.height - h) / 2;
 
@@ -287,19 +285,18 @@ export function generarPDFActividades(
     }
   });
 
-  // 5. Bloque Oficial de Firmas
+  // 5. Bloque Oficial de Firmas (Integrado siempre con la tabla, sin páginas huérfanas)
   const lastAutoTable = (doc as any).lastAutoTable;
-  let finalY = lastAutoTable ? lastAutoTable.finalY + 16 : pageHeight - 42;
+  const tableBottomY = lastAutoTable ? lastAutoTable.finalY : 180;
 
-  // Si no hay suficiente espacio para las firmas, agregar página
-  if (finalY + 24 > pageHeight - 16) {
-    doc.addPage();
-    finalY = 28;
-  }
+  // Espacio disponible antes de la línea divisoria del pie de página (270 mm)
+  const remainingSpace = (pageHeight - 9.5) - tableBottomY;
+  const signSpacing = remainingSpace > 28 ? 10 : (remainingSpace > 19 ? 7 : 5);
+  const finalY = tableBottomY + signSpacing;
 
-  const signWidth = 65;
-  const leftSignX = margin + 8;
-  const rightSignX = pageWidth - margin - signWidth - 8;
+  const signWidth = 62;
+  const leftSignX = margin + 10;
+  const rightSignX = pageWidth - margin - signWidth - 10;
 
   doc.setDrawColor(...cBorderMid);
   doc.setLineWidth(0.3);
@@ -309,43 +306,45 @@ export function generarPDFActividades(
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(7.5);
   doc.setTextColor(...cTitle);
-  doc.text('PRESIDENCIA CONGREGACIONAL', leftSignX + signWidth / 2, finalY + 4, { align: 'center' });
+  doc.text('PRESIDENCIA CONGREGACIONAL', leftSignX + signWidth / 2, finalY + 3.8, { align: 'center' });
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(6.5);
   doc.setTextColor(...cTextLight);
-  doc.text('Iglesia Cristiana Luterana El Buen Pastor', leftSignX + signWidth / 2, finalY + 7.5, { align: 'center' });
-  doc.text('Firma y Sello Oficial', leftSignX + signWidth / 2, finalY + 10.5, { align: 'center' });
+  doc.text('Iglesia Cristiana Luterana El Buen Pastor', leftSignX + signWidth / 2, finalY + 7.2, { align: 'center' });
+  doc.text('Firma y Sello Oficial', leftSignX + signWidth / 2, finalY + 10.2, { align: 'center' });
 
   // Firma derecha: Secretaría Congregacional
   doc.line(rightSignX, finalY, rightSignX + signWidth, finalY);
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(7.5);
   doc.setTextColor(...cTitle);
-  doc.text('SECRETARÍA CONGREGACIONAL', rightSignX + signWidth / 2, finalY + 4, { align: 'center' });
+  doc.text('SECRETARÍA CONGREGACIONAL', rightSignX + signWidth / 2, finalY + 3.8, { align: 'center' });
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(6.5);
   doc.setTextColor(...cTextLight);
-  doc.text('Revisión, Registro y Aprobación', rightSignX + signWidth / 2, finalY + 7.5, { align: 'center' });
-  doc.text('Fecha de Validación: ___________________', rightSignX + signWidth / 2, finalY + 10.5, { align: 'center' });
+  doc.text('Revisión, Registro y Aprobación', rightSignX + signWidth / 2, finalY + 7.2, { align: 'center' });
+  doc.text('Fecha: ____/____/________', rightSignX + signWidth / 2, finalY + 10.2, { align: 'center' });
 
-  // 6. Pie de Página Formal y Paginación
+  // 6. Pie de Página Formal y Paginación (Sin colisiones de texto)
   const totalPaginas = doc.getNumberOfPages();
   for (let i = 1; i <= totalPaginas; i++) {
     doc.setPage(i);
 
-    const footerY = pageHeight - 7;
+    const footerY = pageHeight - 6;
 
     // Fina línea divisoria
     doc.setDrawColor(...cBorderLight);
     doc.setLineWidth(0.25);
-    doc.line(margin, footerY - 3, pageWidth - margin, footerY - 3);
+    doc.line(margin, footerY - 3.5, pageWidth - margin, footerY - 3.5);
 
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(6.5);
+    doc.setFontSize(6.8);
     doc.setTextColor(...cTextLight);
 
-    doc.text('Iglesia Cristiana Luterana El Buen Pastor • San Pedro Sula, Honduras', margin, footerY);
-    doc.text('Documento Administrativo Oficial • Agenda Pastoral', pageWidth / 2, footerY, { align: 'center' });
+    // Texto izquierdo nítido e institucional
+    doc.text('Iglesia Cristiana Luterana El Buen Pastor • Agenda Pastoral', margin, footerY);
+
+    // Numeración a la derecha
     doc.setFont('helvetica', 'bold');
     doc.text(`Página ${i} de ${totalPaginas}`, pageWidth - margin, footerY, { align: 'right' });
   }
