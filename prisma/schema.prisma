@@ -28,6 +28,7 @@ model Actividad {
   fecha      DateTime
   actividad  String
   detalles   String?
+  categoria  String?  @default("otro")
   completado Boolean  @default(false)
 
   @@map("actividades")

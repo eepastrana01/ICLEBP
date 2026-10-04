@@ -25,6 +25,7 @@ export interface Actividad {
   fecha: string;
   actividad: string;
   detalles: string;
+  categoria?: string;
   completado: boolean;
 }
 
@@ -150,7 +151,10 @@ export const ADMIN_CATEGORIES: AdminCategory[] = [
   }
 ];
 
-export function detectCategoryFromTitle(title: string): string {
+export function detectCategoryFromTitle(title: string, explicitCategory?: string): string {
+  if (explicitCategory && ADMIN_CATEGORIES.some(c => c.id === explicitCategory)) {
+    return explicitCategory;
+  }
   const t = (title || '').toLowerCase();
   if (t.includes('aseo') || t.includes('limpieza') || t.includes('mantenimiento') || t.includes('pintura')) return 'mantenimiento';
   if (t.includes('rifa') || t.includes('sorteo') || t.includes('kermesse') || t.includes('venta') || t.includes('fondos') || t.includes('colecta') || t.includes('desayuno')) return 'recaudacion';
@@ -160,10 +164,13 @@ export function detectCategoryFromTitle(title: string): string {
   return 'otro';
 }
 
-export function getCategoryTag(title: string) {
-  const catId = detectCategoryFromTitle(title);
+export function getCategoryTag(title: string, categoria?: string) {
+  const catId = (categoria && ADMIN_CATEGORIES.some(c => c.id === categoria))
+    ? categoria
+    : detectCategoryFromTitle(title);
   const cat = ADMIN_CATEGORIES.find(c => c.id === catId) || ADMIN_CATEGORIES[ADMIN_CATEGORIES.length - 1];
   return {
+    id: cat.id,
     label: cat.shortLabel,
     bg: cat.badgeBg,
     text: cat.badgeText,
@@ -253,7 +260,7 @@ export function ActivityModal({
         actividad: editingItem.actividad,
         detalles: editingItem.detalles || ''
       });
-      setSelectedCategory(detectCategoryFromTitle(editingItem.actividad));
+      setSelectedCategory(editingItem.categoria || detectCategoryFromTitle(editingItem.actividad));
     } else {
       setForm({
         fecha: initialDate || new Date().toISOString().split('T')[0],
@@ -266,7 +273,7 @@ export function ActivityModal({
   }, [editingItem, initialDate, isOpen]);
 
   const crearMutation = useMutation({
-    mutationFn: (data: { fecha: string; actividad: string; detalles: string }) => api.post('/actividades', data),
+    mutationFn: (data: { fecha: string; actividad: string; detalles: string; categoria?: string }) => api.post('/actividades', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['actividades'] });
       onClose();
@@ -278,7 +285,7 @@ export function ActivityModal({
   });
 
   const editarMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: { fecha: string; actividad: string; detalles: string } }) => api.put(`/actividades/editar/${id}`, data),
+    mutationFn: ({ id, data }: { id: number; data: { fecha: string; actividad: string; detalles: string; categoria?: string } }) => api.put(`/actividades/editar/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['actividades'] });
       onClose();
@@ -301,7 +308,8 @@ export function ActivityModal({
     const payload = {
       fecha: form.fecha,
       actividad: form.actividad.trim(),
-      detalles: form.detalles.trim()
+      detalles: form.detalles.trim(),
+      categoria: selectedCategory
     };
     if (editingItem) {
       editarMutation.mutate({ id: editingItem.id, data: payload });

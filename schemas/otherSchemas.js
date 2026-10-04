@@ -17,7 +17,8 @@ const activitySchema = z.object({
     actividad: z.string({ required_error: 'El nombre de la actividad es obligatorio.' })
         .min(1, 'El nombre de la actividad no puede estar vacío.')
         .trim(),
-    detalles: z.string().nullable().optional()
+    detalles: z.string().nullable().optional(),
+    categoria: z.string().nullable().optional().default('otro')
 });
 
 const activityStatusSchema = z.object({

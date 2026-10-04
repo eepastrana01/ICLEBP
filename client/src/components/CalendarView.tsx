@@ -241,7 +241,7 @@ function AgendaTab({
                     <AnimatePresence mode="popLayout" initial={false}>
                       {monthActivities.map((a) => {
                         const { day, dayOfWeek } = formatDateLabel(a.fecha);
-                        const tag = getCategoryTag(a.actividad);
+                        const tag = getCategoryTag(a.actividad, a.categoria);
                         const isDeleting = deletingId === a.id;
 
                         return (
@@ -552,7 +552,7 @@ function CalendarTab({
                     {hasActs && (
                       <div className="space-y-1">
                         {(cell.acts || []).slice(0, 2).map(a => {
-                          const tag = getCategoryTag(a.actividad);
+                          const tag = getCategoryTag(a.actividad, a.categoria);
                           return (
                             <div 
                               key={a.id} 
@@ -655,7 +655,7 @@ function CalendarTab({
 
               {/* Activities Section */}
               {selectedActs.map(a => {
-                const tag = getCategoryTag(a.actividad);
+                const tag = getCategoryTag(a.actividad, a.categoria);
                 return (
                   <div key={`act-inspect-${a.id}`} className="flex items-center justify-between p-4 bg-white/80 border border-white rounded-2xl shadow-2xs">
                     <div className="flex items-center gap-3 min-w-0">

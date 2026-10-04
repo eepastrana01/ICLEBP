@@ -770,7 +770,7 @@ export default function CarteleraView() {
                       const local = new Date(f.getTime() + f.getTimezoneOffset() * 60000);
                       const dayNum = String(local.getDate()).padStart(2, '0');
                       const dayName = DAY_NAMES_SHORT[local.getDay()];
-                      const catId = detectCategoryFromTitle(act.actividad);
+                      const catId = act.categoria || detectCategoryFromTitle(act.actividad);
                       const IconComponent = getCategoryIcon(catId);
 
                       return (
