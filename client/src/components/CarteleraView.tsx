@@ -21,7 +21,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import api from '../lib/api';
-import { LOGO_ICLEB_BASE64 } from '../lib/logoBase64';
+import { LOGO_WHITE_BASE64 } from '../lib/logoWhiteBase64';
 import { detectCategoryFromTitle, type Actividad } from './ActivityModal';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -38,15 +38,20 @@ interface ThemeOption {
   name: string;
   tagline: string;
   accentColor: string;
+  headerBgStyle: { background: string };
   headerBg: string;
   headerText: string;
+  paperBgStyle: { backgroundColor: string };
   paperBg: string;
+  cardBgStyle: { backgroundColor: string; borderColor: string };
   cardBg: string;
   cardBorder: string;
+  dayBadgeBgStyle: { backgroundColor: string; color: string };
   dayBadgeBg: string;
   dayBadgeText: string;
   titleColor: string;
   mutedColor: string;
+  verseBgStyle: { backgroundColor: string; borderColor: string; color: string };
   verseBg: string;
   verseBorder: string;
   verseText: string;
@@ -59,15 +64,20 @@ const THEMES: Record<string, ThemeOption> = {
     name: 'Azul Clásico',
     tagline: 'Institucional & Sobrio',
     accentColor: '#1E3A8A',
+    headerBgStyle: { background: 'linear-gradient(to right, #090d16, #172554, #090d16)' },
     headerBg: 'bg-gradient-to-r from-slate-900 via-blue-950 to-slate-900',
     headerText: 'text-white',
+    paperBgStyle: { backgroundColor: '#F8FAFC' },
     paperBg: 'bg-[#F8FAFC]',
+    cardBgStyle: { backgroundColor: '#FFFFFF', borderColor: '#E2E8F0' },
     cardBg: 'bg-white',
     cardBorder: 'border-slate-200/90',
+    dayBadgeBgStyle: { backgroundColor: '#1E3A8A', color: '#FFFFFF' },
     dayBadgeBg: 'bg-blue-900 text-white',
     dayBadgeText: 'text-blue-900',
     titleColor: 'text-slate-900',
     mutedColor: 'text-slate-600',
+    verseBgStyle: { backgroundColor: '#EFF6FF', borderColor: '#BFDBFE', color: '#172554' },
     verseBg: 'bg-blue-50/80',
     verseBorder: 'border-blue-200/70',
     verseText: 'text-blue-950',
@@ -78,15 +88,20 @@ const THEMES: Record<string, ThemeOption> = {
     name: 'Salvia & Menta',
     tagline: 'Natural & Pacífico',
     accentColor: '#2D6A4F',
+    headerBgStyle: { background: 'linear-gradient(to right, #022c22, #042f2e, #022c22)' },
     headerBg: 'bg-gradient-to-r from-emerald-950 via-teal-950 to-emerald-950',
     headerText: 'text-white',
+    paperBgStyle: { backgroundColor: '#F4F7F5' },
     paperBg: 'bg-[#F4F7F5]',
+    cardBgStyle: { backgroundColor: '#FFFFFF', borderColor: '#D1FAE5' },
     cardBg: 'bg-white',
     cardBorder: 'border-emerald-200/70',
+    dayBadgeBgStyle: { backgroundColor: '#065F46', color: '#FFFFFF' },
     dayBadgeBg: 'bg-emerald-800 text-white',
     dayBadgeText: 'text-emerald-800',
     titleColor: 'text-emerald-950',
     mutedColor: 'text-emerald-900/70',
+    verseBgStyle: { backgroundColor: '#ECFDF5', borderColor: '#A7F3D0', color: '#064E3B' },
     verseBg: 'bg-emerald-50/90',
     verseBorder: 'border-emerald-200/80',
     verseText: 'text-emerald-950',
@@ -97,15 +112,20 @@ const THEMES: Record<string, ThemeOption> = {
     name: 'Terracota',
     tagline: 'Cálido & Reforma',
     accentColor: '#9C4221',
+    headerBgStyle: { background: 'linear-gradient(to right, #451a03, #7c2d12, #451a03)' },
     headerBg: 'bg-gradient-to-r from-[#5E2211] via-[#7A2E16] to-[#5E2211]',
     headerText: 'text-white',
+    paperBgStyle: { backgroundColor: '#FAF6F2' },
     paperBg: 'bg-[#FAF6F2]',
+    cardBgStyle: { backgroundColor: '#FFFFFF', borderColor: '#FDE68A' },
     cardBg: 'bg-white',
     cardBorder: 'border-amber-200/70',
+    dayBadgeBgStyle: { backgroundColor: '#9C4221', color: '#FFFFFF' },
     dayBadgeBg: 'bg-[#9C4221] text-white',
     dayBadgeText: 'text-[#9C4221]',
     titleColor: 'text-stone-900',
     mutedColor: 'text-stone-600',
+    verseBgStyle: { backgroundColor: '#FFFBEB', borderColor: '#FDE68A', color: '#78350F' },
     verseBg: 'bg-amber-50/80',
     verseBorder: 'border-amber-200/80',
     verseText: 'text-[#7A2E16]',
@@ -116,15 +136,20 @@ const THEMES: Record<string, ThemeOption> = {
     name: 'Borgoña Real',
     tagline: 'Festivo & Distinguido',
     accentColor: '#831843',
+    headerBgStyle: { background: 'linear-gradient(to right, #4c0519, #3b0764, #4c0519)' },
     headerBg: 'bg-gradient-to-r from-rose-950 via-purple-950 to-rose-950',
     headerText: 'text-white',
+    paperBgStyle: { backgroundColor: '#FCF8F9' },
     paperBg: 'bg-[#FCF8F9]',
+    cardBgStyle: { backgroundColor: '#FFFFFF', borderColor: '#FECDD3' },
     cardBg: 'bg-white',
     cardBorder: 'border-rose-200/70',
+    dayBadgeBgStyle: { backgroundColor: '#831843', color: '#FFFFFF' },
     dayBadgeBg: 'bg-[#831843] text-white',
     dayBadgeText: 'text-[#831843]',
     titleColor: 'text-slate-900',
     mutedColor: 'text-slate-600',
+    verseBgStyle: { backgroundColor: '#FFF1F2', borderColor: '#FECDD3', color: '#881337' },
     verseBg: 'bg-rose-50/80',
     verseBorder: 'border-rose-200/80',
     verseText: 'text-[#831843]',
@@ -216,21 +241,63 @@ export default function CarteleraView() {
     window.print();
   };
 
+  // Helper para generar el canvas de la cartelera con sanitización total de estilos
+  const generateSheetCanvas = async (element: HTMLElement) => {
+    const isLandscape = orientation === 'landscape';
+    const targetWidth = isLandscape ? 1056 : 816;
+    const targetHeight = isLandscape ? 816 : 1056;
+
+    const canvas = await html2canvas(element, {
+      scale: 2,
+      useCORS: true,
+      allowTaint: false,
+      logging: false,
+      backgroundColor: '#FFFFFF',
+      windowWidth: targetWidth + 100,
+      windowHeight: targetHeight + 100,
+      onclone: (clonedDoc) => {
+        const clonedEl = clonedDoc.getElementById('lienzo-cartelera-imprimible');
+        if (clonedEl) {
+          clonedEl.style.width = `${targetWidth}px`;
+          clonedEl.style.minHeight = `${targetHeight}px`;
+          clonedEl.style.maxHeight = `${targetHeight}px`;
+          clonedEl.style.boxShadow = 'none';
+          clonedEl.style.transform = 'none';
+          clonedEl.style.borderRadius = '0px';
+
+          // Eliminar elementos con blur decorativo que no son soportados por html2canvas
+          const glows = clonedEl.querySelectorAll('.cartelera-decor-glow');
+          glows.forEach((g) => {
+            (g as HTMLElement).style.display = 'none';
+          });
+
+          // Limpiar filtros y backdrops CSS que rompen html2canvas
+          const allCloned = clonedEl.querySelectorAll('*');
+          allCloned.forEach((node) => {
+            const elNode = node as HTMLElement;
+            if (elNode.style) {
+              elNode.style.filter = 'none';
+              (elNode.style as any).backdropFilter = 'none';
+              (elNode.style as any).webkitBackdropFilter = 'none';
+            }
+          });
+        }
+      }
+    });
+
+    return canvas;
+  };
+
   // 2. Descargar como PDF listo para imprimir
   const handleDownloadPdf = async () => {
     if (!printSheetRef.current) return;
     setIsExporting(true);
     try {
-      const canvas = await html2canvas(printSheetRef.current, {
-        scale: 2.5,
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#FFFFFF'
-      });
-
+      const canvas = await generateSheetCanvas(printSheetRef.current);
       const imgData = canvas.toDataURL('image/jpeg', 0.95);
+      const isLandscape = orientation === 'landscape';
       const pdf = new jsPDF({
-        orientation: orientation === 'landscape' ? 'landscape' : 'portrait',
+        orientation: isLandscape ? 'landscape' : 'portrait',
         unit: 'mm',
         format: 'letter'
       });
@@ -238,10 +305,11 @@ export default function CarteleraView() {
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
 
-      pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+      pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
       pdf.save(`Cartelera_${MONTH_NAMES[selectedMonth]}_${selectedYear}.pdf`);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error generando PDF de cartelera:', err);
+      alert('Hubo un inconveniente al generar el PDF. Puedes usar el botón "Imprimir Hoja" para guardarla como PDF directamente.');
     } finally {
       setIsExporting(false);
     }
@@ -252,19 +320,26 @@ export default function CarteleraView() {
     if (!printSheetRef.current) return;
     setIsExporting(true);
     try {
-      const canvas = await html2canvas(printSheetRef.current, {
-        scale: 2.5,
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#FFFFFF'
-      });
+      const canvas = await generateSheetCanvas(printSheetRef.current);
 
-      const link = document.createElement('a');
-      link.download = `Cartelera_${MONTH_NAMES[selectedMonth]}_${selectedYear}.png`;
-      link.href = canvas.toDataURL('image/png');
-      link.click();
-    } catch (err) {
+      canvas.toBlob((blob) => {
+        if (!blob) {
+          const link = document.createElement('a');
+          link.download = `Cartelera_${MONTH_NAMES[selectedMonth]}_${selectedYear}.png`;
+          link.href = canvas.toDataURL('image/png');
+          link.click();
+          return;
+        }
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.download = `Cartelera_${MONTH_NAMES[selectedMonth]}_${selectedYear}.png`;
+        link.href = url;
+        link.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      }, 'image/png');
+    } catch (err: any) {
       console.error('Error exportando imagen de cartelera:', err);
+      alert('Hubo un inconveniente al generar la imagen. Puedes usar el botón "Imprimir Hoja" como alternativa.');
     } finally {
       setIsExporting(false);
     }
@@ -347,8 +422,8 @@ export default function CarteleraView() {
             disabled={isExporting || displayedActivities.length === 0}
             className="flex items-center gap-2 px-3.5 py-2.5 bg-white border border-slate-200 text-slate-700 rounded-xl text-sm font-semibold hover:bg-slate-50 transition-all shadow-2xs active:scale-95 disabled:opacity-50"
           >
-            <Download className="w-4 h-4 text-blue-700" />
-            <span>Descargar PDF</span>
+            <Download className={`w-4 h-4 text-blue-700 ${isExporting ? 'animate-bounce' : ''}`} />
+            <span>{isExporting ? 'Generando PDF...' : 'Descargar PDF'}</span>
           </button>
 
           <button
@@ -356,8 +431,8 @@ export default function CarteleraView() {
             disabled={isExporting || displayedActivities.length === 0}
             className="flex items-center gap-2 px-3.5 py-2.5 bg-white border border-slate-200 text-slate-700 rounded-xl text-sm font-semibold hover:bg-slate-50 transition-all shadow-2xs active:scale-95 disabled:opacity-50"
           >
-            <ImageIcon className="w-4 h-4 text-emerald-700" />
-            <span>Guardar Imagen</span>
+            <ImageIcon className={`w-4 h-4 text-emerald-700 ${isExporting ? 'animate-bounce' : ''}`} />
+            <span>{isExporting ? 'Guardando imagen...' : 'Guardar Imagen'}</span>
           </button>
         </div>
       </div>
@@ -606,21 +681,25 @@ export default function CarteleraView() {
               id="lienzo-cartelera-imprimible"
               className={`cartelera-print-container w-full max-w-[820px] shadow-2xl rounded-2xl border border-slate-300/80 overflow-hidden flex flex-col transition-all duration-300 ${theme.paperBg}`}
               style={{
+                ...theme.paperBgStyle,
                 aspectRatio: orientation === 'landscape' ? '11 / 8.5' : '8.5 / 11',
                 minHeight: orientation === 'landscape' ? '560px' : '740px'
               }}
             >
               {/* ENCABEZADO INSTITUCIONAL DEL BOLETÍN */}
-              <div className={`${theme.headerBg} ${theme.headerText} p-6 sm:p-7 relative overflow-hidden shrink-0`}>
+              <div
+                style={theme.headerBgStyle}
+                className={`${theme.headerText} p-6 sm:p-7 relative overflow-hidden shrink-0`}
+              >
                 <div className="relative z-10 flex items-center justify-between gap-4">
                   
                   {/* Bloque Izquierdo: Logotipo e Identidad */}
                   <div className="flex items-center gap-4">
-                    <div className="w-16 h-16 sm:w-18 sm:h-18 rounded-2xl bg-white/10 p-1.5 backdrop-blur-md border border-white/20 shadow-inner flex items-center justify-center shrink-0">
+                    <div className="w-16 h-16 sm:w-18 sm:h-18 rounded-2xl bg-white/10 p-1.5 border border-white/20 shadow-inner flex items-center justify-center shrink-0">
                       <img
-                        src={LOGO_ICLEB_BASE64}
+                        src={LOGO_WHITE_BASE64}
                         alt="Logo ICLEB"
-                        className="w-full h-full object-contain filter drop-shadow-md"
+                        className="w-full h-full object-contain"
                       />
                     </div>
 
@@ -639,10 +718,10 @@ export default function CarteleraView() {
 
                   {/* Bloque Derecho: Mes y Año Protagonistas */}
                   <div className="text-right shrink-0">
-                    <span className="text-[11px] font-bold tracking-widest uppercase px-2.5 py-1 rounded-md bg-white/15 backdrop-blur-xs border border-white/20 inline-block mb-1">
+                    <span className="text-[11px] font-bold tracking-widest uppercase px-2.5 py-1 rounded-md bg-white/15 border border-white/20 inline-block mb-1">
                       CARTELERA OFICIAL
                     </span>
-                    <h3 className="text-2xl sm:text-3xl lg:text-4xl font-black uppercase tracking-tight text-white drop-shadow-xs">
+                    <h3 className="text-2xl sm:text-3xl lg:text-4xl font-black uppercase tracking-tight text-white">
                       {MONTH_NAMES[selectedMonth]}
                     </h3>
                     <p className="text-base sm:text-lg font-bold opacity-90 tracking-wider">
@@ -653,13 +732,22 @@ export default function CarteleraView() {
                 </div>
 
                 {/* Sutil brillo decorativo */}
-                <div className="absolute -top-12 -right-12 w-48 h-48 bg-white/5 rounded-full blur-2xl pointer-events-none" />
+                <div className="absolute -top-12 -right-12 w-48 h-48 bg-white/5 rounded-full pointer-events-none cartelera-decor-glow" />
               </div>
 
               {/* CINTILLO CON EL LEMA / VERSÍCULO BÍBLICO */}
               {verseText.trim() && (
-                <div className={`px-6 py-2.5 ${theme.verseBg} border-b ${theme.verseBorder} shrink-0 text-center`}>
-                  <p className={`text-xs sm:text-sm font-semibold italic ${theme.verseText} leading-snug tracking-tight`}>
+                <div
+                  style={{
+                    backgroundColor: theme.verseBgStyle.backgroundColor,
+                    borderBottom: `1px solid ${theme.verseBgStyle.borderColor}`
+                  }}
+                  className="px-6 py-2.5 shrink-0 text-center"
+                >
+                  <p
+                    style={{ color: theme.verseBgStyle.color }}
+                    className="text-xs sm:text-sm font-semibold italic leading-snug tracking-tight"
+                  >
                     {verseText}
                   </p>
                 </div>
@@ -688,10 +776,14 @@ export default function CarteleraView() {
                       return (
                         <div
                           key={act.id}
+                          style={theme.cardBgStyle}
                           className={`${theme.cardBg} rounded-xl border ${theme.cardBorder} p-3 sm:p-3.5 shadow-2xs flex items-center gap-3.5 transition-all`}
                         >
                           {/* Bloque de fecha: Gran número y día de la semana */}
-                          <div className={`w-14 sm:w-16 h-14 sm:h-16 rounded-xl ${theme.dayBadgeBg} flex flex-col items-center justify-center shrink-0 shadow-xs`}>
+                          <div
+                            style={theme.dayBadgeBgStyle}
+                            className={`w-14 sm:w-16 h-14 sm:h-16 rounded-xl ${theme.dayBadgeBg} flex flex-col items-center justify-center shrink-0 shadow-xs`}
+                          >
                             <span className="text-[10px] sm:text-[11px] font-black tracking-wider uppercase opacity-90 leading-none">
                               {dayName}
                             </span>
