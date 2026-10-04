@@ -71,15 +71,15 @@ const THEMES: Record<string, ThemeOption> = {
     paperBg: 'bg-[#F8FAFC]',
     cardBgStyle: { backgroundColor: '#FFFFFF', borderColor: '#E2E8F0' },
     cardBg: 'bg-white',
-    cardBorder: 'border-slate-200/90',
+    cardBorder: 'border-slate-200',
     dayBadgeBgStyle: { backgroundColor: '#1E3A8A', color: '#FFFFFF' },
     dayBadgeBg: 'bg-blue-900 text-white',
     dayBadgeText: 'text-blue-900',
     titleColor: 'text-slate-900',
     mutedColor: 'text-slate-600',
     verseBgStyle: { backgroundColor: '#EFF6FF', borderColor: '#BFDBFE', color: '#172554' },
-    verseBg: 'bg-blue-50/80',
-    verseBorder: 'border-blue-200/70',
+    verseBg: 'bg-blue-50',
+    verseBorder: 'border-blue-200',
     verseText: 'text-blue-950',
     tagDot: 'bg-blue-700'
   },
@@ -95,15 +95,15 @@ const THEMES: Record<string, ThemeOption> = {
     paperBg: 'bg-[#F4F7F5]',
     cardBgStyle: { backgroundColor: '#FFFFFF', borderColor: '#D1FAE5' },
     cardBg: 'bg-white',
-    cardBorder: 'border-emerald-200/70',
+    cardBorder: 'border-emerald-200',
     dayBadgeBgStyle: { backgroundColor: '#065F46', color: '#FFFFFF' },
     dayBadgeBg: 'bg-emerald-800 text-white',
     dayBadgeText: 'text-emerald-800',
     titleColor: 'text-emerald-950',
-    mutedColor: 'text-emerald-900/70',
+    mutedColor: 'text-emerald-800',
     verseBgStyle: { backgroundColor: '#ECFDF5', borderColor: '#A7F3D0', color: '#064E3B' },
-    verseBg: 'bg-emerald-50/90',
-    verseBorder: 'border-emerald-200/80',
+    verseBg: 'bg-emerald-50',
+    verseBorder: 'border-emerald-200',
     verseText: 'text-emerald-950',
     tagDot: 'bg-emerald-600'
   },
@@ -119,15 +119,15 @@ const THEMES: Record<string, ThemeOption> = {
     paperBg: 'bg-[#FAF6F2]',
     cardBgStyle: { backgroundColor: '#FFFFFF', borderColor: '#FDE68A' },
     cardBg: 'bg-white',
-    cardBorder: 'border-amber-200/70',
+    cardBorder: 'border-amber-200',
     dayBadgeBgStyle: { backgroundColor: '#9C4221', color: '#FFFFFF' },
     dayBadgeBg: 'bg-[#9C4221] text-white',
     dayBadgeText: 'text-[#9C4221]',
     titleColor: 'text-stone-900',
     mutedColor: 'text-stone-600',
     verseBgStyle: { backgroundColor: '#FFFBEB', borderColor: '#FDE68A', color: '#78350F' },
-    verseBg: 'bg-amber-50/80',
-    verseBorder: 'border-amber-200/80',
+    verseBg: 'bg-amber-50',
+    verseBorder: 'border-amber-200',
     verseText: 'text-[#7A2E16]',
     tagDot: 'bg-[#9C4221]'
   },
@@ -143,15 +143,15 @@ const THEMES: Record<string, ThemeOption> = {
     paperBg: 'bg-[#FCF8F9]',
     cardBgStyle: { backgroundColor: '#FFFFFF', borderColor: '#FECDD3' },
     cardBg: 'bg-white',
-    cardBorder: 'border-rose-200/70',
+    cardBorder: 'border-rose-200',
     dayBadgeBgStyle: { backgroundColor: '#831843', color: '#FFFFFF' },
     dayBadgeBg: 'bg-[#831843] text-white',
     dayBadgeText: 'text-[#831843]',
     titleColor: 'text-slate-900',
     mutedColor: 'text-slate-600',
     verseBgStyle: { backgroundColor: '#FFF1F2', borderColor: '#FECDD3', color: '#881337' },
-    verseBg: 'bg-rose-50/80',
-    verseBorder: 'border-rose-200/80',
+    verseBg: 'bg-rose-50',
+    verseBorder: 'border-rose-200',
     verseText: 'text-[#831843]',
     tagDot: 'bg-[#831843]'
   }
@@ -247,12 +247,39 @@ export default function CarteleraView() {
     const targetWidth = isLandscape ? 1056 : 816;
     const targetHeight = isLandscape ? 816 : 1056;
 
+    // Canvas 1x1 auxiliar para transformar colores modernos (oklab, oklch, color-mix) a rgba nativo
+    const helperCanvas = document.createElement('canvas');
+    helperCanvas.width = 1;
+    helperCanvas.height = 1;
+    const helperCtx = helperCanvas.getContext('2d', { willReadFrequently: true });
+
+    const toRgba = (colorStr: string): string => {
+      if (!colorStr || colorStr === 'transparent' || colorStr === 'none' || colorStr === 'inherit') {
+        return colorStr;
+      }
+      if (!colorStr.includes('oklch') && !colorStr.includes('oklab') && !colorStr.includes('color-mix')) {
+        return colorStr;
+      }
+      if (!helperCtx) return '#000000';
+      try {
+        helperCtx.clearRect(0, 0, 1, 1);
+        helperCtx.fillStyle = colorStr;
+        helperCtx.fillRect(0, 0, 1, 1);
+        const [r, g, b, a] = helperCtx.getImageData(0, 0, 1, 1).data;
+        return `rgba(${r}, ${g}, ${b}, ${(a / 255).toFixed(3)})`;
+      } catch {
+        return '#000000';
+      }
+    };
+
     const canvas = await html2canvas(element, {
       scale: 2,
       useCORS: true,
       allowTaint: false,
       logging: false,
       backgroundColor: '#FFFFFF',
+      scrollX: 0,
+      scrollY: 0,
       windowWidth: targetWidth + 100,
       windowHeight: targetHeight + 100,
       onclone: (clonedDoc) => {
@@ -271,14 +298,37 @@ export default function CarteleraView() {
             (g as HTMLElement).style.display = 'none';
           });
 
-          // Limpiar filtros y backdrops CSS que rompen html2canvas
-          const allCloned = clonedEl.querySelectorAll('*');
+          // Limpiar filtros, sombras y normalizar colores oklab/oklch en todos los nodos
+          const allCloned = [clonedEl, ...Array.from(clonedEl.querySelectorAll('*'))] as HTMLElement[];
+          const clonedWin = clonedDoc.defaultView || window;
+
           allCloned.forEach((node) => {
-            const elNode = node as HTMLElement;
-            if (elNode.style) {
-              elNode.style.filter = 'none';
-              (elNode.style as any).backdropFilter = 'none';
-              (elNode.style as any).webkitBackdropFilter = 'none';
+            if (!node.style) return;
+            node.style.filter = 'none';
+            (node.style as any).backdropFilter = 'none';
+            (node.style as any).webkitBackdropFilter = 'none';
+            node.style.boxShadow = 'none';
+            node.style.textShadow = 'none';
+
+            const comp = clonedWin.getComputedStyle(node);
+            if (comp) {
+              const colorProps = [
+                'color',
+                'backgroundColor',
+                'borderColor',
+                'borderTopColor',
+                'borderBottomColor',
+                'borderLeftColor',
+                'borderRightColor',
+                'outlineColor'
+              ] as const;
+
+              for (const prop of colorProps) {
+                const val = comp[prop as any];
+                if (val && (val.includes('oklch') || val.includes('oklab') || val.includes('color-mix'))) {
+                  (node.style as any)[prop] = toRgba(val);
+                }
+              }
             }
           });
         }
@@ -679,7 +729,7 @@ export default function CarteleraView() {
             <div
               ref={printSheetRef}
               id="lienzo-cartelera-imprimible"
-              className={`cartelera-print-container w-full max-w-[820px] shadow-2xl rounded-2xl border border-slate-300/80 overflow-hidden flex flex-col transition-all duration-300 ${theme.paperBg}`}
+              className={`cartelera-print-container w-full max-w-[820px] shadow-2xl rounded-2xl border border-slate-300 overflow-hidden flex flex-col transition-all duration-300 ${theme.paperBg}`}
               style={{
                 ...theme.paperBgStyle,
                 aspectRatio: orientation === 'landscape' ? '11 / 8.5' : '8.5 / 11',
@@ -695,7 +745,10 @@ export default function CarteleraView() {
                   
                   {/* Bloque Izquierdo: Logotipo e Identidad */}
                   <div className="flex items-center gap-4">
-                    <div className="w-16 h-16 sm:w-18 sm:h-18 rounded-2xl bg-white/10 p-1.5 border border-white/20 shadow-inner flex items-center justify-center shrink-0">
+                    <div
+                      style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', borderColor: 'rgba(255, 255, 255, 0.25)' }}
+                      className="w-16 h-16 sm:w-18 sm:h-18 rounded-2xl p-1.5 border shadow-inner flex items-center justify-center shrink-0"
+                    >
                       <img
                         src={LOGO_WHITE_BASE64}
                         alt="Logo ICLEB"
@@ -718,7 +771,10 @@ export default function CarteleraView() {
 
                   {/* Bloque Derecho: Mes y Año Protagonistas */}
                   <div className="text-right shrink-0">
-                    <span className="text-[11px] font-bold tracking-widest uppercase px-2.5 py-1 rounded-md bg-white/15 border border-white/20 inline-block mb-1">
+                    <span
+                      style={{ backgroundColor: 'rgba(255, 255, 255, 0.18)', borderColor: 'rgba(255, 255, 255, 0.25)' }}
+                      className="text-[11px] font-bold tracking-widest uppercase px-2.5 py-1 rounded-md border inline-block mb-1"
+                    >
                       CARTELERA OFICIAL
                     </span>
                     <h3 className="text-2xl sm:text-3xl lg:text-4xl font-black uppercase tracking-tight text-white">
@@ -732,7 +788,10 @@ export default function CarteleraView() {
                 </div>
 
                 {/* Sutil brillo decorativo */}
-                <div className="absolute -top-12 -right-12 w-48 h-48 bg-white/5 rounded-full pointer-events-none cartelera-decor-glow" />
+                <div
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)' }}
+                  className="absolute -top-12 -right-12 w-48 h-48 rounded-full pointer-events-none cartelera-decor-glow"
+                />
               </div>
 
               {/* CINTILLO CON EL LEMA / VERSÍCULO BÍBLICO */}
@@ -826,7 +885,7 @@ export default function CarteleraView() {
               </div>
 
               {/* PIE DE PÁGINA INSTITUCIONAL DEL BOLETÍN */}
-              <div className="px-6 py-3 bg-white border-t border-slate-200/80 flex items-center justify-between text-[11px] text-slate-500 shrink-0">
+              <div className="px-6 py-3 bg-white border-t border-slate-200 flex items-center justify-between text-[11px] text-slate-500 shrink-0">
                 <div className="flex items-center gap-1.5 font-medium">
                   <MapPin className="w-3.5 h-3.5 text-slate-400" />
                   <span>Colonia Unión, San Pedro Sula • Iglesia Cristiana Luterana El Buen Pastor</span>
