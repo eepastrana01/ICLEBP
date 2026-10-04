@@ -187,7 +187,7 @@ export default function CarteleraView() {
   const [verseText, setVerseText] = useState<string>(
     '«El Señor es mi pastor; nada me faltará.» — Salmo 23:1'
   );
-  const [isExporting, setIsExporting] = useState<boolean>(false);
+  const [exportingType, setExportingType] = useState<'pdf' | 'image' | null>(null);
 
   const printSheetRef = useRef<HTMLDivElement>(null);
 
@@ -253,11 +253,8 @@ export default function CarteleraView() {
     helperCanvas.height = 1;
     const helperCtx = helperCanvas.getContext('2d', { willReadFrequently: true });
 
-    const toRgba = (colorStr: string): string => {
+    const convertSingleColor = (colorStr: string): string => {
       if (!colorStr || colorStr === 'transparent' || colorStr === 'none' || colorStr === 'inherit') {
-        return colorStr;
-      }
-      if (!colorStr.includes('oklch') && !colorStr.includes('oklab') && !colorStr.includes('color-mix')) {
         return colorStr;
       }
       if (!helperCtx) return '#000000';
@@ -272,76 +269,103 @@ export default function CarteleraView() {
       }
     };
 
-    const canvas = await html2canvas(element, {
-      scale: 2,
-      useCORS: true,
-      allowTaint: false,
-      logging: false,
-      backgroundColor: '#FFFFFF',
-      scrollX: 0,
-      scrollY: 0,
-      windowWidth: targetWidth + 100,
-      windowHeight: targetHeight + 100,
-      onclone: (clonedDoc) => {
-        const clonedEl = clonedDoc.getElementById('lienzo-cartelera-imprimible');
-        if (clonedEl) {
-          clonedEl.style.width = `${targetWidth}px`;
-          clonedEl.style.minHeight = `${targetHeight}px`;
-          clonedEl.style.maxHeight = `${targetHeight}px`;
-          clonedEl.style.boxShadow = 'none';
-          clonedEl.style.transform = 'none';
-          clonedEl.style.borderRadius = '0px';
-
-          // Eliminar elementos con blur decorativo que no son soportados por html2canvas
-          const glows = clonedEl.querySelectorAll('.cartelera-decor-glow');
-          glows.forEach((g) => {
-            (g as HTMLElement).style.display = 'none';
-          });
-
-          // Limpiar filtros, sombras y normalizar colores oklab/oklch en todos los nodos
-          const allCloned = [clonedEl, ...Array.from(clonedEl.querySelectorAll('*'))] as HTMLElement[];
-          const clonedWin = clonedDoc.defaultView || window;
-
-          allCloned.forEach((node) => {
-            if (!node.style) return;
-            node.style.filter = 'none';
-            (node.style as any).backdropFilter = 'none';
-            (node.style as any).webkitBackdropFilter = 'none';
-            node.style.boxShadow = 'none';
-            node.style.textShadow = 'none';
-
-            const comp = clonedWin.getComputedStyle(node);
-            if (comp) {
-              const colorProps = [
-                'color',
-                'backgroundColor',
-                'borderColor',
-                'borderTopColor',
-                'borderBottomColor',
-                'borderLeftColor',
-                'borderRightColor',
-                'outlineColor'
-              ] as const;
-
-              for (const prop of colorProps) {
-                const val = comp[prop as any];
-                if (val && (val.includes('oklch') || val.includes('oklab') || val.includes('color-mix'))) {
-                  (node.style as any)[prop] = toRgba(val);
-                }
-              }
-            }
-          });
-        }
+    const toRgba = (val: string): string => {
+      if (!val || typeof val !== 'string') return val;
+      if (!val.includes('oklch') && !val.includes('oklab') && !val.includes('color-mix')) {
+        return val;
       }
-    });
+      if (val.startsWith('oklch(') || val.startsWith('oklab(') || val.startsWith('color-mix(')) {
+        return convertSingleColor(val);
+      }
+      return val.replace(/oklch\([^)]+\)|oklab\([^)]+\)/g, (match) => convertSingleColor(match));
+    };
 
-    return canvas;
+    const createStyleProxy = (style: CSSStyleDeclaration) => {
+      return new Proxy(style, {
+        get(target, prop) {
+          if (prop === 'getPropertyValue') {
+            return (propName: string) => {
+              const v = target.getPropertyValue(propName);
+              return toRgba(v);
+            };
+          }
+          const v = (target as any)[prop];
+          if (typeof v === 'string') {
+            return toRgba(v);
+          }
+          if (typeof v === 'function') {
+            return v.bind(target);
+          }
+          return v;
+        }
+      });
+    };
+
+    // Interceptar getComputedStyle en el window principal mientras corre html2canvas
+    const origWindowGetComputedStyle = window.getComputedStyle;
+    window.getComputedStyle = function (elt: Element, pseudoElt?: string | null) {
+      const style = origWindowGetComputedStyle.call(this, elt, pseudoElt);
+      return createStyleProxy(style);
+    };
+
+    try {
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: false,
+        logging: false,
+        backgroundColor: '#FFFFFF',
+        scrollX: 0,
+        scrollY: 0,
+        windowWidth: targetWidth + 100,
+        windowHeight: targetHeight + 100,
+        onclone: (clonedDoc) => {
+          const clonedWin = clonedDoc.defaultView;
+          if (clonedWin && clonedWin.getComputedStyle) {
+            const origClonedGetComputedStyle = clonedWin.getComputedStyle.bind(clonedWin);
+            clonedWin.getComputedStyle = function (elt: Element, pseudoElt?: string | null) {
+              const style = origClonedGetComputedStyle(elt, pseudoElt);
+              return createStyleProxy(style);
+            };
+          }
+
+          const clonedEl = clonedDoc.getElementById('lienzo-cartelera-imprimible');
+          if (clonedEl) {
+            clonedEl.style.width = `${targetWidth}px`;
+            clonedEl.style.minHeight = `${targetHeight}px`;
+            clonedEl.style.maxHeight = `${targetHeight}px`;
+            clonedEl.style.boxShadow = 'none';
+            clonedEl.style.transform = 'none';
+            clonedEl.style.borderRadius = '0px';
+
+            const glows = clonedEl.querySelectorAll('.cartelera-decor-glow');
+            glows.forEach((g) => {
+              (g as HTMLElement).style.display = 'none';
+            });
+
+            const allCloned = [clonedEl, ...Array.from(clonedEl.querySelectorAll('*'))] as HTMLElement[];
+            allCloned.forEach((node) => {
+              if (!node.style) return;
+              node.style.filter = 'none';
+              (node.style as any).backdropFilter = 'none';
+              (node.style as any).webkitBackdropFilter = 'none';
+              node.style.boxShadow = 'none';
+              node.style.textShadow = 'none';
+            });
+          }
+        }
+      });
+
+      return canvas;
+    } finally {
+      window.getComputedStyle = origWindowGetComputedStyle;
+    }
   };
 
   // 2. Descargar como PDF listo para imprimir
   const handleDownloadPdf = async () => {
     if (!printSheetRef.current) return;
-    setIsExporting(true);
+    setExportingType('pdf');
     try {
       const canvas = await generateSheetCanvas(printSheetRef.current);
       const imgData = canvas.toDataURL('image/jpeg', 0.95);
@@ -357,41 +381,46 @@ export default function CarteleraView() {
 
       pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
       pdf.save(`Cartelera_${MONTH_NAMES[selectedMonth]}_${selectedYear}.pdf`);
+      console.log('PDF de cartelera generado y descargado exitosamente');
     } catch (err: any) {
       console.error('Error generando PDF de cartelera:', err);
       alert('Hubo un inconveniente al generar el PDF. Puedes usar el botón "Imprimir Hoja" para guardarla como PDF directamente.');
     } finally {
-      setIsExporting(false);
+      setExportingType(null);
     }
   };
 
   // 3. Descargar como Imagen PNG de alta calidad
   const handleDownloadImage = async () => {
     if (!printSheetRef.current) return;
-    setIsExporting(true);
+    setExportingType('image');
     try {
       const canvas = await generateSheetCanvas(printSheetRef.current);
 
       canvas.toBlob((blob) => {
-        if (!blob) {
+        try {
+          if (!blob) {
+            const link = document.createElement('a');
+            link.download = `Cartelera_${MONTH_NAMES[selectedMonth]}_${selectedYear}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+            return;
+          }
+          const url = URL.createObjectURL(blob);
           const link = document.createElement('a');
           link.download = `Cartelera_${MONTH_NAMES[selectedMonth]}_${selectedYear}.png`;
-          link.href = canvas.toDataURL('image/png');
+          link.href = url;
           link.click();
-          return;
+          setTimeout(() => URL.revokeObjectURL(url), 1000);
+          console.log('Imagen de cartelera guardada exitosamente');
+        } finally {
+          setExportingType(null);
         }
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.download = `Cartelera_${MONTH_NAMES[selectedMonth]}_${selectedYear}.png`;
-        link.href = url;
-        link.click();
-        setTimeout(() => URL.revokeObjectURL(url), 1000);
       }, 'image/png');
     } catch (err: any) {
       console.error('Error exportando imagen de cartelera:', err);
       alert('Hubo un inconveniente al generar la imagen. Puedes usar el botón "Imprimir Hoja" como alternativa.');
-    } finally {
-      setIsExporting(false);
+      setExportingType(null);
     }
   };
 
@@ -460,7 +489,7 @@ export default function CarteleraView() {
         <div className="flex items-center gap-2.5 flex-wrap">
           <button
             onClick={handlePrint}
-            disabled={isExporting || displayedActivities.length === 0}
+            disabled={exportingType !== null || displayedActivities.length === 0}
             className="flex items-center gap-2 px-4 py-2.5 bg-slate-900 text-white rounded-xl text-sm font-semibold hover:bg-slate-800 transition-all shadow-xs active:scale-95 disabled:opacity-50"
           >
             <Printer className="w-4 h-4" />
@@ -469,20 +498,20 @@ export default function CarteleraView() {
 
           <button
             onClick={handleDownloadPdf}
-            disabled={isExporting || displayedActivities.length === 0}
+            disabled={exportingType !== null || displayedActivities.length === 0}
             className="flex items-center gap-2 px-3.5 py-2.5 bg-white border border-slate-200 text-slate-700 rounded-xl text-sm font-semibold hover:bg-slate-50 transition-all shadow-2xs active:scale-95 disabled:opacity-50"
           >
-            <Download className={`w-4 h-4 text-blue-700 ${isExporting ? 'animate-bounce' : ''}`} />
-            <span>{isExporting ? 'Generando PDF...' : 'Descargar PDF'}</span>
+            <Download className={`w-4 h-4 text-blue-700 ${exportingType === 'pdf' ? 'animate-bounce' : ''}`} />
+            <span>{exportingType === 'pdf' ? 'Generando PDF...' : 'Descargar PDF'}</span>
           </button>
 
           <button
             onClick={handleDownloadImage}
-            disabled={isExporting || displayedActivities.length === 0}
+            disabled={exportingType !== null || displayedActivities.length === 0}
             className="flex items-center gap-2 px-3.5 py-2.5 bg-white border border-slate-200 text-slate-700 rounded-xl text-sm font-semibold hover:bg-slate-50 transition-all shadow-2xs active:scale-95 disabled:opacity-50"
           >
-            <ImageIcon className={`w-4 h-4 text-emerald-700 ${isExporting ? 'animate-bounce' : ''}`} />
-            <span>{isExporting ? 'Guardando imagen...' : 'Guardar Imagen'}</span>
+            <ImageIcon className={`w-4 h-4 text-emerald-700 ${exportingType === 'image' ? 'animate-bounce' : ''}`} />
+            <span>{exportingType === 'image' ? 'Guardando imagen...' : 'Guardar Imagen'}</span>
           </button>
         </div>
       </div>

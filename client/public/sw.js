@@ -1,4 +1,4 @@
-const CACHE_NAME = 'planner-pastoral-v1';
+const CACHE_NAME = 'planner-pastoral-v2.1';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
