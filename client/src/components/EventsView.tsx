@@ -62,7 +62,14 @@ export default function EventsView() {
   // Modales
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
   const [editingEvento, setEditingEvento] = useState<Evento | null>(null);
-  const [eventForm, setEventForm] = useState({
+  const [eventForm, setEventForm] = useState<{
+    nombre: string;
+    descripcion: string;
+    tipo: string;
+    precio_boleto: number | '';
+    meta_recaudacion: string;
+    fecha_evento: string;
+  }>({
     nombre: '',
     descripcion: '',
     tipo: 'rifa',
@@ -73,11 +80,28 @@ export default function EventsView() {
   const [eventFormError, setEventFormError] = useState('');
 
   // Modal para editar participante existente
-  const [editingParticipante, setEditingParticipante] = useState<Participante | null>(null);
+  interface EditParticipanteForm {
+    id: number;
+    nombre_persona: string;
+    telefono: string;
+    cantidad_boletos: number | '';
+    numeros_boletos: string;
+    monto_total: number | '';
+    pagado: boolean;
+    entregado: boolean;
+    notas: string;
+  }
+  const [editingParticipante, setEditingParticipante] = useState<EditParticipanteForm | null>(null);
 
   // Formulario de Registro Rápido (Quick-Add) - 100% manual
   const nameInputRef = useRef<HTMLInputElement>(null);
-  const [quickForm, setQuickForm] = useState({
+  const [quickForm, setQuickForm] = useState<{
+    nombre_persona: string;
+    cantidad_boletos: number | '';
+    numeros_boletos: string;
+    pagado: boolean;
+    entregado: boolean;
+  }>({
     nombre_persona: '',
     cantidad_boletos: 1,
     numeros_boletos: '',
@@ -232,6 +256,20 @@ export default function EventsView() {
   });
 
   // ==================== HANDLERS ====================
+  const openEditParticipante = (p: Participante) => {
+    setEditingParticipante({
+      id: p.id,
+      nombre_persona: p.nombre_persona || '',
+      telefono: p.telefono || '',
+      cantidad_boletos: p.cantidad_boletos ?? 1,
+      numeros_boletos: p.numeros_boletos || '',
+      monto_total: p.monto_total ?? ((p.cantidad_boletos || 1) * (activeEvento?.precio_boleto || 0)),
+      pagado: Boolean(p.pagado),
+      entregado: Boolean(p.entregado),
+      notas: p.notas || ''
+    });
+  };
+
   const resetEventForm = () => {
     setEditingEvento(null);
     setEventForm({
@@ -275,10 +313,15 @@ export default function EventsView() {
       setEventFormError('El nombre de la actividad o rifa es obligatorio.');
       return;
     }
+    const precio = typeof eventForm.precio_boleto === 'number' ? eventForm.precio_boleto : (parseFloat(eventForm.precio_boleto) || 0);
+    const payload = {
+      ...eventForm,
+      precio_boleto: precio
+    };
     if (editingEvento) {
-      updateEventoMutation.mutate({ id: editingEvento.id, data: eventForm });
+      updateEventoMutation.mutate({ id: editingEvento.id, data: payload });
     } else {
-      createEventoMutation.mutate(eventForm);
+      createEventoMutation.mutate(payload);
     }
   };
 
@@ -287,13 +330,14 @@ export default function EventsView() {
     if (!activeEventoId) return;
     if (!quickForm.nombre_persona.trim()) return;
 
+    const cant = typeof quickForm.cantidad_boletos === 'number' && quickForm.cantidad_boletos > 0 ? quickForm.cantidad_boletos : 1;
     const precio = activeEvento?.precio_boleto || 0;
-    const total = quickForm.cantidad_boletos * precio;
+    const total = cant * precio;
 
     quickAddMutation.mutate({
       evento_id: activeEventoId,
       nombre_persona: quickForm.nombre_persona.trim(),
-      cantidad_boletos: quickForm.cantidad_boletos,
+      cantidad_boletos: cant,
       numeros_boletos: quickForm.numeros_boletos.trim() || null,
       monto_total: total,
       pagado: quickForm.pagado,
@@ -635,7 +679,10 @@ export default function EventsView() {
                     <div className="flex items-center bg-white/90 rounded-2xl border border-white/90 shadow-2xs h-11 px-1">
                       <button
                         type="button"
-                        onClick={() => setQuickForm(prev => ({ ...prev, cantidad_boletos: Math.max(1, prev.cantidad_boletos - 1) }))}
+                        onClick={() => setQuickForm(prev => {
+                          const cur = typeof prev.cantidad_boletos === 'number' ? prev.cantidad_boletos : 1;
+                          return { ...prev, cantidad_boletos: Math.max(1, cur - 1) };
+                        })}
                         className="w-8 h-8 rounded-xl flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-100 text-base font-bold transition-colors cursor-pointer select-none active:scale-95"
                         title="Restar 1 boleto"
                       >
@@ -643,15 +690,35 @@ export default function EventsView() {
                       </button>
                       <input
                         type="number"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
                         min="1"
                         required
                         value={quickForm.cantidad_boletos}
-                        onChange={(e) => setQuickForm({ ...quickForm, cantidad_boletos: Math.max(1, parseInt(e.target.value) || 1) })}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setQuickForm(prev => ({
+                            ...prev,
+                            cantidad_boletos: val === '' ? '' : Math.max(0, parseInt(val, 10) || 0)
+                          }));
+                        }}
+                        onBlur={() => {
+                          setQuickForm(prev => {
+                            const cur = prev.cantidad_boletos;
+                            return {
+                              ...prev,
+                              cantidad_boletos: typeof cur === 'number' && cur > 0 ? cur : 1
+                            };
+                          });
+                        }}
                         className="w-12 h-8 text-center text-xs font-black text-slate-900 bg-transparent focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       />
                       <button
                         type="button"
-                        onClick={() => setQuickForm(prev => ({ ...prev, cantidad_boletos: prev.cantidad_boletos + 1 }))}
+                        onClick={() => setQuickForm(prev => {
+                          const cur = typeof prev.cantidad_boletos === 'number' ? prev.cantidad_boletos : 1;
+                          return { ...prev, cantidad_boletos: cur + 1 };
+                        })}
                         className="w-8 h-8 rounded-xl flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-100 text-base font-bold transition-colors cursor-pointer select-none active:scale-95"
                         title="Sumar 1 boleto"
                       >
@@ -665,7 +732,10 @@ export default function EventsView() {
                         <button
                           key={n}
                           type="button"
-                          onClick={() => setQuickForm(prev => ({ ...prev, cantidad_boletos: prev.cantidad_boletos + n }))}
+                          onClick={() => setQuickForm(prev => {
+                            const cur = typeof prev.cantidad_boletos === 'number' ? prev.cantidad_boletos : 1;
+                            return { ...prev, cantidad_boletos: cur + n };
+                          })}
                           className="px-2.5 py-1.5 rounded-xl text-[10px] font-black text-slate-700 hover:bg-slate-900 hover:text-white transition-colors cursor-pointer active:scale-95"
                           title={`Sumar ${n} boletos`}
                         >
@@ -691,7 +761,7 @@ export default function EventsView() {
                 <div className="flex items-center justify-between sm:justify-start gap-2 shrink-0">
                   {/* Total Calculado en Vivo */}
                   <div className="flex items-center justify-center px-3.5 h-11 rounded-2xl bg-slate-900/5 border border-white/80 text-xs font-extrabold text-slate-800 shrink-0">
-                    L. {Number(quickForm.cantidad_boletos * (activeEvento?.precio_boleto || 0)).toFixed(0)}
+                    L. {Number((typeof quickForm.cantidad_boletos === 'number' ? quickForm.cantidad_boletos : 0) * (activeEvento?.precio_boleto || 0)).toFixed(0)}
                   </div>
 
                   {/* Switches Rápidos: Pagado & Entregado */}
@@ -847,7 +917,7 @@ export default function EventsView() {
                         {canWrite && (
                           <div className="flex items-center">
                             <button
-                              onClick={() => setEditingParticipante(p)}
+                              onClick={() => openEditParticipante(p)}
                               className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-900 hover:bg-white cursor-pointer"
                               title="Editar"
                             >
@@ -1044,7 +1114,7 @@ export default function EventsView() {
                           <td className="px-4 py-3 align-middle text-right rounded-r-2xl">
                             <div className="flex items-center justify-end gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                               <button
-                                onClick={() => setEditingParticipante(p)}
+                                onClick={() => openEditParticipante(p)}
                                 className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-900 hover:bg-white transition-colors cursor-pointer"
                                 title="Editar datos"
                               >
@@ -1154,12 +1224,16 @@ export default function EventsView() {
                     </label>
                     <input
                       type="number"
+                      inputMode="decimal"
                       step="0.01"
                       min="0"
                       required
                       placeholder="Ej. 50.00"
                       value={eventForm.precio_boleto}
-                      onChange={(e) => setEventForm({ ...eventForm, precio_boleto: parseFloat(e.target.value) || 0 })}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setEventForm({ ...eventForm, precio_boleto: val === '' ? '' : parseFloat(val) || 0 });
+                      }}
                       className="glass-input w-full h-10 rounded-xl px-3 text-xs font-bold text-slate-900 focus:outline-none"
                     />
                   </div>
@@ -1172,7 +1246,9 @@ export default function EventsView() {
                     </label>
                     <input
                       type="number"
+                      inputMode="decimal"
                       step="0.01"
+                      min="0"
                       placeholder="Ej. 10000"
                       value={eventForm.meta_recaudacion}
                       onChange={(e) => setEventForm({ ...eventForm, meta_recaudacion: e.target.value })}
@@ -1267,14 +1343,21 @@ export default function EventsView() {
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
+                  const cant = typeof editingParticipante.cantidad_boletos === 'number' && editingParticipante.cantidad_boletos > 0
+                    ? editingParticipante.cantidad_boletos
+                    : 1;
+                  const total = typeof editingParticipante.monto_total === 'number' && editingParticipante.monto_total >= 0
+                    ? editingParticipante.monto_total
+                    : (cant * (activeEvento?.precio_boleto || 0));
+
                   updateParticipanteMutation.mutate({
                     id: editingParticipante.id,
                     data: {
-                      nombre_persona: editingParticipante.nombre_persona,
-                      telefono: editingParticipante.telefono,
-                      cantidad_boletos: editingParticipante.cantidad_boletos,
-                      numeros_boletos: editingParticipante.numeros_boletos,
-                      monto_total: editingParticipante.monto_total,
+                      nombre_persona: editingParticipante.nombre_persona.trim(),
+                      telefono: editingParticipante.telefono.trim(),
+                      cantidad_boletos: cant,
+                      numeros_boletos: editingParticipante.numeros_boletos.trim() || null,
+                      monto_total: total,
                       pagado: editingParticipante.pagado,
                       entregado: editingParticipante.entregado,
                       notas: editingParticipante.notas
@@ -1296,27 +1379,112 @@ export default function EventsView() {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-3 items-start">
                   <div>
                     <label className="block text-[11px] font-extrabold text-slate-500 uppercase tracking-wider mb-1.5">
                       Cant. Boletos
                     </label>
-                    <input
-                      type="number"
-                      min="1"
-                      required
-                      value={editingParticipante.cantidad_boletos}
-                      onChange={(e) => {
-                        const cant = Math.max(1, parseInt(e.target.value) || 1);
-                        const precio = activeEvento?.precio_boleto || 0;
-                        setEditingParticipante({
-                          ...editingParticipante,
-                          cantidad_boletos: cant,
-                          monto_total: cant * precio
-                        });
-                      }}
-                      className="glass-input w-full h-10 rounded-xl px-3 text-xs font-bold text-slate-900 focus:outline-none"
-                    />
+                    <div className="flex items-center bg-white/90 rounded-xl border border-white/90 shadow-2xs h-10 px-1">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const cur = typeof editingParticipante.cantidad_boletos === 'number' ? editingParticipante.cantidad_boletos : 1;
+                          const next = Math.max(1, cur - 1);
+                          const precio = activeEvento?.precio_boleto || 0;
+                          setEditingParticipante({
+                            ...editingParticipante,
+                            cantidad_boletos: next,
+                            monto_total: next * precio
+                          });
+                        }}
+                        className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-100 text-sm font-bold transition-colors cursor-pointer select-none active:scale-95"
+                        title="Restar 1 boleto"
+                      >
+                        -
+                      </button>
+                      <input
+                        type="number"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        min="1"
+                        required
+                        value={editingParticipante.cantidad_boletos}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          const precio = activeEvento?.precio_boleto || 0;
+                          if (val === '') {
+                            setEditingParticipante({
+                              ...editingParticipante,
+                              cantidad_boletos: '',
+                              monto_total: ''
+                            });
+                          } else {
+                            const parsed = parseInt(val, 10);
+                            const cant = isNaN(parsed) ? 1 : Math.max(0, parsed);
+                            setEditingParticipante({
+                              ...editingParticipante,
+                              cantidad_boletos: cant,
+                              monto_total: cant * precio
+                            });
+                          }
+                        }}
+                        onBlur={() => {
+                          setEditingParticipante(prev => {
+                            if (!prev) return null;
+                            const cur = prev.cantidad_boletos;
+                            const precio = activeEvento?.precio_boleto || 0;
+                            const safeCant = typeof cur === 'number' && cur > 0 ? cur : 1;
+                            const safeTotal = typeof prev.monto_total === 'number' ? prev.monto_total : safeCant * precio;
+                            return {
+                              ...prev,
+                              cantidad_boletos: safeCant,
+                              monto_total: safeTotal
+                            };
+                          });
+                        }}
+                        className="w-full h-8 text-center text-xs font-black text-slate-900 bg-transparent focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const cur = typeof editingParticipante.cantidad_boletos === 'number' ? editingParticipante.cantidad_boletos : 1;
+                          const next = cur + 1;
+                          const precio = activeEvento?.precio_boleto || 0;
+                          setEditingParticipante({
+                            ...editingParticipante,
+                            cantidad_boletos: next,
+                            monto_total: next * precio
+                          });
+                        }}
+                        className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-100 text-sm font-bold transition-colors cursor-pointer select-none active:scale-95"
+                        title="Sumar 1 boleto"
+                      >
+                        +
+                      </button>
+                    </div>
+
+                    {/* Botones de incremento rápido */}
+                    <div className="flex items-center gap-1 mt-1.5">
+                      {[1, 5, 10].map(n => (
+                        <button
+                          key={n}
+                          type="button"
+                          onClick={() => {
+                            const cur = typeof editingParticipante.cantidad_boletos === 'number' ? editingParticipante.cantidad_boletos : 1;
+                            const next = cur + n;
+                            const precio = activeEvento?.precio_boleto || 0;
+                            setEditingParticipante({
+                              ...editingParticipante,
+                              cantidad_boletos: next,
+                              monto_total: next * precio
+                            });
+                          }}
+                          className="px-2 py-0.5 rounded-lg text-[10px] font-black bg-slate-100 hover:bg-slate-900 hover:text-white text-slate-700 transition-colors cursor-pointer select-none active:scale-95"
+                        >
+                          +{n}
+                        </button>
+                      ))}
+                    </div>
                   </div>
 
                   <div>
@@ -1325,12 +1493,35 @@ export default function EventsView() {
                     </label>
                     <input
                       type="number"
+                      inputMode="decimal"
                       step="0.01"
+                      min="0"
                       required
                       value={editingParticipante.monto_total}
-                      onChange={(e) => setEditingParticipante({ ...editingParticipante, monto_total: parseFloat(e.target.value) || 0 })}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setEditingParticipante({
+                          ...editingParticipante,
+                          monto_total: val === '' ? '' : parseFloat(val) || 0
+                        });
+                      }}
+                      onBlur={() => {
+                        setEditingParticipante(prev => {
+                          if (!prev) return null;
+                          const cur = prev.monto_total;
+                          const safeCant = typeof prev.cantidad_boletos === 'number' && prev.cantidad_boletos > 0 ? prev.cantidad_boletos : 1;
+                          const precio = activeEvento?.precio_boleto || 0;
+                          return {
+                            ...prev,
+                            monto_total: typeof cur === 'number' ? cur : safeCant * precio
+                          };
+                        });
+                      }}
                       className="glass-input w-full h-10 rounded-xl px-3 text-xs font-bold text-slate-900 focus:outline-none"
                     />
+                    <p className="text-[10px] font-medium text-slate-400 mt-1.5">
+                      {activeEvento?.precio_boleto ? `L. ${activeEvento.precio_boleto} c/u` : 'Precio personalizado'}
+                    </p>
                   </div>
                 </div>
 
@@ -1353,7 +1544,9 @@ export default function EventsView() {
                       Teléfono
                     </label>
                     <input
-                      type="text"
+                      type="tel"
+                      inputMode="tel"
+                      autoComplete="tel"
                       placeholder="+504 9999-9999"
                       value={editingParticipante.telefono || ''}
                       onChange={(e) => setEditingParticipante({ ...editingParticipante, telefono: e.target.value })}
