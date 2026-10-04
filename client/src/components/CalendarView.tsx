@@ -4,8 +4,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../lib/api';
 import { generarPDFActividades } from '../lib/pdfActividades';
 import { ConfirmModal, useConfirm } from './ConfirmModal';
+import { useNavigate } from 'react-router-dom';
 import { SPRING_SNAPPY, SPRING_FAST } from '../lib/animations';
-import { Gift } from 'lucide-react';
+import { Gift, LayoutTemplate } from 'lucide-react';
 import { ActivityModal, getCategoryTag, type Actividad } from './ActivityModal';
 
 interface Miembro { id: number; nombre: string; fecha_nacimiento: string; }
@@ -40,6 +41,7 @@ function AgendaTab({
   onOpenEdit: (item: Actividad) => void;
 }) {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [semFilter, setSemFilter] = useState<1|2>(getSemester(new Date()));
   const [yearFilter, setYearFilter] = useState(new Date().getFullYear());
@@ -125,6 +127,14 @@ function AgendaTab({
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             Exportar PDF
+          </button>
+          <button
+            onClick={() => navigate('/cartelera')}
+            className="glass-button-secondary flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 rounded-2xl px-3.5 sm:px-4 py-2.5 text-xs font-bold text-blue-900 bg-blue-50/70 border border-blue-200/80 hover:bg-blue-100/80 transition-colors cursor-pointer"
+            title="Diseñar e imprimir cartelera mural para la pizarra de anuncios"
+          >
+            <LayoutTemplate className="w-3.5 h-3.5 text-blue-800" />
+            Cartelera Mensual
           </button>
           {isAdmin && (
             <motion.button
