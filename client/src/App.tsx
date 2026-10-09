@@ -15,6 +15,7 @@ const TeamView = lazy(() => import('./components/TeamView'))
 const EventsView = lazy(() => import('./components/EventsView'))
 const BaptismsView = lazy(() => import('./components/BaptismsView'))
 const CarteleraView = lazy(() => import('./components/CarteleraView'))
+const BirthdaysView = lazy(() => import('./components/BirthdaysView'))
 
 function ModuleSkeleton() {
   return (
@@ -70,6 +71,10 @@ function ProtectedRoute({ module, children }: ProtectedRouteProps) {
       const perms = user.permisos || {};
       if (module === 'cartelera') {
         if (perms.cartelera === 'ninguno' || (perms.agenda === 'ninguno' && perms.cartelera === undefined)) {
+          return <Navigate to={`/${getDefaultModule(user)}`} replace />;
+        }
+      } else if (module === 'cumpleaneros') {
+        if (perms.cumpleaneros === 'ninguno' || (perms.miembros === 'ninguno' && perms.cumpleaneros === undefined)) {
           return <Navigate to={`/${getDefaultModule(user)}`} replace />;
         }
       } else if (perms[module] === 'ninguno') {
@@ -159,6 +164,7 @@ function App() {
         <Route path="/equipo" element={<ProtectedRoute module="equipo"><TeamView /></ProtectedRoute>} />
         <Route path="/eventos" element={<ProtectedRoute module="eventos"><EventsView /></ProtectedRoute>} />
         <Route path="/cartelera" element={<ProtectedRoute module="cartelera"><CarteleraView /></ProtectedRoute>} />
+        <Route path="/cumpleaneros" element={<ProtectedRoute module="cumpleaneros"><BirthdaysView /></ProtectedRoute>} />
         <Route path="/usuarios" element={<ProtectedRoute module="usuarios"><UsersView /></ProtectedRoute>} />
         <Route path="/perfil" element={<ProtectedRoute module="perfil"><ProfileView /></ProtectedRoute>} />
       </Route>

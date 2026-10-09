@@ -1,6 +1,8 @@
 import { useState, useMemo, type FormEvent } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Cake } from 'lucide-react';
 import api from '../lib/api';
 import { ConfirmModal, useConfirm } from './ConfirmModal';
 import { SPRING_SNAPPY, SPRING_FAST } from '../lib/animations';
@@ -15,6 +17,7 @@ interface Miembro {
 }
 
 export default function MembersView() {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const isAdmin = user.rol === 'admin';
@@ -188,7 +191,17 @@ export default function MembersView() {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+          {activeView === 'list' && (
+            <button
+              onClick={() => navigate('/cumpleaneros')}
+              className="w-full sm:w-auto glass-button-secondary inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-xs font-bold text-pink-800 bg-pink-50/70 border border-pink-200/80 hover:bg-pink-100/80 cursor-pointer shadow-xs transition-all"
+              title="Diseñar e imprimir cartelera mensual de cumpleañeros"
+            >
+              <Cake className="w-4 h-4 text-pink-600" />
+              <span>Cartelera de Cumpleaños</span>
+            </button>
+          )}
           {activeView === 'list' ? (
             canWrite && (
               <motion.button
