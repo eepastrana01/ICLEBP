@@ -4,27 +4,22 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Printer,
   Download,
-  Image as ImageIcon,
-  Quote,
-  Gift,
-  Cake,
-  Eye,
-  EyeOff,
-  UserPlus,
+  Calendar as CalendarIcon,
+  Search,
   ChevronLeft,
   ChevronRight,
   PartyPopper,
-  Church,
-  CheckSquare,
-  Square,
-  Sparkles,
-  Award,
-  Calendar,
-  Copy,
+  Cake,
+  Gift,
   Check,
   MessageCircle,
-  Bookmark,
-  Layers
+  LayoutGrid,
+  FileText,
+  UserPlus,
+  Eye,
+  EyeOff,
+  Sparkles,
+  Quote
 } from 'lucide-react';
 import api from '../lib/api';
 import { LOGO_WHITE_BASE64 } from '../lib/logoWhiteBase64';
@@ -46,6 +41,7 @@ export interface ManualBirthday {
   dia: number;
   anioNac?: number;
   congregacion?: string;
+  deseo?: string;
 }
 
 const MONTH_NAMES = [
@@ -53,151 +49,90 @@ const MONTH_NAMES = [
   'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
 ];
 
+const MONTH_SHORT = [
+  'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
+  'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'
+];
+
 const DAY_NAMES_SHORT = ['DOM', 'LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB'];
 
 const BIBLE_VERSES = [
   {
-    id: 'numeros6',
     citation: 'Números 6:24-26',
     text: '«El Señor te bendiga y te guarde; el Señor haga resplandecer su rostro sobre ti y tenga de ti misericordia; el Señor alce sobre ti su rostro y ponga en ti paz.»'
   },
   {
-    id: 'salmo139',
     citation: 'Salmo 139:14',
     text: '«Te alabaré, porque formidables y maravillosas son tus obras; estoy maravillado, y mi alma lo sabe muy bien.»'
   },
   {
-    id: 'jeremias29',
     citation: 'Jeremías 29:11',
     text: '«Porque yo sé los pensamientos que tengo acerca de vosotros, dice el Señor, pensamientos de paz y no de mal, para daros el fin que esperáis.»'
   },
   {
-    id: 'salmo90',
     citation: 'Salmo 90:12',
     text: '«Enséñanos de tal modo a contar nuestros días, que traigamos al corazón sabiduría.»'
   },
   {
-    id: 'proverbios9',
     citation: 'Proverbios 9:11',
     text: '«Porque por mí se aumentarán tus días, y años de vida se te añadirán.»'
   },
   {
-    id: 'salmo118',
     citation: 'Salmo 118:24',
     text: '«Este es el día que hizo el Señor; nos gozaremos y alegraremos en él.»'
-  },
-  {
-    id: 'salmo23',
-    citation: 'Salmo 23:6',
-    text: '«Ciertamente el bien y la misericordia me seguirán todos los días de mi vida, y en la casa del Señor moraré por largos días.»'
   }
 ];
-
-type LayoutStyle = 'gala' | 'weekly' | 'cards';
-
-interface ColorPalette {
-  id: string;
-  name: string;
-  tagline: string;
-  primary: string;
-  accent: string;
-  headerBg: { background: string };
-  paperBg: { backgroundColor: string };
-  cardBg: { backgroundColor: string; borderColor: string };
-  ribbonBg: { backgroundColor: string; color: string };
-  crestBorder: string;
-  textColor: string;
-}
-
-const PALETTES: Record<string, ColorPalette> = {
-  royal_gold: {
-    id: 'royal_gold',
-    name: 'Gala Azul Real & Oro',
-    tagline: 'Solemne, majestuoso y con detalles dorados',
-    primary: '#1E3A8A',
-    accent: '#B45309',
-    headerBg: { background: 'linear-gradient(135deg, #091124 0%, #172554 50%, #091124 100%)' },
-    paperBg: { backgroundColor: '#FCFBF8' },
-    cardBg: { backgroundColor: '#FFFFFF', borderColor: '#E5DFD5' },
-    ribbonBg: { backgroundColor: '#1E3A8A', color: '#FDFBF7' },
-    crestBorder: '#B45309',
-    textColor: '#0F172A'
-  },
-  emerald_peace: {
-    id: 'emerald_peace',
-    name: 'Jardín de Gracia & Esmeralda',
-    tagline: 'Vida, frescura y esperanza cristiana',
-    primary: '#065F46',
-    accent: '#D97706',
-    headerBg: { background: 'linear-gradient(135deg, #02241b 0%, #064E3B 50%, #02241b 100%)' },
-    paperBg: { backgroundColor: '#F8FAF9' },
-    cardBg: { backgroundColor: '#FFFFFF', borderColor: '#D1E7DD' },
-    ribbonBg: { backgroundColor: '#065F46', color: '#FFFFFF' },
-    crestBorder: '#059669',
-    textColor: '#064E3B'
-  },
-  ruby_warm: {
-    id: 'ruby_warm',
-    name: 'Borgoña & Cálido',
-    tagline: 'Fraternidad, amor y celebración festiva',
-    primary: '#881337',
-    accent: '#E11D48',
-    headerBg: { background: 'linear-gradient(135deg, #3B0715 0%, #881337 50%, #3B0715 100%)' },
-    paperBg: { backgroundColor: '#FCF8F8' },
-    cardBg: { backgroundColor: '#FFFFFF', borderColor: '#F8D7DA' },
-    ribbonBg: { backgroundColor: '#881337', color: '#FFFFFF' },
-    crestBorder: '#9F1239',
-    textColor: '#4C0519'
-  },
-  classic_print: {
-    id: 'classic_print',
-    name: 'Blanco & Negro Editorial',
-    tagline: 'Alto contraste nítido, ideal para fotocopiadoras',
-    primary: '#0F172A',
-    accent: '#334155',
-    headerBg: { background: 'linear-gradient(135deg, #020617 0%, #1E293B 50%, #020617 100%)' },
-    paperBg: { backgroundColor: '#FFFFFF' },
-    cardBg: { backgroundColor: '#FFFFFF', borderColor: '#CBD5E1' },
-    ribbonBg: { backgroundColor: '#0F172A', color: '#FFFFFF' },
-    crestBorder: '#0F172A',
-    textColor: '#0F172A'
-  }
-};
 
 export default function BirthdaysView() {
   const currentDate = new Date();
   const [selectedMonth, setSelectedMonth] = useState<number>(currentDate.getMonth());
   const [selectedYear, setSelectedYear] = useState<number>(currentDate.getFullYear());
-  const [layoutStyle, setLayoutStyle] = useState<LayoutStyle>('gala');
-  const [paletteKey, setPaletteKey] = useState<string>('royal_gold');
-  const [selectedVerseId, setSelectedVerseId] = useState<string>('numeros6');
-  const [customVerseText, setCustomVerseText] = useState<string>('');
-  const [customVerseCitation, setCustomVerseCitation] = useState<string>('Dedicatoria Pastoral');
-  const [showAge, setShowAge] = useState<boolean>(false);
-  const [showCongregation, setShowCongregation] = useState<boolean>(true);
+  const [timeScope, setTimeScope] = useState<'mes' | 'trimestre' | 'anio'>('mes');
+  const [activeTab, setActiveTab] = useState<'fichas' | 'calendario' | 'cartel'>('fichas');
+  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [selectedCongregacion, setSelectedCongregacion] = useState<string>('todos');
+  const [showAge, setShowAge] = useState<boolean>(true);
 
-  // Cumpleañeros manuales
+  // Cumpleañeros manuales temporales
   const [manualBirthdays, setManualBirthdays] = useState<ManualBirthday[]>([]);
   const [isAddManualOpen, setIsAddManualOpen] = useState<boolean>(false);
   const [manualName, setManualName] = useState<string>('');
   const [manualDay, setManualDay] = useState<number>(1);
   const [manualCongregation, setManualCongregation] = useState<string>('General');
 
-  // IDs excluidos de la impresión
-  const [excludedIds, setExcludedIds] = useState<string[]>([]);
+  // Estados de exportación y feedback
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [copiedToast, setCopiedToast] = useState<string | null>(null);
 
   const printableRef = useRef<HTMLDivElement>(null);
 
-  // Query de miembros
+  // Consulta de miembros desde la base de datos
   const { data: miembros = [], isLoading } = useQuery<Miembro[]>({
     queryKey: ['miembros'],
     queryFn: async () => (await api.get('/miembros')).data
   });
 
-  // Procesamiento y cálculo de cumpleañeros
-  const allMonthBirthdays = useMemo(() => {
+  // Conteo de cumpleañeros por cada uno de los 12 meses
+  const monthCounts = useMemo(() => {
+    const counts = Array(12).fill(0);
+    miembros.forEach((m) => {
+      if (!m.fecha_nacimiento) return;
+      try {
+        const parts = m.fecha_nacimiento.split('T')[0].split('-');
+        if (parts.length >= 2) {
+          const monthIdx = parseInt(parts[1], 10) - 1;
+          if (monthIdx >= 0 && monthIdx < 12) counts[monthIdx]++;
+        }
+      } catch {}
+    });
+    manualBirthdays.forEach(() => {
+      counts[selectedMonth]++;
+    });
+    return counts;
+  }, [miembros, manualBirthdays, selectedMonth]);
+
+  // Procesamiento de los cumpleañeros del mes seleccionado
+  const monthBirthdays = useMemo(() => {
     const list: Array<{
       uid: string;
       id: number | string;
@@ -210,14 +145,17 @@ export default function BirthdaysView() {
       congregacion: string;
       esManual: boolean;
       esHoy: boolean;
+      esManana: boolean;
+      esPasado: boolean;
       diasFaltantes: number;
-      esEstaSemana: boolean;
+      statusLabel: string;
+      statusType: 'today' | 'tomorrow' | 'upcoming' | 'past' | 'standard';
     }> = [];
 
     const now = new Date();
     const isCurrentMonth = now.getFullYear() === selectedYear && now.getMonth() === selectedMonth;
 
-    // 1. De los miembros registrados
+    // 1. Miembros registrados
     miembros.forEach((m) => {
       if (!m.fecha_nacimiento) return;
       try {
@@ -228,14 +166,46 @@ export default function BirthdaysView() {
         const bMonth = parseInt(parts[1], 10) - 1;
         const bDay = parseInt(parts[2], 10);
 
-        if (bMonth === selectedMonth) {
-          const targetDate = new Date(selectedYear, selectedMonth, bDay);
+        // Filtrado según scope (mes, trimestre o año)
+        let isInScope = false;
+        if (timeScope === 'mes') {
+          isInScope = bMonth === selectedMonth;
+        } else if (timeScope === 'trimestre') {
+          const currentQuarter = Math.floor(selectedMonth / 3);
+          const memberQuarter = Math.floor(bMonth / 3);
+          isInScope = currentQuarter === memberQuarter;
+        } else {
+          isInScope = true; // Año completo
+        }
+
+        if (isInScope) {
+          const targetDate = new Date(selectedYear, bMonth, bDay);
           const dayOfWeek = DAY_NAMES_SHORT[targetDate.getDay()];
           const edad = bYear ? selectedYear - bYear : undefined;
 
           const esHoy = isCurrentMonth && now.getDate() === bDay;
           const diff = bDay - now.getDate();
-          const esEstaSemana = isCurrentMonth && diff >= 0 && diff <= 7;
+          const esManana = isCurrentMonth && diff === 1;
+          const esPasado = isCurrentMonth && diff < 0;
+
+          let statusLabel = `${String(bDay).padStart(2, '0')} de ${MONTH_NAMES[bMonth]}`;
+          let statusType: 'today' | 'tomorrow' | 'upcoming' | 'past' | 'standard' = 'standard';
+
+          if (isCurrentMonth) {
+            if (esHoy) {
+              statusLabel = `¡CUMPLE HOY! • ${bDay} de ${MONTH_NAMES[bMonth]}`;
+              statusType = 'today';
+            } else if (esManana) {
+              statusLabel = `Mañana • ${bDay} de ${MONTH_NAMES[bMonth]}`;
+              statusType = 'tomorrow';
+            } else if (esPasado) {
+              statusLabel = `${bDay} de ${MONTH_NAMES[bMonth]} • Pasado`;
+              statusType = 'past';
+            } else {
+              statusLabel = `${bDay} de ${MONTH_NAMES[bMonth]} • En ${diff} días`;
+              statusType = 'upcoming';
+            }
+          }
 
           list.push({
             uid: `m-${m.id}`,
@@ -249,16 +219,19 @@ export default function BirthdaysView() {
             congregacion: m.congregacion || 'General',
             esManual: false,
             esHoy,
+            esManana,
+            esPasado,
             diasFaltantes: diff,
-            esEstaSemana
+            statusLabel,
+            statusType
           });
         }
       } catch (err) {
-        console.error('Error parsing member birthday', err);
+        console.error('Error procesando fecha de miembro', err);
       }
     });
 
-    // 2. Cumpleañeros adicionales
+    // 2. Cumpleañeros manuales
     manualBirthdays.forEach((man) => {
       const targetDate = new Date(selectedYear, selectedMonth, man.dia);
       const dayOfWeek = DAY_NAMES_SHORT[targetDate.getDay()];
@@ -266,7 +239,27 @@ export default function BirthdaysView() {
 
       const esHoy = isCurrentMonth && now.getDate() === man.dia;
       const diff = man.dia - now.getDate();
-      const esEstaSemana = isCurrentMonth && diff >= 0 && diff <= 7;
+      const esManana = isCurrentMonth && diff === 1;
+      const esPasado = isCurrentMonth && diff < 0;
+
+      let statusLabel = `${String(man.dia).padStart(2, '0')} de ${MONTH_NAMES[selectedMonth]}`;
+      let statusType: 'today' | 'tomorrow' | 'upcoming' | 'past' | 'standard' = 'standard';
+
+      if (isCurrentMonth) {
+        if (esHoy) {
+          statusLabel = `¡CUMPLE HOY! • ${man.dia} de ${MONTH_NAMES[selectedMonth]}`;
+          statusType = 'today';
+        } else if (esManana) {
+          statusLabel = `Mañana • ${man.dia} de ${MONTH_NAMES[selectedMonth]}`;
+          statusType = 'tomorrow';
+        } else if (esPasado) {
+          statusLabel = `${man.dia} de ${MONTH_NAMES[selectedMonth]} • Pasado`;
+          statusType = 'past';
+        } else {
+          statusLabel = `${man.dia} de ${MONTH_NAMES[selectedMonth]} • En ${diff} días`;
+          statusType = 'upcoming';
+        }
+      }
 
       list.push({
         uid: `man-${man.id}`,
@@ -280,66 +273,85 @@ export default function BirthdaysView() {
         congregacion: man.congregacion || 'General',
         esManual: true,
         esHoy,
+        esManana,
+        esPasado,
         diasFaltantes: diff,
-        esEstaSemana
+        statusLabel,
+        statusType
       });
     });
 
-    return list.sort((a, b) => a.dia - b.dia);
-  }, [miembros, manualBirthdays, selectedMonth, selectedYear]);
-
-  // Filtrar los que están seleccionados
-  const displayedBirthdays = useMemo(() => {
-    return allMonthBirthdays.filter((b) => !excludedIds.includes(b.uid));
-  }, [allMonthBirthdays, excludedIds]);
-
-  // Quienes cumplen hoy
-  const todaysBirthdays = useMemo(() => {
-    return allMonthBirthdays.filter((b) => b.esHoy);
-  }, [allMonthBirthdays]);
-
-  // Agrupación por semanas para el layout semanal
-  const weeklyGroups = useMemo(() => {
-    const weeks: Record<string, typeof displayedBirthdays> = {
-      'Semana 1 (Días 1 al 7)': [],
-      'Semana 2 (Días 8 al 14)': [],
-      'Semana 3 (Días 15 al 21)': [],
-      'Semana 4 y 5 (Días 22 al 31)': []
-    };
-
-    displayedBirthdays.forEach((b) => {
-      if (b.dia <= 7) weeks['Semana 1 (Días 1 al 7)'].push(b);
-      else if (b.dia <= 14) weeks['Semana 2 (Días 8 al 14)'].push(b);
-      else if (b.dia <= 21) weeks['Semana 3 (Días 15 al 21)'].push(b);
-      else weeks['Semana 4 y 5 (Días 22 al 31)'].push(b);
+    // Ordenar cronológicamente por mes y día
+    return list.sort((a, b) => {
+      if (a.mes !== b.mes) return a.mes - b.mes;
+      return a.dia - b.dia;
     });
+  }, [miembros, manualBirthdays, selectedMonth, selectedYear, timeScope]);
 
-    return Object.entries(weeks).filter(([_, items]) => items.length > 0);
-  }, [displayedBirthdays]);
+  // Lista única de congregaciones presentes
+  const congregacionesList = useMemo(() => {
+    const set = new Set<string>();
+    monthBirthdays.forEach((b) => {
+      if (b.congregacion) set.add(b.congregacion);
+    });
+    return Array.from(set);
+  }, [monthBirthdays]);
 
-  // Versículo seleccionado
-  const currentVerse = useMemo(() => {
-    if (selectedVerseId === 'custom') {
-      return {
-        citation: customVerseCitation.trim() || 'Dedicatoria Pastoral',
-        text: customVerseText.trim() || '«Damos gracias a Dios por sus vidas y oramos por bendición y paz sobre cada uno de ustedes.»'
-      };
-    }
-    return BIBLE_VERSES.find((v) => v.id === selectedVerseId) || BIBLE_VERSES[0];
-  }, [selectedVerseId, customVerseText, customVerseCitation]);
+  // Conteo por congregación
+  const congregacionCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    monthBirthdays.forEach((b) => {
+      const c = b.congregacion || 'General';
+      counts[c] = (counts[c] || 0) + 1;
+    });
+    return counts;
+  }, [monthBirthdays]);
 
-  // Paleta de color seleccionada
-  const palette = PALETTES[paletteKey] || PALETTES.royal_gold;
+  // Filtrado final por buscador y congregación
+  const filteredBirthdays = useMemo(() => {
+    return monthBirthdays.filter((b) => {
+      const matchesSearch =
+        searchTerm.trim() === '' ||
+        b.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        b.congregacion.toLowerCase().includes(searchTerm.toLowerCase());
 
-  // Acciones de selección
-  const toggleExcludeId = (uid: string) => {
-    setExcludedIds((prev) =>
-      prev.includes(uid) ? prev.filter((id) => id !== uid) : [...prev, uid]
-    );
+      const matchesCong =
+        selectedCongregacion === 'todos' || b.congregacion === selectedCongregacion;
+
+      return matchesSearch && matchesCong;
+    });
+  }, [monthBirthdays, searchTerm, selectedCongregacion]);
+
+  // Métricas de estado (pasados, hoy, próximos)
+  const metrics = useMemo(() => {
+    const pasados = filteredBirthdays.filter((b) => b.esPasado).length;
+    const hoy = filteredBirthdays.filter((b) => b.esHoy).length;
+    const proximos = filteredBirthdays.filter((b) => !b.esPasado && !b.esHoy).length;
+    return { pasados, hoy, proximos, total: filteredBirthdays.length };
+  }, [filteredBirthdays]);
+
+  // Tarjeta destacada 1: Quien cumple hoy (primer resultado)
+  const todayHighlight = useMemo(() => {
+    return monthBirthdays.find((b) => b.esHoy) || null;
+  }, [monthBirthdays]);
+
+  // Tarjeta destacada 2: Próximo cumpleañero más cercano
+  const nextHighlight = useMemo(() => {
+    return monthBirthdays.find((b) => !b.esPasado && !b.esHoy) || null;
+  }, [monthBirthdays]);
+
+  // Versículo sugerido del mes
+  const verseOfTheMonth = useMemo(() => {
+    return BIBLE_VERSES[selectedMonth % BIBLE_VERSES.length];
+  }, [selectedMonth]);
+
+  // Copiar felicitación para WhatsApp
+  const handleCopyGreeting = (name: string, congregacion: string) => {
+    const greeting = `¡Feliz cumpleaños, ${name}! 🎂🎉 Que nuestro buen Dios bendiga grandemente tu vida en este nuevo año, guarde tus pasos y derrame Su paz y gozo sobre tu hogar. «El Señor te bendiga y te guarde; el Señor haga resplandecer su rostro sobre ti...» (Números 6:24). ¡Un abrazo fraternal de parte de tu familia en Cristo de la Iglesia El Buen Pastor (${congregacion})! ✨`;
+    navigator.clipboard.writeText(greeting);
+    setCopiedToast(`¡Felicitación copiada para ${name}!`);
+    setTimeout(() => setCopiedToast(null), 3000);
   };
-
-  const handleSelectAll = () => setExcludedIds([]);
-  const handleDeselectAll = () => setExcludedIds(allMonthBirthdays.map((b) => b.uid));
 
   // Agregar cumpleañero manual
   const handleAddManualBirthday = (e: React.FormEvent) => {
@@ -359,19 +371,7 @@ export default function BirthdaysView() {
     setIsAddManualOpen(false);
   };
 
-  const handleRemoveManual = (id: string) => {
-    setManualBirthdays((prev) => prev.filter((m) => m.id !== id));
-  };
-
-  // Copiar felicitación para WhatsApp
-  const handleCopyGreeting = (name: string) => {
-    const greeting = `¡Feliz cumpleaños, ${name}! 🎂 Que nuestro buen Dios bendiga grandemente tu vida en este nuevo año, guarde tus pasos y derrame abundantes bendiciones y gozo sobre ti y tu familia. «El Señor te bendiga y te guarde; el Señor haga resplandecer su rostro sobre ti...» (Números 6:24). ¡Un abrazo fraternal de parte de tu familia en la Iglesia El Buen Pastor! ✨`;
-    navigator.clipboard.writeText(greeting);
-    setCopiedToast(`¡Felicitación copiada para ${name}!`);
-    setTimeout(() => setCopiedToast(null), 3000);
-  };
-
-  // Impresión Directa
+  // Impresión directa nativa
   const handlePrint = () => {
     window.print();
   };
@@ -513,27 +513,9 @@ export default function BirthdaysView() {
     }
   };
 
-  const handleDownloadImage = async () => {
-    if (!printableRef.current || isGenerating) return;
-    setIsGenerating(true);
-
-    try {
-      const canvas = await generateSheetCanvas(printableRef.current);
-      const link = document.createElement('a');
-      link.download = `Cartelera_Cumpleaneros_${MONTH_NAMES[selectedMonth]}_${selectedYear}.png`;
-      link.href = canvas.toDataURL('image/png', 1.0);
-      link.click();
-    } catch (err) {
-      console.error('Error al generar imagen:', err);
-      alert('Hubo un error al generar la imagen.');
-    } finally {
-      setIsGenerating(false);
-    }
-  };
-
   return (
     <div className="pb-16 font-sans text-slate-900">
-      {/* Estilos para impresión nativa en tamaño Carta */}
+      {/* Estilos para impresión en tamaño Carta */}
       <style>{`
         @media print {
           body {
@@ -569,7 +551,7 @@ export default function BirthdaysView() {
         }
       `}</style>
 
-      {/* Toast flotante para copia de felicitación */}
+      {/* Toast flotante */}
       <AnimatePresence>
         {copiedToast && (
           <motion.div
@@ -584,461 +566,691 @@ export default function BirthdaysView() {
         )}
       </AnimatePresence>
 
-      <div className="pantalla-cumpleaneros space-y-6">
+      <div className="pantalla-cumpleaneros space-y-5">
         
         {/* ======================================================== */}
-        {/* 1. HERO FESTIVO INTERACTIVO (Diferente a Actividades)     */}
+        {/* 1. TOP BAR: BUSCADOR + ALCANCE + ACCIONES               */}
         {/* ======================================================== */}
-        <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-indigo-950 via-slate-900 to-rose-950 text-white p-6 sm:p-8 shadow-xl border border-white/10">
-          {/* Luces y brillo decorativo ambiental */}
-          <div className="absolute top-0 right-0 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute -bottom-10 left-10 w-80 h-80 bg-rose-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+          {/* Buscador */}
+          <div className="relative flex-1 max-w-md">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <input
+              type="text"
+              placeholder="Buscar por nombre o congregación..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full bg-white/80 border border-slate-200/90 rounded-2xl pl-10 pr-4 py-2.5 text-xs font-bold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-400 transition-all shadow-2xs"
+            />
+          </div>
 
-          <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-            <div>
-              <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/10 border border-white/20 text-xs font-bold text-amber-300 mb-3 shadow-inner">
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>Muro de Celebración de Vida</span>
-              </div>
-              
-              <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-white flex items-center gap-3">
-                <span>Cumpleañeros de {MONTH_NAMES[selectedMonth]}</span>
-                <Cake className="w-8 h-8 text-amber-400 shrink-0" />
-              </h1>
-              
-              <p className="text-xs sm:text-sm text-slate-300 font-medium max-w-xl mt-1.5 leading-relaxed">
-                Celebra a los hermanos de la congregación con carteleras de diseño exclusivo tipo Gala, Almanaque o Postales para la pizarra informativa.
-              </p>
+          {/* Selector de Alcance (Mes Actual / Trimestre / Año Completo) */}
+          <div className="flex items-center gap-1 bg-white/80 p-1 rounded-2xl border border-slate-200/80 shadow-2xs self-start sm:self-auto">
+            <button
+              onClick={() => setTimeScope('mes')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                timeScope === 'mes'
+                  ? 'bg-rose-500 text-white shadow-2xs font-extrabold'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              Mes Actual
+            </button>
+            <button
+              onClick={() => setTimeScope('trimestre')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                timeScope === 'trimestre'
+                  ? 'bg-rose-500 text-white shadow-2xs font-extrabold'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              Trimestre
+            </button>
+            <button
+              onClick={() => setTimeScope('anio')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                timeScope === 'anio'
+                  ? 'bg-rose-500 text-white shadow-2xs font-extrabold'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              Año Completo
+            </button>
+          </div>
 
-              {/* Botonera de Navegación Rápida de Mes */}
-              <div className="flex flex-wrap items-center gap-2 mt-4 pt-3 border-t border-white/10">
-                <button
-                  onClick={() => {
-                    if (selectedMonth === 0) {
-                      setSelectedMonth(11);
-                      setSelectedYear((y) => y - 1);
-                    } else setSelectedMonth((m) => m - 1);
-                  }}
-                  className="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors cursor-pointer text-white"
-                  title="Mes anterior"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </button>
+          {/* Botones de Acción Superiores */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                setActiveTab('cartel');
+                setTimeout(() => handlePrint(), 200);
+              }}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-2xl bg-white border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-all cursor-pointer shadow-2xs"
+            >
+              <Printer className="w-3.5 h-3.5 text-slate-600" />
+              <span>Imprimir Reporte</span>
+            </button>
 
-                <select
-                  value={selectedMonth}
-                  onChange={(e) => setSelectedMonth(Number(e.target.value))}
-                  className="bg-white/10 hover:bg-white/15 border border-white/20 text-white rounded-xl px-3 py-1.5 text-xs font-extrabold focus:outline-none cursor-pointer"
-                >
-                  {MONTH_NAMES.map((m, idx) => (
-                    <option key={m} value={idx} className="bg-slate-900 text-white">
-                      {m}
-                    </option>
-                  ))}
-                </select>
-
-                <select
-                  value={selectedYear}
-                  onChange={(e) => setSelectedYear(Number(e.target.value))}
-                  className="bg-white/10 hover:bg-white/15 border border-white/20 text-white rounded-xl px-3 py-1.5 text-xs font-extrabold focus:outline-none cursor-pointer"
-                >
-                  {[2024, 2025, 2026, 2027, 2028].map((y) => (
-                    <option key={y} value={y} className="bg-slate-900 text-white">
-                      {y}
-                    </option>
-                  ))}
-                </select>
-
-                <button
-                  onClick={() => {
-                    if (selectedMonth === 11) {
-                      setSelectedMonth(0);
-                      setSelectedYear((y) => y + 1);
-                    } else setSelectedMonth((m) => m + 1);
-                  }}
-                  className="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors cursor-pointer text-white"
-                  title="Mes siguiente"
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-
-                <button
-                  onClick={() => {
-                    setSelectedMonth(currentDate.getMonth());
-                    setSelectedYear(currentDate.getFullYear());
-                  }}
-                  className="text-xs font-black px-3 py-1.5 rounded-xl bg-amber-400 text-slate-950 hover:bg-amber-300 transition-colors cursor-pointer shadow-xs"
-                >
-                  Ir al Mes Actual
-                </button>
-              </div>
-            </div>
-
-            {/* Tarjeta Destacada de "¡Cumpleañeros de Hoy!" */}
-            <div className="w-full lg:w-80 shrink-0 bg-white/10 backdrop-blur-md rounded-3xl p-5 border border-white/15 shadow-xl">
-              <div className="flex items-center justify-between gap-2 mb-2">
-                <span className="text-[10px] font-black uppercase tracking-wider text-amber-300 flex items-center gap-1.5">
-                  <PartyPopper className="w-3.5 h-3.5" />
-                  {todaysBirthdays.length > 0 ? '¡Hoy de Fiesta!' : 'Próximas Fiestas'}
-                </span>
-                <span className="text-[11px] font-extrabold text-white/80">
-                  {allMonthBirthdays.length} en el mes
-                </span>
-              </div>
-
-              {todaysBirthdays.length > 0 ? (
-                <div className="space-y-2">
-                  {todaysBirthdays.map((b) => (
-                    <div
-                      key={b.uid}
-                      className="bg-white/15 p-3 rounded-2xl border border-amber-400/40 flex items-center justify-between gap-2"
-                    >
-                      <div className="min-w-0">
-                        <p className="text-xs font-black text-white truncate leading-tight">
-                          {b.nombre}
-                        </p>
-                        <p className="text-[10px] font-semibold text-amber-200 mt-0.5">
-                          ¡Cumpleaños hoy! 🎉
-                        </p>
-                      </div>
-                      <button
-                        onClick={() => handleCopyGreeting(b.nombre)}
-                        className="p-2 rounded-xl bg-amber-400 text-slate-950 hover:bg-amber-300 transition-transform active:scale-90 cursor-pointer shrink-0"
-                        title="Copiar felicitación para WhatsApp"
-                      >
-                        <Copy className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-2.5">
-                  <p className="text-xs font-semibold text-white/90">
-                    {allMonthBirthdays.length > 0
-                      ? `Hay ${allMonthBirthdays.length} hermanos celebrando vida en ${MONTH_NAMES[selectedMonth]}.`
-                      : `Sin cumpleaños registrados en ${MONTH_NAMES[selectedMonth]}.`}
-                  </p>
-                  <p className="text-[10px] text-white/60 mt-1">
-                    Usa los botones de abajo para personalizar la hoja para la pizarra.
-                  </p>
-                </div>
-              )}
-            </div>
+            <button
+              onClick={() => setIsAddManualOpen(true)}
+              className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-rose-500 to-rose-600 text-white text-xs font-black hover:from-rose-600 hover:to-rose-700 transition-all cursor-pointer shadow-sm active:scale-95"
+            >
+              <UserPlus className="w-3.5 h-3.5 text-white" />
+              <span>+ Añadir Cumpleaños</span>
+            </button>
           </div>
         </div>
 
         {/* ======================================================== */}
-        {/* 2. SELECTOR DE PLANTILLAS Y HERRAMIENTAS DE DISEÑO       */}
+        {/* 2. CINTA HORIZONTAL DE MESES CON CONTEOS                */}
         {/* ======================================================== */}
-        <div className="glass-panel rounded-3xl p-5 sm:p-6 shadow-sm border border-white/80 space-y-5">
-          
-          {/* Selector de Layouts (3 Diseños Radicales) */}
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <label className="text-xs font-extrabold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-                <Layers className="w-4 h-4 text-slate-700" />
-                <span>Elige el Formato de Diseño para la Pizarra:</span>
-              </label>
-              <span className="text-[11px] font-bold text-slate-400">
-                Cambia el estilo al instante
-              </span>
-            </div>
+        <div className="bg-white/80 rounded-2xl p-2 border border-slate-200/80 shadow-2xs overflow-x-auto custom-scrollbar flex items-center justify-between gap-1">
+          {MONTH_SHORT.map((mShort, idx) => {
+            const isSelected = selectedMonth === idx;
+            const count = monthCounts[idx];
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              {/* Opción 1: Gala Real & Medallones */}
-              <button
-                type="button"
-                onClick={() => setLayoutStyle('gala')}
-                className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer relative overflow-hidden ${
-                  layoutStyle === 'gala'
-                    ? 'bg-slate-900 text-white border-slate-900 shadow-md ring-2 ring-slate-900/20'
-                    : 'bg-white/80 hover:bg-white text-slate-800 border-slate-200'
-                }`}
-              >
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-xs font-black">1. Gala & Medallones de Honor</span>
-                  <Award className={`w-4 h-4 ${layoutStyle === 'gala' ? 'text-amber-400' : 'text-slate-400'}`} />
-                </div>
-                <p className={`text-[11px] leading-snug font-medium ${layoutStyle === 'gala' ? 'text-slate-300' : 'text-slate-500'}`}>
-                  Estilo institucional ceremonial con sello eclesial y medallones redondos para cada día.
-                </p>
-              </button>
-
-              {/* Opción 2: Almanaque Semanal Mural */}
-              <button
-                type="button"
-                onClick={() => setLayoutStyle('weekly')}
-                className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer relative overflow-hidden ${
-                  layoutStyle === 'weekly'
-                    ? 'bg-slate-900 text-white border-slate-900 shadow-md ring-2 ring-slate-900/20'
-                    : 'bg-white/80 hover:bg-white text-slate-800 border-slate-200'
-                }`}
-              >
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-xs font-black">2. Almanaque Semanal Mural</span>
-                  <Calendar className={`w-4 h-4 ${layoutStyle === 'weekly' ? 'text-amber-400' : 'text-slate-400'}`} />
-                </div>
-                <p className={`text-[11px] leading-snug font-medium ${layoutStyle === 'weekly' ? 'text-slate-300' : 'text-slate-500'}`}>
-                  Agrupado en bloques semanales ordenados (Semana 1, 2, 3...) como un calendario de pared de arte.
-                </p>
-              </button>
-
-              {/* Opción 3: Mosaico de Postales / Etiquetas */}
-              <button
-                type="button"
-                onClick={() => setLayoutStyle('cards')}
-                className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer relative overflow-hidden ${
-                  layoutStyle === 'cards'
-                    ? 'bg-slate-900 text-white border-slate-900 shadow-md ring-2 ring-slate-900/20'
-                    : 'bg-white/80 hover:bg-white text-slate-800 border-slate-200'
-                }`}
-              >
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-xs font-black">3. Mosaico de Tarjetas de Fiesta</span>
-                  <Gift className={`w-4 h-4 ${layoutStyle === 'cards' ? 'text-amber-400' : 'text-slate-400'}`} />
-                </div>
-                <p className={`text-[11px] leading-snug font-medium ${layoutStyle === 'cards' ? 'text-slate-300' : 'text-slate-500'}`}>
-                  Diseño de tarjetas de regalo con tipografía festiva y número de día en relieve artístico.
-                </p>
-              </button>
-            </div>
-          </div>
-
-          {/* Fila de Ajustes: Paleta, Versículo, Privacidad y Exportación */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-3 border-t border-slate-200/70">
-            {/* Paleta */}
-            <div>
-              <label className="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1">
-                Paleta de Color
-              </label>
-              <select
-                value={paletteKey}
-                onChange={(e) => setPaletteKey(e.target.value)}
-                className="glass-input w-full rounded-xl px-3 py-2 text-xs font-bold text-slate-800 focus:outline-none cursor-pointer"
-              >
-                {Object.values(PALETTES).map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Versículo */}
-            <div>
-              <label className="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1">
-                Versículo Bíblico
-              </label>
-              <select
-                value={selectedVerseId}
-                onChange={(e) => setSelectedVerseId(e.target.value)}
-                className="glass-input w-full rounded-xl px-3 py-2 text-xs font-bold text-slate-800 focus:outline-none cursor-pointer"
-              >
-                {BIBLE_VERSES.map((v) => (
-                  <option key={v.id} value={v.id}>
-                    {v.citation}
-                  </option>
-                ))}
-                <option value="custom">Dedicatoria Personalizada...</option>
-              </select>
-            </div>
-
-            {/* Privacidad */}
-            <div>
-              <label className="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1">
-                Opciones de Visibilidad
-              </label>
-              <div className="flex items-center gap-1.5 pt-0.5">
-                <button
-                  type="button"
-                  onClick={() => setShowAge(!showAge)}
-                  className={`flex-1 px-2.5 py-2 rounded-xl text-[11px] font-bold border transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-                    showAge
-                      ? 'bg-blue-50 text-blue-700 border-blue-200'
-                      : 'bg-white/80 text-slate-500 border-slate-200'
-                  }`}
-                  title="Mostrar u ocultar edad por discreción"
-                >
-                  {showAge ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
-                  <span>{showAge ? 'Con Edad' : 'Sin Edad'}</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setShowCongregation(!showCongregation)}
-                  className={`flex-1 px-2.5 py-2 rounded-xl text-[11px] font-bold border transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-                    showCongregation
-                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                      : 'bg-white/80 text-slate-500 border-slate-200'
-                  }`}
-                  title="Mostrar sede o congregación"
-                >
-                  <Church className="w-3.5 h-3.5" />
-                  <span>{showCongregation ? 'Con Sede' : 'Sin Sede'}</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Botonera de Exportación */}
-            <div>
-              <label className="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1">
-                Acciones de Impresión
-              </label>
-              <div className="flex items-center gap-1.5 pt-0.5">
-                <button
-                  onClick={handlePrint}
-                  disabled={isGenerating}
-                  className="flex-1 h-9 rounded-xl glass-button-secondary font-bold text-xs text-slate-800 flex items-center justify-center gap-1.5 cursor-pointer shadow-xs active:scale-95"
-                  title="Imprimir directamente en hoja Carta"
-                >
-                  <Printer className="w-3.5 h-3.5 text-slate-700" />
-                  <span>Imprimir</span>
-                </button>
-
-                <button
-                  onClick={handleDownloadPdf}
-                  disabled={isGenerating}
-                  className="flex-1 h-9 rounded-xl bg-blue-900 text-white font-bold text-xs flex items-center justify-center gap-1.5 hover:bg-blue-800 cursor-pointer shadow-xs active:scale-95 disabled:opacity-60"
-                  title="Descargar PDF de alta resolución"
-                >
-                  <Download className="w-3.5 h-3.5" />
-                  <span>{isGenerating ? 'PDF...' : 'PDF'}</span>
-                </button>
-
-                <button
-                  onClick={handleDownloadImage}
-                  disabled={isGenerating}
-                  className="w-9 h-9 rounded-xl bg-slate-900 text-white font-bold text-xs flex items-center justify-center hover:bg-slate-800 cursor-pointer shadow-xs active:scale-95 shrink-0"
-                  title="Descargar Imagen PNG"
-                >
-                  <ImageIcon className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Campo si se elige versículo personalizado */}
-          {selectedVerseId === 'custom' && (
-            <div className="pt-2 border-t border-slate-200/50 grid grid-cols-1 md:grid-cols-3 gap-3">
-              <div>
-                <label className="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1">
-                  Título de la Dedicatoria
-                </label>
-                <input
-                  type="text"
-                  placeholder="Ej. Saludo Pastoral..."
-                  value={customVerseCitation}
-                  onChange={(e) => setCustomVerseCitation(e.target.value)}
-                  className="glass-input w-full rounded-xl px-3 py-2 text-xs font-bold text-slate-800 focus:outline-none"
-                />
-              </div>
-              <div className="md:col-span-2">
-                <label className="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1">
-                  Mensaje o Versículo
-                </label>
-                <input
-                  type="text"
-                  placeholder="Escribe el mensaje cristiano de bendición..."
-                  value={customVerseText}
-                  onChange={(e) => setCustomVerseText(e.target.value)}
-                  className="glass-input w-full rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 focus:outline-none"
-                />
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* ======================================================== */}
-        {/* 3. BARRA DE SELECCIÓN Y ADICIÓN DE PERSONAS              */}
-        {/* ======================================================== */}
-        <div className="glass-panel-subtle rounded-2xl p-4 border border-white/70 space-y-3">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <span className="text-xs font-extrabold text-slate-800">
-              Personas en la Cartelera ({displayedBirthdays.length} de {allMonthBirthdays.length} seleccionados)
-            </span>
-            <div className="flex items-center gap-3">
-              <button
-                onClick={handleSelectAll}
-                className="text-[11px] font-bold text-blue-700 hover:underline cursor-pointer"
-              >
-                Seleccionar Todos
-              </button>
-              <span className="text-slate-300">•</span>
-              <button
-                onClick={handleDeselectAll}
-                className="text-[11px] font-bold text-slate-500 hover:underline cursor-pointer"
-              >
-                Deseleccionar
-              </button>
-              <button
-                onClick={() => setIsAddManualOpen(true)}
-                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-slate-900 text-white font-bold text-xs hover:bg-slate-800 cursor-pointer shadow-xs ml-2"
-              >
-                <UserPlus className="w-3.5 h-3.5 text-amber-300" />
-                <span>Agregar Adicional</span>
-              </button>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap gap-1.5">
-            {allMonthBirthdays.map((b) => {
-              const isIncluded = !excludedIds.includes(b.uid);
+            if (isSelected) {
               return (
                 <div
-                  key={b.uid}
-                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-bold border transition-all ${
-                    isIncluded
-                      ? 'bg-white text-slate-900 border-slate-300 shadow-2xs'
-                      : 'bg-slate-100/70 text-slate-400 border-transparent line-through'
-                  }`}
+                  key={idx}
+                  className="flex items-center gap-2 bg-gradient-to-r from-rose-500 to-rose-600 text-white px-4 py-2 rounded-xl shadow-xs font-black text-xs shrink-0 select-none"
                 >
                   <button
-                    type="button"
-                    onClick={() => toggleExcludeId(b.uid)}
-                    className="flex items-center gap-1.5 cursor-pointer text-left"
+                    onClick={() => {
+                      if (selectedMonth === 0) {
+                        setSelectedMonth(11);
+                        setSelectedYear((y) => y - 1);
+                      } else setSelectedMonth((m) => m - 1);
+                    }}
+                    className="hover:opacity-75 cursor-pointer text-white"
                   >
-                    {isIncluded ? (
-                      <CheckSquare className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-                    ) : (
-                      <Square className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                    )}
-                    <span>
-                      Día {b.dia}: {b.nombre}
-                    </span>
+                    <ChevronLeft className="w-3.5 h-3.5" />
                   </button>
-
-                  {/* Botón rápido para felicitar por WhatsApp */}
+                  <span>
+                    {MONTH_NAMES[idx]} ({count})
+                  </span>
                   <button
-                    onClick={() => handleCopyGreeting(b.nombre)}
-                    className="text-emerald-600 hover:text-emerald-800 ml-1 cursor-pointer"
-                    title={`Copiar mensaje de felicitación para ${b.nombre}`}
+                    onClick={() => {
+                      if (selectedMonth === 11) {
+                        setSelectedMonth(0);
+                        setSelectedYear((y) => y + 1);
+                      } else setSelectedMonth((m) => m + 1);
+                    }}
+                    className="hover:opacity-75 cursor-pointer text-white"
                   >
-                    <MessageCircle className="w-3 h-3" />
+                    <ChevronRight className="w-3.5 h-3.5" />
                   </button>
-
-                  {b.esManual && (
-                    <span
-                      onClick={() => handleRemoveManual(b.id as string)}
-                      className="text-slate-400 hover:text-rose-600 ml-1 cursor-pointer font-bold"
-                      title="Eliminar"
-                    >
-                      ✕
-                    </span>
-                  )}
                 </div>
               );
-            })}
+            }
+
+            return (
+              <button
+                key={idx}
+                onClick={() => setSelectedMonth(idx)}
+                className="px-3 py-2 rounded-xl text-xs font-bold text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors shrink-0 cursor-pointer whitespace-nowrap"
+              >
+                {mShort} <span className="text-[11px] font-semibold text-slate-400">({count})</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* ======================================================== */}
+        {/* 3. TRES TARJETAS HERO SUPERIORES (Estilo Stitch Reference)*/}
+        {/* ======================================================== */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+          {/* Card 1: Celebraciones del Mes */}
+          <div className="bg-white rounded-3xl p-5 border border-slate-200/90 shadow-2xs flex items-center justify-between gap-4">
+            <div>
+              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block mb-1">
+                Celebraciones del Mes
+              </span>
+              <p className="text-2xl font-black text-slate-900 leading-tight">
+                {monthBirthdays.length} {monthBirthdays.length === 1 ? 'cumpleañero' : 'cumpleañeros'}
+              </p>
+              <p className="text-[11px] font-semibold text-slate-500 mt-1 truncate">
+                {congregacionesList.length > 0
+                  ? congregacionesList
+                      .slice(0, 3)
+                      .map((c) => `${congregacionCounts[c] || 0} en ${c}`)
+                      .join(' • ')
+                  : 'Sin registros para este mes'}
+              </p>
+            </div>
+            <div className="w-12 h-12 rounded-2xl bg-rose-50 border border-rose-100 text-rose-500 flex items-center justify-center shrink-0">
+              <Cake className="w-6 h-6" />
+            </div>
+          </div>
+
+          {/* Card 2: ¡HOY ES SU DÍA! (Spotlight Card) */}
+          <div
+            className={`rounded-3xl p-5 border shadow-2xs flex items-center justify-between gap-4 transition-all ${
+              todayHighlight
+                ? 'bg-rose-50/50 border-rose-200 ring-2 ring-rose-400/20'
+                : 'bg-white border-slate-200/90'
+            }`}
+          >
+            <div className="min-w-0">
+              <span
+                className={`inline-flex items-center gap-1 text-[9.5px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md mb-1.5 ${
+                  todayHighlight
+                    ? 'bg-rose-500 text-white'
+                    : 'bg-slate-100 text-slate-400'
+                }`}
+              >
+                <PartyPopper className="w-3 h-3" />
+                <span>{todayHighlight ? '¡HOY ES SU DÍA!' : 'HOY'}</span>
+              </span>
+
+              {todayHighlight ? (
+                <>
+                  <h4 className="text-base font-black text-slate-900 truncate leading-tight">
+                    {todayHighlight.nombre}
+                  </h4>
+                  <p className="text-[11px] font-semibold text-slate-600 mt-0.5 truncate">
+                    {showAge && todayHighlight.edad ? `Cumple ${todayHighlight.edad} años • ` : ''}
+                    {todayHighlight.congregacion}
+                  </p>
+                </>
+              ) : (
+                <>
+                  <h4 className="text-sm font-bold text-slate-700">Ningún cumpleaños hoy</h4>
+                  <p className="text-[11px] font-medium text-slate-400 mt-0.5">
+                    Revisa los próximos días en la lista.
+                  </p>
+                </>
+              )}
+            </div>
+
+            {todayHighlight ? (
+              <div className="text-center shrink-0">
+                <div className="w-11 h-11 rounded-2xl bg-slate-900 text-white font-black text-sm flex items-center justify-center shadow-xs mx-auto">
+                  {todayHighlight.dia}
+                </div>
+                <span className="text-[10px] font-bold text-slate-500 block mt-1">
+                  {MONTH_SHORT[selectedMonth]}
+                </span>
+              </div>
+            ) : (
+              <div className="w-12 h-12 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center shrink-0">
+                <Gift className="w-5 h-5" />
+              </div>
+            )}
+          </div>
+
+          {/* Card 3: Próximo Cumpleaños */}
+          <div className="bg-white rounded-3xl p-5 border border-slate-200/90 shadow-2xs flex items-center justify-between gap-4">
+            <div className="min-w-0">
+              {nextHighlight ? (
+                <>
+                  <span className="inline-block bg-amber-50 text-amber-700 border border-amber-200 text-[9.5px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md mb-1.5">
+                    {nextHighlight.esManana
+                      ? `Mañana • ${nextHighlight.dia} de ${MONTH_SHORT[selectedMonth]}`
+                      : `${nextHighlight.dia} de ${MONTH_SHORT[selectedMonth]} • En ${nextHighlight.diasFaltantes} días`}
+                  </span>
+                  <h4 className="text-base font-black text-slate-900 truncate leading-tight">
+                    {nextHighlight.nombre}
+                  </h4>
+                  <p className="text-[11px] font-semibold text-slate-600 mt-0.5 truncate">
+                    {showAge && nextHighlight.edad ? `Cumple ${nextHighlight.edad} años • ` : ''}
+                    {nextHighlight.congregacion}
+                  </p>
+                </>
+              ) : (
+                <>
+                  <span className="inline-block bg-slate-100 text-slate-400 text-[9.5px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md mb-1.5">
+                    Próximos
+                  </span>
+                  <h4 className="text-sm font-bold text-slate-700">Sin próximos este mes</h4>
+                  <p className="text-[11px] font-medium text-slate-400 mt-0.5">
+                    Todos los del mes ya pasaron.
+                  </p>
+                </>
+              )}
+            </div>
+
+            <div className="w-12 h-12 rounded-2xl bg-amber-50 border border-amber-100 text-amber-600 flex items-center justify-center shrink-0">
+              <Gift className="w-6 h-6" />
+            </div>
+          </div>
+        </div>
+
+        {/* ======================================================== */}
+        {/* 4. BARRA DE FILTRADO POR CONGREGACIÓN Y VISTAS          */}
+        {/* ======================================================== */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-1">
+          {/* Pills de Filtrado por Congregación */}
+          <div className="flex items-center gap-1.5 overflow-x-auto custom-scrollbar pb-1 sm:pb-0">
+            <span className="text-xs font-bold text-slate-400 shrink-0 mr-1">Filtrar por:</span>
+            <button
+              onClick={() => setSelectedCongregacion('todos')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+                selectedCongregacion === 'todos'
+                  ? 'bg-rose-500 text-white shadow-2xs font-extrabold'
+                  : 'bg-white/80 text-slate-600 hover:bg-white'
+              }`}
+            >
+              Todos ({monthBirthdays.length})
+            </button>
+
+            {congregacionesList.map((cong) => (
+              <button
+                key={cong}
+                onClick={() => setSelectedCongregacion(cong)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+                  selectedCongregacion === cong
+                    ? 'bg-rose-500 text-white shadow-2xs font-extrabold'
+                    : 'bg-white/80 text-slate-600 hover:bg-white'
+                }`}
+              >
+                {cong} ({congregacionCounts[cong] || 0})
+              </button>
+            ))}
+          </div>
+
+          {/* Switcher de Vistas: Fichas | Calendario | Cartel para Impresión */}
+          <div className="flex items-center gap-1 bg-white/80 p-1 rounded-2xl border border-slate-200/80 shadow-2xs self-start sm:self-auto shrink-0">
+            <button
+              onClick={() => setActiveTab('fichas')}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                activeTab === 'fichas'
+                  ? 'bg-slate-900 text-white shadow-2xs font-extrabold'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <LayoutGrid className="w-3.5 h-3.5" />
+              <span>Fichas</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('calendario')}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                activeTab === 'calendario'
+                  ? 'bg-slate-900 text-white shadow-2xs font-extrabold'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <CalendarIcon className="w-3.5 h-3.5" />
+              <span>Calendario</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('cartel')}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                activeTab === 'cartel'
+                  ? 'bg-rose-500 text-white shadow-2xs font-extrabold'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <FileText className="w-3.5 h-3.5" />
+              <span>Cartel para Impresión</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Encabezado de la lista con métricas */}
+        <div className="flex items-center justify-between pt-2">
+          <div>
+            <h2 className="text-lg font-black text-slate-900">
+              Cumpleañeros de {MONTH_NAMES[selectedMonth]}
+            </h2>
+            <span className="text-[11px] font-semibold text-slate-400 block">
+              Ordenados cronológicamente del día 1 al 31
+            </span>
+          </div>
+
+          <div className="text-right">
+            <span className="text-xs font-bold text-slate-500">
+              {metrics.pasados} pasados • {metrics.hoy} hoy • {metrics.proximos} próximos
+            </span>
+          </div>
+        </div>
+
+        {/* ======================================================== */}
+        {/* 5. VISTA 1: FICHAS (Tarjetas Modernas del Mockup)       */}
+        {/* ======================================================== */}
+        {activeTab === 'fichas' && (
+          <div className="space-y-4">
+            {isLoading ? (
+              <div className="py-24 text-center">
+                <div className="w-8 h-8 border-2 border-slate-900 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+                <p className="text-xs font-bold text-slate-600">Cargando directorio de cumpleañeros...</p>
+              </div>
+            ) : filteredBirthdays.length === 0 ? (
+              <div className="py-20 text-center rounded-3xl bg-white/70 border border-dashed border-slate-300 p-8">
+                <Cake className="w-10 h-10 text-slate-400 mx-auto mb-2" />
+                <h3 className="text-sm font-bold text-slate-800">No se encontraron cumpleañeros</h3>
+                <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
+                  {searchTerm ? 'Intenta con otro término de búsqueda.' : 'Puedes agregar miembros o registrar uno adicional.'}
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+                {filteredBirthdays.map((b) => (
+                  <motion.div
+                    key={b.uid}
+                    whileHover={{ y: -2 }}
+                    className={`bg-white rounded-3xl p-4 border transition-all flex flex-col justify-between ${
+                      b.esHoy
+                        ? 'border-rose-400 shadow-md ring-2 ring-rose-400/20'
+                        : 'border-slate-200/90 shadow-2xs hover:shadow-xs'
+                    }`}
+                  >
+                    <div>
+                      {/* Fila superior: badge de fecha + edad */}
+                      <div className="flex items-center justify-between gap-2 mb-3">
+                        <span
+                          className={`text-[10px] font-extrabold px-2 py-0.5 rounded-md truncate ${
+                            b.esHoy
+                              ? 'bg-rose-500 text-white font-black'
+                              : b.esManana
+                              ? 'bg-amber-100 text-amber-800 border border-amber-200'
+                              : b.esPasado
+                              ? 'bg-slate-100 text-slate-500'
+                              : 'bg-blue-50 text-blue-700 border border-blue-100'
+                          }`}
+                        >
+                          {b.statusLabel}
+                        </span>
+
+                        {showAge && b.edad !== undefined && (
+                          <span className="text-[11px] font-extrabold text-slate-400 shrink-0">
+                            {b.esPasado ? `Cumplió ${b.edad}` : `Cumple ${b.edad}`}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Info del Miembro: Avatar + Nombre + Congregación */}
+                      <div className="flex items-center gap-3 mb-3">
+                        <div
+                          className={`w-11 h-11 rounded-2xl flex items-center justify-center font-black text-sm shrink-0 shadow-2xs ${
+                            b.esHoy
+                              ? 'bg-rose-500 text-white'
+                              : 'bg-slate-900 text-white'
+                          }`}
+                        >
+                          {b.nombre.substring(0, 2).toUpperCase()}
+                        </div>
+
+                        <div className="min-w-0">
+                          <h4 className="text-xs font-black text-slate-900 truncate leading-tight">
+                            {b.nombre}
+                          </h4>
+                          <p className="text-[11px] font-medium text-slate-500 truncate mt-0.5">
+                            {b.congregacion}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Nota o sugerencia bíblica */}
+                      <div className="bg-slate-50 rounded-xl p-2.5 mb-3 border border-slate-100 text-[10.5px] text-slate-600 flex items-center gap-1.5">
+                        <Sparkles className="w-3 h-3 text-amber-500 shrink-0" />
+                        <span className="truncate">
+                          {b.esHoy ? '¡Día de gozo y gratitud en Cristo!' : `Día de la semana: ${b.diaSemana}`}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Botón de Acción en la base de la tarjeta */}
+                    {b.esHoy ? (
+                      <button
+                        onClick={() => handleCopyGreeting(b.nombre, b.congregacion)}
+                        className="w-full py-2 rounded-xl bg-rose-500 text-white text-xs font-black hover:bg-rose-600 transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-xs active:scale-95"
+                      >
+                        <PartyPopper className="w-3.5 h-3.5" />
+                        <span>Felicitar Ahora</span>
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handleCopyGreeting(b.nombre, b.congregacion)}
+                        className="w-full py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                        title="Copiar mensaje de felicitación para WhatsApp"
+                      >
+                        <MessageCircle className="w-3.5 h-3.5 text-slate-500" />
+                        <span>Copiar Mensaje</span>
+                      </button>
+                    )}
+                  </motion.div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ======================================================== */}
+        {/* 6. VISTA 2: CALENDARIO MENSUAL (Vista Almanaque)        */}
+        {/* ======================================================== */}
+        {activeTab === 'calendario' && (
+          <div className="bg-white rounded-3xl p-6 border border-slate-200/90 shadow-2xs">
+            <div className="grid grid-cols-7 gap-2 text-center mb-3">
+              {['DOM', 'LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB'].map((d) => (
+                <span key={d} className="text-[11px] font-black text-slate-400 uppercase tracking-widest">
+                  {d}
+                </span>
+              ))}
+            </div>
+
+            <div className="grid grid-cols-7 gap-2">
+              {Array.from({ length: new Date(selectedYear, selectedMonth, 1).getDay() }).map((_, i) => (
+                <div key={`empty-${i}`} className="min-h-[85px] rounded-2xl bg-slate-50/50" />
+              ))}
+
+              {Array.from({ length: new Date(selectedYear, selectedMonth + 1, 0).getDate() }).map((_, i) => {
+                const dayNum = i + 1;
+                const bdaysOnDay = filteredBirthdays.filter((b) => b.dia === dayNum);
+                const hasBdays = bdaysOnDay.length > 0;
+
+                return (
+                  <div
+                    key={`day-${dayNum}`}
+                    className={`min-h-[85px] rounded-2xl p-2 border transition-all flex flex-col justify-between ${
+                      hasBdays
+                        ? 'bg-rose-50/40 border-rose-200 shadow-2xs'
+                        : 'bg-white border-slate-100'
+                    }`}
+                  >
+                    <span
+                      className={`text-xs font-black self-start ${
+                        hasBdays ? 'text-rose-600 font-black' : 'text-slate-500'
+                      }`}
+                    >
+                      {dayNum}
+                    </span>
+
+                    {hasBdays && (
+                      <div className="space-y-1">
+                        {bdaysOnDay.slice(0, 2).map((b) => (
+                          <div
+                            key={b.uid}
+                            className="text-[9.5px] font-bold bg-white text-slate-800 px-1.5 py-0.5 rounded-md border border-rose-200 truncate shadow-2xs"
+                            title={b.nombre}
+                          >
+                            🎉 {b.nombre}
+                          </div>
+                        ))}
+                        {bdaysOnDay.length > 2 && (
+                          <span className="text-[9px] font-bold text-rose-600 block text-right">
+                            +{bdaysOnDay.length - 2} más
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* ======================================================== */}
+        {/* 7. VISTA 3: CARTEL PARA IMPRESIÓN (PIZARRA MURAL)       */}
+        {/* ======================================================== */}
+        <div className={activeTab === 'cartel' ? 'block' : 'hidden'}>
+          {/* Barra de control de la cartelera */}
+          <div className="bg-white rounded-3xl p-5 border border-slate-200/90 shadow-2xs flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 mb-6">
+            <div>
+              <h3 className="text-sm font-black text-slate-900">
+                Vista Previa para Cartelera de la Iglesia
+              </h3>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Diseño optimizado para impresión en tamaño Carta para la pizarra física de la congregación.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowAge(!showAge)}
+                className="px-3 py-2 rounded-xl text-xs font-bold border border-slate-200 text-slate-700 bg-slate-50 hover:bg-slate-100 cursor-pointer flex items-center gap-1.5"
+              >
+                {showAge ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
+                <span>{showAge ? 'Ocultar Edad' : 'Mostrar Edad'}</span>
+              </button>
+
+              <button
+                onClick={handlePrint}
+                className="px-4 py-2 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-xs font-black cursor-pointer shadow-xs flex items-center gap-1.5"
+              >
+                <Printer className="w-3.5 h-3.5" />
+                <span>Imprimir Cartelera del Mes</span>
+              </button>
+
+              <button
+                onClick={handleDownloadPdf}
+                disabled={isGenerating}
+                className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-black cursor-pointer shadow-xs flex items-center gap-1.5 disabled:opacity-60"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>{isGenerating ? 'Generando...' : 'Descargar PDF'}</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Lienzo Imprimible Tamaño Carta */}
+          <div id="contenedor-impresion-cumpleaneros" className="flex justify-center overflow-x-auto pb-8">
+            <div
+              ref={printableRef}
+              id="lienzo-cumpleaneros-imprimible"
+              style={{
+                width: '816px',
+                minHeight: '1056px',
+                backgroundColor: '#FFFFFF'
+              }}
+              className="relative shadow-xl overflow-hidden flex flex-col justify-between p-10 border border-slate-200"
+            >
+              {/* Parte Superior: Encabezado + Versículo */}
+              <div className="space-y-6">
+                
+                {/* Header Institucional con Logo */}
+                <div className="flex items-center justify-between pb-6 border-b-2 border-slate-100">
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 rounded-2xl bg-slate-900 p-2 flex items-center justify-center shrink-0 shadow-sm">
+                      <img
+                        src={LOGO_WHITE_BASE64}
+                        alt="Logo ICLEB"
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 block">
+                        Iglesia Cristiana Luterana El Buen Pastor
+                      </span>
+                      <h1 className="text-2xl font-black text-slate-900 tracking-tight uppercase mt-0.5">
+                        Cumpleañeros de {MONTH_NAMES[selectedMonth]} {selectedYear}
+                      </h1>
+                      <span className="text-xs font-bold text-rose-600 block mt-0.5">
+                        Directorio de Celebración de Vida • {filteredBirthdays.length} celebraciones
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="text-right">
+                    <span className="inline-block px-3 py-1.5 rounded-xl bg-rose-50 text-rose-700 border border-rose-200 text-xs font-black uppercase tracking-wider">
+                      {MONTH_NAMES[selectedMonth]} {selectedYear}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Versículo Bíblico del Mes */}
+                <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200/80 flex items-start gap-3">
+                  <Quote className="w-5 h-5 text-rose-500 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-xs leading-relaxed italic text-slate-800 font-medium">
+                      {verseOfTheMonth.text}
+                    </p>
+                    <p className="text-[10px] font-black uppercase tracking-wider text-rose-600 mt-1">
+                      — {verseOfTheMonth.citation}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Grid de Fichas para la Pizarra */}
+                {filteredBirthdays.length === 0 ? (
+                  <div className="py-24 text-center rounded-2xl border border-dashed border-slate-200">
+                    <Cake className="w-10 h-10 text-slate-300 mx-auto mb-2" />
+                    <p className="text-xs font-bold text-slate-600">
+                      Sin cumpleaños registrados en este periodo.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-3">
+                    {filteredBirthdays.map((b) => (
+                      <div
+                        key={b.uid}
+                        className="bg-white rounded-2xl p-3.5 border border-slate-200 flex items-center justify-between gap-3 shadow-2xs"
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          {/* Badge de Día */}
+                          <div className="w-11 h-11 rounded-xl bg-slate-900 text-white flex flex-col items-center justify-center shrink-0">
+                            <span className="text-sm font-black leading-none">{b.dia}</span>
+                            <span className="text-[7.5px] font-black uppercase tracking-wider mt-0.5 opacity-80 leading-none">
+                              {b.diaSemana}
+                            </span>
+                          </div>
+
+                          {/* Nombre y Congregación */}
+                          <div className="min-w-0">
+                            <h4 className="text-xs font-black text-slate-900 truncate leading-tight">
+                              {b.nombre}
+                            </h4>
+                            <p className="text-[10px] font-medium text-slate-500 truncate mt-0.5">
+                              {b.congregacion}
+                            </p>
+                          </div>
+                        </div>
+
+                        {showAge && b.edad !== undefined && (
+                          <span className="text-[10px] font-extrabold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md shrink-0">
+                            {b.edad} años
+                          </span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Pie de Página de la Cartelera */}
+              <div className="pt-4 mt-6 border-t border-slate-200 flex items-center justify-between text-[10px] text-slate-400">
+                <span className="font-bold text-slate-600 uppercase tracking-wider">
+                  Pizarra Informativa ICLEB • «Dando gracias al Señor en todo tiempo»
+                </span>
+                <span>
+                  Emitido: {MONTH_NAMES[selectedMonth]} {selectedYear}
+                </span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Modal para Agregar Cumpleañero Manual / Visita */}
+      {/* Modal para Agregar Cumpleañero Adicional */}
       {isAddManualOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
-          <div className="glass-panel-elevated rounded-3xl w-full max-w-sm p-6 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-200/70 pb-3">
+          <div className="bg-white rounded-3xl w-full max-w-sm p-6 shadow-2xl space-y-4 border border-slate-200">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <h3 className="text-sm font-black text-slate-900">
-                Agregar Cumpleañero Adicional
+                Añadir Cumpleañero Adicional
               </h3>
               <button
                 onClick={() => setIsAddManualOpen(false)}
@@ -1059,7 +1271,7 @@ export default function BirthdaysView() {
                   placeholder="Ej. Pastor Juan Pérez..."
                   value={manualName}
                   onChange={(e) => setManualName(e.target.value)}
-                  className="glass-input w-full rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-400"
                   autoFocus
                 />
               </div>
@@ -1076,7 +1288,7 @@ export default function BirthdaysView() {
                     required
                     value={manualDay}
                     onChange={(e) => setManualDay(parseInt(e.target.value, 10) || 1)}
-                    className="glass-input w-full rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-400"
                   />
                 </div>
 
@@ -1088,367 +1300,30 @@ export default function BirthdaysView() {
                     type="text"
                     value={manualCongregation}
                     onChange={(e) => setManualCongregation(e.target.value)}
-                    className="glass-input w-full rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 focus:outline-none"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-400"
                   />
                 </div>
               </div>
 
-              <div className="flex gap-2 pt-2 border-t border-slate-200">
+              <div className="flex gap-2 pt-2 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setIsAddManualOpen(false)}
-                  className="glass-button-secondary flex-1 py-2 rounded-xl text-xs font-bold text-slate-700 cursor-pointer"
+                  className="flex-1 py-2 rounded-xl text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-2 rounded-xl bg-slate-900 text-white text-xs font-bold hover:bg-slate-800 cursor-pointer"
+                  className="flex-1 py-2 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold cursor-pointer shadow-xs"
                 >
-                  Agregar
+                  Guardar
                 </button>
               </div>
             </form>
           </div>
         </div>
       )}
-
-      {/* ========================================================================= */}
-      {/* 4. LIENZO IMPRIMIBLE DE LA CARTELERA (TAMAÑO CARTA PORTRAIT)              */}
-      {/* ========================================================================= */}
-      <div id="contenedor-impresion-cumpleaneros" className="mt-8 flex justify-center overflow-x-auto pb-8">
-        <div
-          ref={printableRef}
-          id="lienzo-cumpleaneros-imprimible"
-          style={{
-            width: '816px',
-            minHeight: '1056px',
-            ...palette.paperBg
-          }}
-          className="relative shadow-2xl overflow-hidden flex flex-col justify-between p-10 border-4 border-double border-slate-300"
-        >
-          {/* Filete ornamental perimetral tipo Diploma / Cartel de Gala */}
-          <div className="absolute inset-3 border-2 border-slate-300/60 pointer-events-none rounded-xl" />
-          <div className="absolute inset-4 border border-dashed border-slate-200 pointer-events-none rounded-lg" />
-
-          {/* PARTE SUPERIOR */}
-          <div className="relative z-10 space-y-6">
-
-            {/* ======================================================== */}
-            {/* CABECERA: FORMATO 1 - GALA / CEREMONIAL                   */}
-            {/* ======================================================== */}
-            {layoutStyle === 'gala' && (
-              <div className="text-center pt-2 pb-4 border-b-2 border-slate-200">
-                {/* Blasón Central con Logo de la Iglesia */}
-                <div className="inline-flex items-center justify-center p-3 rounded-2xl bg-slate-900 text-white shadow-md border-2 border-amber-400 mb-3">
-                  <img
-                    src={LOGO_WHITE_BASE64}
-                    alt="Logo ICLEB"
-                    className="w-12 h-12 object-contain"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <span className="block text-[11px] font-extrabold tracking-[0.25em] uppercase text-slate-500 font-sans">
-                    Iglesia Cristiana Luterana El Buen Pastor
-                  </span>
-                  
-                  <h2
-                    style={{ fontFamily: "'Georgia', 'Cambria', serif" }}
-                    className="text-3xl font-black tracking-tight text-slate-900 uppercase"
-                  >
-                    Celebración de Vida & Cumpleañeros
-                  </h2>
-
-                  <div className="inline-flex items-center gap-2 px-4 py-1 rounded-full bg-slate-900 text-amber-300 text-xs font-black uppercase tracking-widest shadow-2xs mt-1">
-                    <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-                    <span>{MONTH_NAMES[selectedMonth]} {selectedYear}</span>
-                    <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* ======================================================== */}
-            {/* CABECERA: FORMATO 2 - ALMANAQUE SEMANAL                   */}
-            {/* ======================================================== */}
-            {layoutStyle === 'weekly' && (
-              <div
-                style={palette.headerBg}
-                className="rounded-2xl p-6 text-white shadow-md flex items-center justify-between gap-4"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 rounded-2xl bg-white/10 p-2 border border-white/20 flex items-center justify-center shrink-0">
-                    <img
-                      src={LOGO_WHITE_BASE64}
-                      alt="Logo ICLEB"
-                      className="w-full h-full object-contain"
-                    />
-                  </div>
-                  <div>
-                    <span className="block text-[10px] font-bold tracking-widest uppercase text-white/70">
-                      Iglesia Cristiana Luterana El Buen Pastor
-                    </span>
-                    <h2
-                      style={{ fontFamily: "'Georgia', 'Cambria', serif" }}
-                      className="text-2xl font-black uppercase tracking-tight text-white mt-0.5"
-                    >
-                      Almanaque de Cumpleaños
-                    </h2>
-                    <span className="block text-xs font-semibold text-amber-300 mt-0.5">
-                      {MONTH_NAMES[selectedMonth]} {selectedYear} • {displayedBirthdays.length} celebraciones
-                    </span>
-                  </div>
-                </div>
-
-                <div className="text-right shrink-0">
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/20 border border-white/30 text-white font-extrabold text-xs">
-                    <Calendar className="w-4 h-4 text-amber-300" />
-                    <span>Registro Semanal</span>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* ======================================================== */}
-            {/* CABECERA: FORMATO 3 - POSTALES Y TARJETAS                */}
-            {/* ======================================================== */}
-            {layoutStyle === 'cards' && (
-              <div className="flex items-center justify-between pb-4 border-b border-slate-200">
-                <div className="flex items-center gap-3.5">
-                  <div className="w-14 h-14 rounded-2xl bg-slate-900 p-2 flex items-center justify-center shrink-0 shadow-sm border border-slate-800">
-                    <img
-                      src={LOGO_WHITE_BASE64}
-                      alt="Logo ICLEB"
-                      className="w-full h-full object-contain"
-                    />
-                  </div>
-                  <div>
-                    <span className="text-[10px] font-black tracking-widest uppercase text-slate-400 block">
-                      Iglesia El Buen Pastor
-                    </span>
-                    <h2
-                      style={{ fontFamily: "'Georgia', 'Cambria', serif" }}
-                      className="text-2xl font-black text-slate-900 tracking-tight uppercase"
-                    >
-                      Galería de Cumpleaños
-                    </h2>
-                    <span className="text-xs font-bold text-rose-700 block">
-                      ¡Felicitaciones a los cumpleañeros de {MONTH_NAMES[selectedMonth]}!
-                    </span>
-                  </div>
-                </div>
-
-                <div className="text-right shrink-0">
-                  <span className="inline-block px-3 py-1.5 rounded-xl bg-amber-100 text-amber-900 border border-amber-300 text-xs font-black uppercase tracking-wider">
-                    {MONTH_NAMES[selectedMonth]} {selectedYear}
-                  </span>
-                </div>
-              </div>
-            )}
-
-            {/* VERSÍCULO BÍBLICO DE BENDICIÓN (Diseño Pergamino Editorial) */}
-            <div className="rounded-2xl p-4 bg-amber-50/60 border border-amber-200/80 text-amber-950 flex items-start gap-3 shadow-2xs">
-              <Quote className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />
-              <div className="min-w-0">
-                <p
-                  style={{ fontFamily: "'Georgia', 'Cambria', serif" }}
-                  className="text-xs leading-relaxed italic text-slate-800"
-                >
-                  {currentVerse.text}
-                </p>
-                <p className="text-[10px] font-black uppercase tracking-wider text-amber-800 mt-1">
-                  — {currentVerse.citation}
-                </p>
-              </div>
-            </div>
-
-            {/* ======================================================== */}
-            {/* CUERPO DEL TABLERO SEGÚN EL LAYOUT ELEGIDO               */}
-            {/* ======================================================== */}
-            {isLoading ? (
-              <div className="py-24 text-center">
-                <div className="w-8 h-8 border-2 border-slate-900 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
-                <p className="text-xs font-bold text-slate-600">Cargando datos de cumpleaños...</p>
-              </div>
-            ) : displayedBirthdays.length === 0 ? (
-              <div className="py-24 text-center rounded-2xl bg-white/70 border border-dashed border-slate-300">
-                <Cake className="w-10 h-10 text-slate-400 mx-auto mb-2" />
-                <h3 className="text-base font-bold text-slate-800">
-                  No hay cumpleaños registrados para {MONTH_NAMES[selectedMonth]}
-                </h3>
-                <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
-                  Puedes registrar nuevos miembros en el sistema o agregar cumpleañeros adicionales en la barra superior.
-                </p>
-              </div>
-            ) : (
-              <>
-                {/* ---------------------------------------------------- */}
-                {/* 1. LAYOUT GALA: Medallones Circulares & Honor        */}
-                {/* ---------------------------------------------------- */}
-                {layoutStyle === 'gala' && (
-                  <div className="grid grid-cols-2 gap-3.5">
-                    {displayedBirthdays.map((b) => (
-                      <div
-                        key={b.uid}
-                        className="bg-white rounded-2xl p-3.5 border border-slate-200/80 shadow-xs flex items-center justify-between gap-3 relative overflow-hidden"
-                      >
-                        <div className="flex items-center gap-3.5 min-w-0">
-                          {/* Medallón Circular Dorado */}
-                          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 text-slate-950 flex flex-col items-center justify-center shrink-0 shadow-sm border border-amber-300">
-                            <span className="text-base font-black leading-none tracking-tight">
-                              {String(b.dia).padStart(2, '0')}
-                            </span>
-                            <span className="text-[7.5px] font-black uppercase tracking-widest mt-0.5 opacity-90 leading-none">
-                              {b.diaSemana}
-                            </span>
-                          </div>
-
-                          {/* Nombre & Datos */}
-                          <div className="min-w-0">
-                            <h4
-                              style={{ fontFamily: "'Georgia', 'Cambria', serif" }}
-                              className="text-xs font-bold text-slate-900 truncate leading-snug"
-                            >
-                              {b.nombre}
-                            </h4>
-                            <div className="flex items-center gap-1.5 mt-0.5">
-                              {showCongregation && (
-                                <span className="text-[9.5px] font-semibold text-slate-500 truncate">
-                                  {b.congregacion}
-                                </span>
-                              )}
-                              {showAge && b.edad !== undefined && (
-                                <span className="text-[9.5px] font-bold text-slate-600 bg-slate-100 px-1 rounded-sm">
-                                  {b.edad} años
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="shrink-0 text-amber-500">
-                          <Bookmark className="w-4 h-4 fill-amber-400 text-amber-500" />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {/* ---------------------------------------------------- */}
-                {/* 2. LAYOUT WEEKLY: Almanaque Semanal por Bloques      */}
-                {/* ---------------------------------------------------- */}
-                {layoutStyle === 'weekly' && (
-                  <div className="space-y-4">
-                    {weeklyGroups.map(([weekTitle, items]) => (
-                      <div key={weekTitle} className="bg-white/80 rounded-2xl p-3.5 border border-slate-200 shadow-2xs">
-                        {/* Cabecera de la Semana */}
-                        <div className="flex items-center justify-between pb-2 mb-2.5 border-b border-slate-100">
-                          <span className="text-[11px] font-black uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
-                            <Calendar className="w-3.5 h-3.5 text-blue-700" />
-                            <span>{weekTitle}</span>
-                          </span>
-                          <span className="text-[10px] font-bold text-slate-400">
-                            {items.length} {items.length === 1 ? 'cumpleañero' : 'cumpleañeros'}
-                          </span>
-                        </div>
-
-                        {/* Personas de esta semana */}
-                        <div className="grid grid-cols-2 gap-2">
-                          {items.map((b) => (
-                            <div
-                              key={b.uid}
-                              className="bg-slate-50/70 rounded-xl p-2.5 border border-slate-200/60 flex items-center justify-between gap-2"
-                            >
-                              <div className="flex items-center gap-2.5 min-w-0">
-                                <span className="w-8 h-8 rounded-lg bg-slate-900 text-white font-black text-xs flex items-center justify-center shrink-0">
-                                  {b.dia}
-                                </span>
-                                <div className="min-w-0">
-                                  <p className="text-xs font-bold text-slate-900 truncate leading-tight">
-                                    {b.nombre}
-                                  </p>
-                                  <p className="text-[9.5px] font-medium text-slate-500 mt-0.5 truncate">
-                                    {b.diaSemana} {showCongregation && `• ${b.congregacion}`}
-                                  </p>
-                                </div>
-                              </div>
-                              {showAge && b.edad !== undefined && (
-                                <span className="text-[9.5px] font-bold text-slate-600 bg-white px-1.5 py-0.5 rounded border border-slate-200 shrink-0">
-                                  {b.edad} años
-                                </span>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {/* ---------------------------------------------------- */}
-                {/* 3. LAYOUT CARDS: Mosaico de Postales con Día Grande  */}
-                {/* ---------------------------------------------------- */}
-                {layoutStyle === 'cards' && (
-                  <div className="grid grid-cols-3 gap-3">
-                    {displayedBirthdays.map((b) => (
-                      <div
-                        key={b.uid}
-                        className="bg-white rounded-2xl p-3 border-2 border-slate-200 shadow-2xs relative overflow-hidden flex flex-col justify-between min-h-[95px]"
-                      >
-                        {/* Gran número del día en marca de agua de fondo */}
-                        <span
-                          style={{ fontFamily: "'Georgia', 'Cambria', serif" }}
-                          className="absolute -bottom-2 -right-1 text-5xl font-black text-slate-100 select-none pointer-events-none"
-                        >
-                          {b.dia}
-                        </span>
-
-                        <div className="relative z-10">
-                          <div className="flex items-center justify-between mb-1">
-                            <span className="text-[10px] font-black uppercase tracking-wider text-rose-700 bg-rose-50 px-2 py-0.5 rounded-md border border-rose-200">
-                              Día {b.dia} • {b.diaSemana}
-                            </span>
-                            <Cake className="w-3.5 h-3.5 text-amber-500" />
-                          </div>
-
-                          <h4
-                            style={{ fontFamily: "'Georgia', 'Cambria', serif" }}
-                            className="text-xs font-bold text-slate-900 line-clamp-2 leading-tight mt-1"
-                          >
-                            {b.nombre}
-                          </h4>
-                        </div>
-
-                        <div className="relative z-10 pt-1.5 flex items-center justify-between text-[9.5px] font-semibold text-slate-500 border-t border-slate-100 mt-2">
-                          <span className="truncate">{showCongregation ? b.congregacion : 'Hermano en Cristo'}</span>
-                          {showAge && b.edad !== undefined && (
-                            <span className="font-bold text-slate-700 shrink-0">{b.edad} años</span>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-
-          {/* PIE DE PÁGINA INSTITUCIONAL DE LA HOJA */}
-          <div className="relative z-10 pt-4 mt-6 border-t-2 border-slate-300/80 flex items-center justify-between text-[10px] text-slate-500 font-sans">
-            <div className="flex items-center gap-2">
-              <span className="font-black text-slate-800 uppercase tracking-wider">
-                Pizarra Informativa ICLEB
-              </span>
-              <span>•</span>
-              <span className="italic">«La congregación ora por ricas bendiciones sobre cada vida»</span>
-            </div>
-            <div className="font-bold text-slate-400">
-              Emitido: {MONTH_NAMES[selectedMonth]} {selectedYear}
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }
