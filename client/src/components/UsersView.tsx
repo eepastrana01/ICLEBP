@@ -1,4 +1,5 @@
-import { useState, useMemo, type FormEvent } from 'react';
+import { useState, useEffect, useMemo, type FormEvent } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../lib/api';
@@ -28,7 +29,6 @@ import {
   Lock,
   Plus,
   ChevronDown,
-  MessageCircle,
   RefreshCw,
   CheckCircle2
 } from 'lucide-react';
@@ -121,11 +121,22 @@ export default function UsersView() {
   // Modal de Credenciales / Reset Password
   const [credentialsUser, setCredentialsUser] = useState<Usuario | null>(null);
   const [showCredPassword, setShowCredPassword] = useState(false);
-  const [copiedWhatsApp, setCopiedWhatsApp] = useState(false);
   const [copiedPassOnly, setCopiedPassOnly] = useState(false);
   const [resetPasswordInput, setResetPasswordInput] = useState('');
   const [resetError, setResetError] = useState('');
   const [resetSuccess, setResetSuccess] = useState(false);
+
+  // Bloquear scroll de fondo cuando hay un modal abierto
+  useEffect(() => {
+    if (credentialsUser || showEditModal) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [credentialsUser, showEditModal]);
 
   // Toast flotante
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -281,7 +292,6 @@ export default function UsersView() {
   const openCredentials = (u: Usuario) => {
     setCredentialsUser(u);
     setShowCredPassword(false);
-    setCopiedWhatsApp(false);
     setCopiedPassOnly(false);
     setResetPasswordInput('');
     setResetError('');
@@ -290,7 +300,6 @@ export default function UsersView() {
 
   const closeCredentials = () => {
     setCredentialsUser(null);
-    setCopiedWhatsApp(false);
     setCopiedPassOnly(false);
     setResetPasswordInput('');
     setResetError('');
@@ -314,16 +323,6 @@ export default function UsersView() {
     const randomNum = Math.floor(10 + Math.random() * 90);
     const suggested = `${prefix}${year}${randomNum}!`;
     setResetPasswordInput(suggested);
-  };
-
-  // Copiar formato para WhatsApp (sin textos bíblicos, estrictamente credenciales)
-  const copyWhatsAppCredentials = (u: Usuario) => {
-    const pass = u.password_plain || '(Sin contraseña registrada)';
-    const text = `Hola ${u.nombre_completo || u.username}, aquí tienes tus datos de acceso al sistema Planner Pastoral ICLEB:\n\n👤 Usuario: ${u.username}\n🔑 Contraseña: ${pass}\n\nPuedes ingresar desde tu navegador para consultar la planificación y módulos correspondientes.`;
-    navigator.clipboard.writeText(text);
-    setCopiedWhatsApp(true);
-    setTimeout(() => setCopiedWhatsApp(false), 2500);
-    showToast(`Credenciales de ${u.username} copiadas`);
   };
 
   // Mutaciones
@@ -940,215 +939,196 @@ export default function UsersView() {
       {/* ======================================================== */}
       {/* MODAL 1: GESTIÓN DE CREDENCIALES & RESET PASSWORD        */}
       {/* ======================================================== */}
-      <AnimatePresence>
-        {credentialsUser && (
-          <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-3 sm:p-4 overflow-y-auto"
-            onClick={closeCredentials}
-          >
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0, y: 12 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.95, opacity: 0, y: 12 }}
-              transition={SPRING_FAST}
-              className="bg-white rounded-[2rem] w-full max-w-md overflow-hidden shadow-2xl border border-slate-200"
-              onClick={(e) => e.stopPropagation()}
+      {createPortal(
+        <AnimatePresence>
+          {credentialsUser && (
+            <div
+              className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-3 sm:p-4 overflow-y-auto"
+              onClick={closeCredentials}
             >
-              {/* Header Modal */}
-              <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center border border-amber-200/60">
-                    <KeyRound className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <h2 className="text-base font-extrabold text-slate-900">
-                      Credenciales de Acceso
-                    </h2>
-                    <p className="text-xs font-medium text-slate-500">
-                      Usuario: <span className="font-bold text-slate-900">{credentialsUser.username}</span>
-                    </p>
-                  </div>
-                </div>
-                <button
-                  onClick={closeCredentials}
-                  className="w-8 h-8 rounded-xl flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-slate-800 transition-colors cursor-pointer"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-
-              <div className="p-6 space-y-5">
-                
-                {/* 1. Tarjeta con credenciales actuales */}
-                <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200/80 space-y-3">
-                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block">
-                    Credenciales Actuales Registradas
-                  </span>
-
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-slate-500 font-semibold">Usuario:</span>
-                      <span className="font-mono font-extrabold text-slate-900 select-all">{credentialsUser.username}</span>
+              <motion.div
+                initial={{ scale: 0.95, opacity: 0, y: 12 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.95, opacity: 0, y: 12 }}
+                transition={SPRING_FAST}
+                className="bg-white rounded-[2rem] w-full max-w-md overflow-hidden shadow-2xl border border-slate-200 my-auto"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Header Modal */}
+                <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center border border-amber-200/60">
+                      <KeyRound className="w-4 h-4" />
                     </div>
+                    <div>
+                      <h2 className="text-base font-extrabold text-slate-900">
+                        Credenciales de Acceso
+                      </h2>
+                      <p className="text-xs font-medium text-slate-500">
+                        Usuario: <span className="font-bold text-slate-900">{credentialsUser.username}</span>
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={closeCredentials}
+                    className="w-8 h-8 rounded-xl flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-slate-800 transition-colors cursor-pointer"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
 
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-slate-500 font-semibold">Contraseña:</span>
-                      <div className="flex items-center gap-1.5">
-                        <span className="font-mono font-bold text-slate-900 select-all tracking-wider">
-                          {showCredPassword
-                            ? credentialsUser.password_plain || '(Sin contraseña registrada)'
-                            : '••••••••••••'}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => setShowCredPassword(!showCredPassword)}
-                          className="p-1 rounded-lg text-slate-400 hover:text-slate-800 hover:bg-white transition-colors cursor-pointer"
-                          title="Ver / Ocultar"
-                        >
-                          {showCredPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                        </button>
-                        {credentialsUser.password_plain && (
+                <div className="p-6 space-y-5">
+                  
+                  {/* 1. Tarjeta con credenciales actuales */}
+                  <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200/80 space-y-3">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block">
+                      Credenciales Actuales Registradas
+                    </span>
+
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-slate-500 font-semibold">Usuario:</span>
+                        <span className="font-mono font-extrabold text-slate-900 select-all">{credentialsUser.username}</span>
+                      </div>
+
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-slate-500 font-semibold">Contraseña:</span>
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-mono font-bold text-slate-900 select-all tracking-wider">
+                            {showCredPassword
+                              ? credentialsUser.password_plain || '(Sin contraseña registrada)'
+                              : '••••••••••••'}
+                          </span>
                           <button
                             type="button"
-                            onClick={() => {
-                              navigator.clipboard.writeText(credentialsUser.password_plain!);
-                              setCopiedPassOnly(true);
-                              setTimeout(() => setCopiedPassOnly(false), 2000);
-                              showToast('Contraseña copiada al portapapeles');
-                            }}
-                            className={`p-1 rounded-lg transition-colors cursor-pointer ${
-                              copiedPassOnly ? 'text-emerald-600 bg-emerald-50' : 'text-slate-400 hover:text-slate-800 hover:bg-white'
-                            }`}
-                            title="Copiar contraseña sola"
+                            onClick={() => setShowCredPassword(!showCredPassword)}
+                            className="p-1 rounded-lg text-slate-400 hover:text-slate-800 hover:bg-white transition-colors cursor-pointer"
+                            title="Ver / Ocultar"
                           >
-                            {copiedPassOnly ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                            {showCredPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                           </button>
-                        )}
+                          {credentialsUser.password_plain && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                navigator.clipboard.writeText(credentialsUser.password_plain!);
+                                setCopiedPassOnly(true);
+                                setTimeout(() => setCopiedPassOnly(false), 2000);
+                                showToast('Contraseña copiada al portapapeles');
+                              }}
+                              className={`p-1 rounded-lg transition-colors cursor-pointer ${
+                                copiedPassOnly ? 'text-emerald-600 bg-emerald-50' : 'text-slate-400 hover:text-slate-800 hover:bg-white'
+                              }`}
+                              title="Copiar contraseña sola"
+                            >
+                              {copiedPassOnly ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
 
-                  {/* Botón rápido para copiar credenciales para WhatsApp */}
-                  <motion.button
-                    whileTap={{ scale: 0.97 }}
-                    onClick={() => copyWhatsAppCredentials(credentialsUser)}
-                    className={`w-full mt-2 inline-flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
-                      copiedWhatsApp
-                        ? 'bg-emerald-50 border-emerald-300 text-emerald-800 shadow-2xs'
-                        : 'bg-white hover:bg-slate-100 border-slate-200 text-slate-700 shadow-2xs'
-                    }`}
-                  >
-                    {copiedWhatsApp ? (
-                      <>
-                        <Check className="w-4 h-4 text-emerald-600" />
-                        <span>¡Mensaje copiado para WhatsApp!</span>
-                      </>
-                    ) : (
-                      <>
-                        <MessageCircle className="w-4 h-4 text-emerald-600" />
-                        <span>Copiar mensaje para enviar por WhatsApp</span>
-                      </>
+                  {/* 2. Sección de Restablecimiento de Contraseña */}
+                  <form onSubmit={handleResetPasswordSubmit} className="space-y-3 pt-2 border-t border-slate-100">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-extrabold text-slate-900 block">
+                        Restablecer Nueva Contraseña
+                      </label>
+                      <button
+                        type="button"
+                        onClick={generateRandomPassword}
+                        className="text-[11px] font-bold text-indigo-600 hover:text-indigo-800 inline-flex items-center gap-1 cursor-pointer"
+                        title="Generar una contraseña aleatoria sugerida"
+                      >
+                        <RefreshCw className="w-3 h-3" />
+                        <span>Sugerir clave</span>
+                      </button>
+                    </div>
+
+                    <input
+                      type="text"
+                      placeholder="Escribe la nueva contraseña..."
+                      value={resetPasswordInput}
+                      onChange={(e) => setResetPasswordInput(e.target.value)}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-bold font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:bg-white shadow-2xs"
+                    />
+
+                    {resetError && (
+                      <p className="text-xs font-bold text-rose-600">{resetError}</p>
                     )}
-                  </motion.button>
+
+                    {resetSuccess && (
+                      <p className="text-xs font-bold text-emerald-600 flex items-center gap-1">
+                        <Check className="w-3.5 h-3.5" />
+                        <span>¡Contraseña actualizada exitosamente!</span>
+                      </p>
+                    )}
+
+                    <div className="flex items-center gap-2.5 pt-2">
+                      <button
+                        type="button"
+                        onClick={closeCredentials}
+                        className="flex-1 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
+                      >
+                        Cerrar
+                      </button>
+                      <motion.button
+                        whileTap={{ scale: 0.96 }}
+                        type="submit"
+                        disabled={resetPasswordMutation.isPending || !resetPasswordInput.trim()}
+                        className="flex-1 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-xs font-bold text-white shadow-[0_4px_14px_rgba(15,23,42,0.18)] transition-all disabled:opacity-40 cursor-pointer"
+                      >
+                        {resetPasswordMutation.isPending ? 'Guardando...' : 'Cambiar Clave'}
+                      </motion.button>
+                    </div>
+                  </form>
+
                 </div>
-
-                {/* 2. Sección de Restablecimiento de Contraseña */}
-                <form onSubmit={handleResetPasswordSubmit} className="space-y-3 pt-2 border-t border-slate-100">
-                  <div className="flex items-center justify-between">
-                    <label className="text-xs font-extrabold text-slate-900 block">
-                      Restablecer Nueva Contraseña
-                    </label>
-                    <button
-                      type="button"
-                      onClick={generateRandomPassword}
-                      className="text-[11px] font-bold text-indigo-600 hover:text-indigo-800 inline-flex items-center gap-1 cursor-pointer"
-                      title="Generar una contraseña aleatoria sugerida"
-                    >
-                      <RefreshCw className="w-3 h-3" />
-                      <span>Sugerir clave</span>
-                    </button>
-                  </div>
-
-                  <input
-                    type="text"
-                    placeholder="Escribe la nueva contraseña..."
-                    value={resetPasswordInput}
-                    onChange={(e) => setResetPasswordInput(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-bold font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:bg-white shadow-2xs"
-                  />
-
-                  {resetError && (
-                    <p className="text-xs font-bold text-rose-600">{resetError}</p>
-                  )}
-
-                  {resetSuccess && (
-                    <p className="text-xs font-bold text-emerald-600 flex items-center gap-1">
-                      <Check className="w-3.5 h-3.5" />
-                      <span>¡Contraseña actualizada exitosamente!</span>
-                    </p>
-                  )}
-
-                  <div className="flex items-center gap-2.5 pt-2">
-                    <button
-                      type="button"
-                      onClick={closeCredentials}
-                      className="flex-1 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
-                    >
-                      Cerrar
-                    </button>
-                    <motion.button
-                      whileTap={{ scale: 0.96 }}
-                      type="submit"
-                      disabled={resetPasswordMutation.isPending || !resetPasswordInput.trim()}
-                      className="flex-1 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-xs font-bold text-white shadow-[0_4px_14px_rgba(15,23,42,0.18)] transition-all disabled:opacity-40 cursor-pointer"
-                    >
-                      {resetPasswordMutation.isPending ? 'Guardando...' : 'Cambiar Clave'}
-                    </motion.button>
-                  </div>
-                </form>
-
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
 
       {/* ======================================================== */}
       {/* MODAL 2: CREACIÓN / EDICIÓN ORGANIZADA POR PESTAÑAS      */}
       {/* ======================================================== */}
-      <AnimatePresence>
-        {showEditModal && (
-          <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-3 sm:p-4 overflow-y-auto"
-            onClick={() => setShowEditModal(false)}
-          >
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0, y: 12 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.95, opacity: 0, y: 12 }}
-              transition={SPRING_FAST}
-              className="bg-white rounded-[2rem] w-full max-w-xl overflow-hidden my-auto shadow-2xl flex flex-col border border-slate-200"
-              onClick={(e) => e.stopPropagation()}
+      {createPortal(
+        <AnimatePresence>
+          {showEditModal && (
+            <div
+              className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-3 sm:p-4 overflow-y-auto"
+              onClick={() => setShowEditModal(false)}
             >
-              {/* Header Modal */}
-              <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 shrink-0">
-                <div>
-                  <h2 className="text-base font-extrabold text-slate-900">
-                    {editingUser ? `Editar: ${editingUser.username}` : 'Registrar Nuevo Usuario'}
-                  </h2>
-                  <p className="text-xs font-medium text-slate-500 mt-0.5">
-                    Configuración de perfil y matriz de permisos por sección.
-                  </p>
+              <motion.div
+                initial={{ scale: 0.95, opacity: 0, y: 12 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.95, opacity: 0, y: 12 }}
+                transition={SPRING_FAST}
+                className="bg-white rounded-[2rem] w-full max-w-xl overflow-hidden my-auto shadow-2xl flex flex-col border border-slate-200"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Header Modal */}
+                <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 shrink-0">
+                  <div>
+                    <h2 className="text-base font-extrabold text-slate-900">
+                      {editingUser ? `Editar: ${editingUser.username}` : 'Registrar Nuevo Usuario'}
+                    </h2>
+                    <p className="text-xs font-medium text-slate-500 mt-0.5">
+                      Configuración de perfil y matriz de permisos por sección.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setShowEditModal(false)}
+                    className="w-8 h-8 rounded-xl flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-slate-800 transition-colors cursor-pointer"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
                 </div>
-                <button
-                  onClick={() => setShowEditModal(false)}
-                  className="w-8 h-8 rounded-xl flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-slate-800 transition-colors cursor-pointer"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
 
-              {/* Pestañas de Navegación del Modal (Mismo Tamaño 50% / 50%) */}
+                {/* Pestañas de Navegación del Modal (Mismo Tamaño 50% / 50%) */}
               <div className="px-6 py-2.5 border-b border-slate-100 bg-slate-50/60 shrink-0">
                 <div className="grid grid-cols-2 gap-1.5 p-1 bg-slate-100/90 rounded-2xl border border-slate-200/60">
                   <button
@@ -1337,7 +1317,7 @@ export default function UsersView() {
                             <div>
                               <span className="font-extrabold text-slate-800 block">Contraseña Protegida</span>
                               <span className="text-[11px] text-slate-400 block mt-0.5">
-                                Puedes restablecerla o copiarla para WhatsApp desde el botón "Contraseña" en la tabla.
+                                Puedes restablecerla o consultarla desde el botón "Contraseña" en la tabla.
                               </span>
                             </div>
                             <button
@@ -1472,9 +1452,12 @@ export default function UsersView() {
             </motion.div>
           </div>
         )}
-      </AnimatePresence>
+      </AnimatePresence>,
+      document.body
+    )}
 
-      {/* Toast Flotante con Máximo z-index (z-[9999]) para superponer cualquier modal y backdrop */}
+    {/* Toast Flotante con Máximo z-index (z-[9999]) para superponer cualquier modal y backdrop */}
+    {createPortal(
       <AnimatePresence>
         {toastMessage && (
           <motion.div
@@ -1490,7 +1473,9 @@ export default function UsersView() {
             <span className="tracking-wide text-slate-100">{toastMessage}</span>
           </motion.div>
         )}
-      </AnimatePresence>
+      </AnimatePresence>,
+      document.body
+    )}
 
       <ConfirmModal
         isOpen={confirmState.isOpen}
