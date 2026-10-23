@@ -2,19 +2,16 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { SPRING_FAST } from '../lib/animations';
 import {
-  Code2,
   GitBranch,
   ExternalLink,
   Copy,
   Check,
-  Cpu,
+  Code2,
+  Server,
   Layers,
   ShieldCheck,
-  Server,
-  Sparkles,
-  Award,
-  Wallet,
   Calendar,
+  Wallet,
   Users,
   Ticket,
   UserCheck,
@@ -24,6 +21,9 @@ import {
   LayoutDashboard
 } from 'lucide-react';
 
+const REPO_URL = 'https://github.com/eepastrana01/ICLEBP.git';
+const GITHUB_PROFILE = 'https://github.com/eepastrana01';
+
 function GithubIcon({ className = 'w-4 h-4' }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
@@ -32,40 +32,38 @@ function GithubIcon({ className = 'w-4 h-4' }: { className?: string }) {
   );
 }
 
-const REPO_URL = 'https://github.com/eepastrana01/ICLEBP.git';
-
-const TECH_FRONTEND = [
-  { name: 'React 19', desc: 'Biblioteca UI con Hooks modernos y carga diferida (Suspense)', tag: 'Core UI' },
-  { name: 'TypeScript', desc: 'Tipado estricto para alta mantenibilidad y cero errores en runtime', tag: 'Lenguaje' },
-  { name: 'Vite 8', desc: 'Entorno de compilación ultrarrápido con Hot Module Replacement (HMR)', tag: 'Bundler' },
-  { name: 'Tailwind CSS v4', desc: 'Motor de diseño Glassmorphism con paletas visuales modernas y accesibles', tag: 'Estilos' },
-  { name: 'Framer Motion', desc: 'Animaciones spring physics, transiciones de vista y micro-interacciones', tag: 'Animación' },
-  { name: 'TanStack React Query', desc: 'Gestión reactiva de caché, sincronización en segundo plano y mutaciones', tag: 'Data Fetching' },
-  { name: 'Lucide React', desc: 'Iconografía consistente, vectorial y optimizada para SaaS', tag: 'Iconos' },
-  { name: 'jsPDF & AutoTable', desc: 'Generación y exportación de carnets, actas de bautismo y balances', tag: 'Reportes' }
+const STACK_FRONTEND = [
+  { name: 'React 19', tag: 'UI Library' },
+  { name: 'TypeScript', tag: 'Lenguaje' },
+  { name: 'Vite 8', tag: 'Bundler' },
+  { name: 'Tailwind CSS v4', tag: 'Estilos' },
+  { name: 'Framer Motion', tag: 'Animaciones' },
+  { name: 'TanStack Query', tag: 'Estado & Caché' },
+  { name: 'Lucide Icons', tag: 'Iconografía' },
+  { name: 'jsPDF / AutoTable', tag: 'Exportación PDF' }
 ];
 
-const TECH_BACKEND = [
-  { name: 'Node.js & Express', desc: 'API RESTful modular con middlewares de seguridad y control de rutas', tag: 'Servidor' },
-  { name: 'PostgreSQL / Supabase', desc: 'Base de datos relacional robusta con transacciones ACID y alta disponibilidad', tag: 'Base de Datos' },
-  { name: 'Prisma ORM', desc: 'Modelado de esquemas y migraciones consistentes de base de datos', tag: 'ORM' },
-  { name: 'Zod Validator', desc: 'Validación estricta de esquemas, tipos y sanitización de datos entrantes', tag: 'Validación' },
-  { name: 'JWT & bcryptjs', desc: 'Autenticación mediante tokens de sesión y hashing criptográfico de claves', tag: 'Seguridad' },
-  { name: 'CORS & Body Parser', desc: 'Configuración segura de orígenes cruzados y procesamiento de payloads', tag: 'Middleware' }
+const STACK_BACKEND = [
+  { name: 'Node.js & Express', tag: 'Servidor REST' },
+  { name: 'PostgreSQL / Supabase', tag: 'Base de Datos' },
+  { name: 'Prisma ORM', tag: 'Modelado & Schema' },
+  { name: 'Zod Validator', tag: 'Validación de Tipos' },
+  { name: 'JWT & bcryptjs', tag: 'Autenticación' },
+  { name: 'Axios', tag: 'Cliente HTTP' }
 ];
 
 const MODULOS_SISTEMA = [
-  { icon: LayoutDashboard, name: 'Inicio & Dashboard', desc: 'Métricas pastorales, finanzas resumidas y accesos rápidos' },
-  { icon: Calendar, name: 'Agenda Pastoral', desc: 'Planificación cronológica de cultos, reuniones y eventos' },
-  { icon: Wallet, name: 'Finanzas Eclesiales', desc: 'Registro de ingresos, egresos, balance y talonarios' },
-  { icon: Users, name: 'Directorio de Miembros', desc: 'Padrón congregacional, estados de membresía y carnets' },
-  { icon: FileText, name: 'Fe de Bautismo', desc: 'Registro histórico y generación de certificados oficiales' },
-  { icon: UserCheck, name: 'Equipo Pastoral', desc: 'Estructura ministerial, líderes de grupos y áreas de servicio' },
-  { icon: Ticket, name: 'Rifas & Pro-Fondos', desc: 'Gestión de talonarios, boletos y recaudación especial' },
-  { icon: Cake, name: 'Cumpleañeros', desc: 'Directorio mensual de aniversarios congregacionales' },
-  { icon: Layers, name: 'Cartelera Mensual', desc: 'Visualización pública de las actividades del mes' },
-  { icon: Shield, name: 'Usuarios & Permisos', desc: 'Matriz RBAC por módulo y restablecimiento de credenciales' },
-  { icon: Sparkles, name: 'Perfil de Usuario', desc: 'Administración de credenciales personales y datos de contacto' }
+  { icon: LayoutDashboard, name: 'Inicio', desc: 'Resumen ejecutivo, cartelera y accesos rápidos' },
+  { icon: Calendar, name: 'Agenda Pastoral', desc: 'Planificación cronológica y calendario mensual' },
+  { icon: Wallet, name: 'Finanzas', desc: 'Ingresos, egresos, balance y talonarios' },
+  { icon: Users, name: 'Miembros', desc: 'Directorio congregacional y carnets' },
+  { icon: FileText, name: 'Fe de Bautismo', desc: 'Registro y certificados oficiales en PDF' },
+  { icon: UserCheck, name: 'Equipo Pastoral', desc: 'Estructura ministerial y liderazgo' },
+  { icon: Ticket, name: 'Rifas & Eventos', desc: 'Control de talonarios y actividades pro-fondos' },
+  { icon: Cake, name: 'Cumpleañeros', desc: 'Directorio de aniversarios del mes' },
+  { icon: Layers, name: 'Cartelera Mensual', desc: 'Actividades públicas congregacionales' },
+  { icon: Shield, name: 'Usuarios', desc: 'Matriz de permisos por módulo y accesos' },
+  { icon: ShieldCheck, name: 'Mi Perfil', desc: 'Seguridad de cuenta y datos de contacto' }
 ];
 
 export default function AppInfoView() {
@@ -74,131 +72,107 @@ export default function AppInfoView() {
   const copyRepoToClipboard = () => {
     navigator.clipboard.writeText(REPO_URL);
     setCopiedRepo(true);
-    setTimeout(() => setCopiedRepo(false), 2500);
+    setTimeout(() => setCopiedRepo(false), 2000);
   };
 
   return (
-    <div className="space-y-8 max-w-5xl mx-auto pb-14 font-sans text-slate-900">
+    <div className="space-y-6 max-w-5xl mx-auto pb-12 font-sans text-slate-900">
 
-      {/* ========== CABECERA PRINCIPAL ========== */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-1">
-        <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/70 border border-slate-200/80 shadow-2xs mb-2 backdrop-blur-md">
-            <span className="w-2 h-2 rounded-full bg-indigo-600"></span>
-            <span className="text-[11px] font-bold tracking-wider text-slate-600 uppercase">
-              Planner Pastoral ICLEB &bull; v2.4
-            </span>
+      {/* ========== ENCABEZADO LIMPIO & ORGÁNICO ========== */}
+      <div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-2xs flex flex-col md:flex-row md:items-center justify-between gap-5">
+        <div className="flex items-center gap-4">
+          <div className="w-14 h-14 rounded-2xl bg-slate-50 border border-slate-200/80 p-2.5 shadow-2xs flex items-center justify-center shrink-0">
+            <img src="/LogoICLEB.svg" alt="Logo ICLEB" className="h-full w-auto object-contain" />
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
-            Información del Sistema
-          </h1>
-          <p className="text-xs sm:text-sm font-medium text-slate-500 mt-0.5">
-            Arquitectura de software, stack tecnológico, repositorio y autoría del proyecto.
-          </p>
+          <div>
+            <div className="flex items-center gap-2.5 flex-wrap">
+              <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900">
+                Planner Pastoral
+              </h1>
+              <span className="text-[11px] font-extrabold text-slate-700 bg-slate-100 border border-slate-200/80 px-2.5 py-0.5 rounded-lg">
+                v2.4
+              </span>
+            </div>
+            <p className="text-xs sm:text-sm font-medium text-slate-500 mt-1">
+              Plataforma de gestión eclesial &bull; Iglesia Cristiana La Hermosa Betel (ICLEB)
+            </p>
+          </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0 self-start md:self-auto">
           <a
             href={REPO_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-extrabold shadow-sm hover:shadow transition-all cursor-pointer"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold shadow-2xs transition-all cursor-pointer"
           >
             <GithubIcon className="w-4 h-4" />
-            <span>Ver en GitHub</span>
-            <ExternalLink className="w-3.5 h-3.5 opacity-70" />
+            <span>GitHub</span>
+            <ExternalLink className="w-3.5 h-3.5 opacity-60" />
           </a>
         </div>
       </div>
 
-      {/* ========== TARJETA DE AUTOR & CREADOR ========== */}
+      {/* ========== SECCIÓN DE AUTOR (EDIS PASTRANA) ========== */}
       <motion.div
         whileHover={{ y: -2 }}
         transition={SPRING_FAST}
-        className="relative overflow-hidden rounded-[2.2rem] bg-gradient-to-br from-slate-900 via-slate-850 to-indigo-950 text-white p-6 sm:p-8 shadow-xl border border-slate-800"
+        className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-2xs space-y-4"
       >
-        {/* Luces ambientales de fondo */}
-        <div className="absolute -top-24 -right-24 w-80 h-80 rounded-full bg-indigo-500/20 blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-24 -left-24 w-80 h-80 rounded-full bg-emerald-500/15 blur-3xl pointer-events-none" />
-
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="flex items-start sm:items-center gap-5">
-            {/* Avatar / Monograma del Autor */}
-            <div className="relative shrink-0">
-              <div className="w-18 h-18 sm:w-20 sm:h-20 rounded-3xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-emerald-400 p-0.5 shadow-lg">
-                <div className="w-full h-full bg-slate-900 rounded-[1.4rem] flex items-center justify-center">
-                  <span className="text-2xl sm:text-3xl font-black tracking-tight text-white">EP</span>
-                </div>
-              </div>
-              <div className="absolute -bottom-1 -right-1 p-1 bg-emerald-500 text-slate-950 rounded-xl shadow">
-                <Award className="w-3.5 h-3.5" />
-              </div>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="w-13 h-13 rounded-2xl bg-slate-900 text-white flex items-center justify-center font-black text-lg shadow-sm shrink-0">
+              EP
             </div>
-
             <div>
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-[10px] font-extrabold uppercase tracking-wider mb-1.5">
-                <Sparkles className="w-3 h-3 text-indigo-400" />
-                <span>Autor & Creador Principal</span>
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg font-black text-slate-900">
+                  Edis Pastrana
+                </h2>
+                <span className="text-[10px] font-extrabold text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-md uppercase tracking-wider">
+                  Desarrollador
+                </span>
               </div>
-              <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
-                Edis Pastrana
-              </h2>
-              <p className="text-xs sm:text-sm text-slate-300 font-medium mt-1 max-w-xl leading-relaxed">
-                Diseñador de interfaz, arquitecto de software y desarrollador de toda la plataforma <span className="font-bold text-white">Planner Pastoral ICLEB</span> para la Iglesia Cristiana La Hermosa Betel.
+              <p className="text-xs font-medium text-slate-500 mt-0.5">
+                Autor y desarrollador del sistema Planner Pastoral ICLEB
               </p>
             </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row md:flex-col gap-2 shrink-0 pt-2 md:pt-0 border-t md:border-t-0 border-slate-800">
-            <div className="bg-white/10 backdrop-blur-md rounded-2xl px-4 py-2.5 border border-white/10">
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block">
-                Plataforma
-              </span>
-              <span className="text-xs font-extrabold text-white">
-                ICLEB Pastoral Suite
-              </span>
-            </div>
-            <div className="bg-white/10 backdrop-blur-md rounded-2xl px-4 py-2.5 border border-white/10">
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block">
-                Versión del Sistema
-              </span>
-              <span className="text-xs font-extrabold text-emerald-400">
-                v2.4 &bull; Edición 2026
-              </span>
-            </div>
+          <div className="flex items-center gap-2 self-start sm:self-auto">
+            <a
+              href={GITHUB_PROFILE}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-xs font-bold text-slate-700 transition-colors"
+            >
+              <GithubIcon className="w-3.5 h-3.5" />
+              <span>@eepastrana01</span>
+            </a>
           </div>
         </div>
+
+        <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-normal pt-1 border-t border-slate-100">
+          Diseñado y programado para organizar las actividades pastorales, el directorio de membresía, la emisión de actas de bautismo y la transparencia financiera de la congregación.
+        </p>
       </motion.div>
 
-      {/* ========== TARJETA DE REPOSITORIO DE CÓDIGO ========== */}
-      <motion.div
-        whileHover={{ y: -2 }}
-        transition={SPRING_FAST}
-        className="glass-panel rounded-[2rem] p-6 sm:p-7 space-y-4 border border-white/80"
-      >
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-700 flex items-center justify-center border border-indigo-100">
-              <GitBranch className="w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="text-base font-extrabold text-slate-900">
-                Repositorio de Código Fuente
-              </h3>
-              <p className="text-xs font-medium text-slate-500">
-                Control de versiones en GitHub con integración continua y despliegue.
-              </p>
-            </div>
+      {/* ========== REPOSITORIO & CÓDIGO ========== */}
+      <div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-2xs space-y-3.5">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <GitBranch className="w-4 h-4 text-slate-600" />
+            <h3 className="text-sm font-extrabold text-slate-900">
+              Repositorio del Proyecto
+            </h3>
           </div>
-
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold self-start sm:self-auto">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span>Rama activa: main</span>
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-bold">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+            <span>Rama: main</span>
           </span>
         </div>
 
-        {/* Caja de URL con botón de copiado rápido */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 p-2 bg-slate-50/80 rounded-2xl border border-slate-200/80">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 p-2 bg-slate-50 rounded-2xl border border-slate-200">
           <div className="flex-1 px-3 py-2 font-mono text-xs font-bold text-slate-800 truncate select-all">
             {REPO_URL}
           </div>
@@ -207,7 +181,7 @@ export default function AppInfoView() {
             <motion.button
               whileTap={{ scale: 0.95 }}
               onClick={copyRepoToClipboard}
-              className={`flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              className={`flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 copiedRepo
                   ? 'bg-emerald-600 text-white shadow-2xs'
                   : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 shadow-2xs'
@@ -237,102 +211,68 @@ export default function AppInfoView() {
             </a>
           </div>
         </div>
-      </motion.div>
+      </div>
 
-      {/* ========== TECNOLOGÍAS USADAS (GRID DETALLADO) ========== */}
-      <div className="space-y-4">
+      {/* ========== TECNOLOGÍAS USADAS (CHIPS LIMPIOS) ========== */}
+      <div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-2xs space-y-5">
         <div>
-          <h2 className="text-lg font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
-            <Cpu className="w-5 h-5 text-indigo-600" />
-            <span>Stack Tecnológico & Dependencias</span>
-          </h2>
+          <h3 className="text-sm font-extrabold text-slate-900 tracking-tight">
+            Tecnologías Utilizadas
+          </h3>
           <p className="text-xs font-medium text-slate-500 mt-0.5">
-            Tecnologías de grado de producción seleccionadas para máxima velocidad y seguridad.
+            Herramientas y librerías que componen la arquitectura del sistema.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-1">
           {/* Frontend */}
-          <div className="glass-panel rounded-[2rem] p-6 space-y-4 border border-white/80 flex flex-col justify-between">
-            <div>
-              <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-xl bg-sky-50 text-sky-700 flex items-center justify-center border border-sky-100">
-                    <Code2 className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-extrabold text-slate-900">Frontend & Experiencia de Usuario</h3>
-                    <p className="text-[11px] text-slate-400 font-medium">Single Page Application (SPA)</p>
-                  </div>
+          <div className="p-4 rounded-2xl bg-slate-50/70 border border-slate-200/80 space-y-3">
+            <div className="flex items-center gap-2 text-xs font-extrabold text-slate-900">
+              <Code2 className="w-4 h-4 text-indigo-600" />
+              <span>Frontend (Cliente)</span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {STACK_FRONTEND.map(tech => (
+                <div
+                  key={tech.name}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-xs shadow-2xs"
+                >
+                  <span className="font-extrabold text-slate-800">{tech.name}</span>
+                  <span className="text-[10px] text-slate-400 font-semibold">&bull; {tech.tag}</span>
                 </div>
-                <span className="text-[10px] font-black uppercase text-sky-700 bg-sky-50 px-2 py-0.5 rounded-lg border border-sky-200">
-                  Cliente
-                </span>
-              </div>
-
-              <div className="space-y-2.5">
-                {TECH_FRONTEND.map(tech => (
-                  <div key={tech.name} className="p-3 rounded-xl bg-white border border-slate-100 hover:border-slate-200 transition-colors">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs font-extrabold text-slate-900">{tech.name}</span>
-                      <span className="text-[9px] font-black uppercase tracking-wider text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
-                        {tech.tag}
-                      </span>
-                    </div>
-                    <p className="text-[11px] font-medium text-slate-500 leading-snug">{tech.desc}</p>
-                  </div>
-                ))}
-              </div>
+              ))}
             </div>
           </div>
 
-          {/* Backend & Base de Datos */}
-          <div className="glass-panel rounded-[2rem] p-6 space-y-4 border border-white/80 flex flex-col justify-between">
-            <div>
-              <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center border border-emerald-100">
-                    <Server className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-extrabold text-slate-900">Backend, API & Persistencia</h3>
-                    <p className="text-[11px] text-slate-400 font-medium">Servicios RESTful y PostgreSQL</p>
-                  </div>
+          {/* Backend */}
+          <div className="p-4 rounded-2xl bg-slate-50/70 border border-slate-200/80 space-y-3">
+            <div className="flex items-center gap-2 text-xs font-extrabold text-slate-900">
+              <Server className="w-4 h-4 text-emerald-600" />
+              <span>Backend & Persistencia</span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {STACK_BACKEND.map(tech => (
+                <div
+                  key={tech.name}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-xs shadow-2xs"
+                >
+                  <span className="font-extrabold text-slate-800">{tech.name}</span>
+                  <span className="text-[10px] text-slate-400 font-semibold">&bull; {tech.tag}</span>
                 </div>
-                <span className="text-[10px] font-black uppercase text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-200">
-                  Servidor
-                </span>
-              </div>
-
-              <div className="space-y-2.5">
-                {TECH_BACKEND.map(tech => (
-                  <div key={tech.name} className="p-3 rounded-xl bg-white border border-slate-100 hover:border-slate-200 transition-colors">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs font-extrabold text-slate-900">{tech.name}</span>
-                      <span className="text-[9px] font-black uppercase tracking-wider text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
-                        {tech.tag}
-                      </span>
-                    </div>
-                    <p className="text-[11px] font-medium text-slate-500 leading-snug">{tech.desc}</p>
-                  </div>
-                ))}
-              </div>
+              ))}
             </div>
           </div>
-
         </div>
       </div>
 
       {/* ========== MÓDULOS DE LA PLATAFORMA ========== */}
-      <div className="glass-panel rounded-[2rem] p-6 sm:p-7 space-y-5 border border-white/80">
+      <div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-2xs space-y-4">
         <div>
-          <h2 className="text-base font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
-            <Layers className="w-4.5 h-4.5 text-indigo-600" />
-            <span>Módulos Integrados en Planner Pastoral</span>
-          </h2>
+          <h3 className="text-sm font-extrabold text-slate-900 tracking-tight">
+            Módulos Integrados
+          </h3>
           <p className="text-xs font-medium text-slate-500 mt-0.5">
-            Ecosistema completo para administración, planificación de actividades y finanzas eclesiales.
+            Ecosistema de 11 módulos activos para la labor ministerial.
           </p>
         </div>
 
@@ -342,15 +282,15 @@ export default function AppInfoView() {
             return (
               <div
                 key={mod.name}
-                className="p-3.5 rounded-2xl bg-white border border-slate-200/70 hover:border-slate-300 transition-all shadow-2xs hover:shadow-xs flex items-start gap-3"
+                className="p-3.5 rounded-2xl bg-slate-50/60 border border-slate-200/70 hover:bg-slate-50 hover:border-slate-300 transition-all flex items-start gap-3"
               >
-                <div className="p-2 rounded-xl bg-slate-50 text-slate-700 border border-slate-200/60 shrink-0 mt-0.5">
+                <div className="p-2 rounded-xl bg-white text-slate-700 border border-slate-200 shadow-2xs shrink-0 mt-0.5">
                   <Icon className="w-4 h-4 text-indigo-600" />
                 </div>
                 <div>
-                  <h3 className="text-xs font-extrabold text-slate-900 leading-tight">
+                  <h4 className="text-xs font-extrabold text-slate-900 leading-tight">
                     {mod.name}
-                  </h3>
+                  </h4>
                   <p className="text-[11px] font-medium text-slate-500 leading-snug mt-0.5">
                     {mod.desc}
                   </p>
@@ -361,15 +301,9 @@ export default function AppInfoView() {
         </div>
       </div>
 
-      {/* ========== FOOTER / CERTIFICACIÓN ========== */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-5 rounded-2xl bg-white/60 border border-slate-200/80 text-xs text-slate-500">
-        <div className="flex items-center gap-2">
-          <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-          <span>Plataforma privada y exclusiva para la congregación <strong>ICLEB</strong>.</span>
-        </div>
-        <div className="text-slate-400 text-[11px]">
-          Desarrollado con dedicación por <strong className="text-slate-700">Edis Pastrana</strong>
-        </div>
+      {/* ========== PIE DE PÁGINA SIMPLE ========== */}
+      <div className="text-center py-2 text-xs font-medium text-slate-400">
+        Planner Pastoral ICLEB &bull; Desarrollado por <strong className="text-slate-700">Edis Pastrana</strong>
       </div>
 
     </div>
