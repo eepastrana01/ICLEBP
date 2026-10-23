@@ -1,6 +1,5 @@
-import React, { useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import {
   Users,
@@ -8,17 +7,12 @@ import {
   Wallet,
   Cake,
   ArrowRight,
-  FileCheck2,
   Ticket,
-  Sparkles,
-  PartyPopper,
   MessageCircle,
   Check,
-  ChevronRight,
-  LayoutTemplate
+  ChevronRight
 } from 'lucide-react';
 import api from '../lib/api';
-import { SPRING_FAST } from '../lib/animations';
 
 export interface Miembro {
   id: number;
@@ -77,16 +71,7 @@ const DAY_NAMES_FULL = [
 
 export default function HomeDashboardView() {
   const navigate = useNavigate();
-  const [copiedToast, setCopiedToast] = React.useState<string | null>(null);
-
-  // Obtener usuario actual
-  const user = useMemo(() => {
-    try {
-      return JSON.parse(localStorage.getItem('user') || '{}');
-    } catch {
-      return {};
-    }
-  }, []);
+  const [copiedToast, setCopiedToast] = useState<string | null>(null);
 
   const now = new Date();
   const currMonth = now.getMonth();
@@ -95,7 +80,7 @@ export default function HomeDashboardView() {
 
   const fechaHoyFormateada = useMemo(() => {
     const diaNombre = DAY_NAMES_FULL[now.getDay()];
-    const mesNombre = MONTH_NAMES[currMonth];
+    const mesNombre = MONTH_NAMES[currMonth].toLowerCase();
     return `${diaNombre}, ${todayDay} de ${mesNombre} de ${currYear}`;
   }, [now, currMonth, todayDay, currYear]);
 
@@ -158,7 +143,6 @@ export default function HomeDashboardView() {
         saldo += tx.monto;
         if (isCurr) ingMes += tx.monto;
 
-        // Registrar asistencia de culto si existe
         if (tx.asistentes && tx.asistentes > 0) {
           if (!ultCulto || new Date(tx.fecha) > new Date(ultCulto.fecha)) {
             ultCulto = {
@@ -188,7 +172,6 @@ export default function HomeDashboardView() {
   const { actividadesMes, completadasMes, pendientesMes, pctAgendaMes, proximasActividades } = useMemo(() => {
     const mesActs: Actividad[] = [];
     const futuras: Actividad[] = [];
-
     const hoyTimestamp = new Date(currYear, currMonth, todayDay).getTime();
 
     actividades.forEach((act) => {
@@ -206,7 +189,6 @@ export default function HomeDashboardView() {
       }
     });
 
-    // Ordenar próximas por fecha ascendente
     futuras.sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime());
 
     const totalMes = mesActs.length;
@@ -277,226 +259,82 @@ export default function HomeDashboardView() {
     };
   }, [miembros, currMonth, currYear, todayDay]);
 
-  // ==================== EVENTO ACTIVO (RIFAS) ====================
+  // Evento activo para rifas
   const eventoActivo = useMemo(() => {
     return eventos.find((e) => e.activo) || eventos[0] || null;
   }, [eventos]);
 
-  // Copiar felicitación congregacional sin lecturas bíblicas
+  // Copiar felicitación (sin lecturas bíblicas, respetando la instrucción del usuario)
   const handleCopyCongratulation = (nombre: string, congregacion: string) => {
-    const mensaje = `¡Hola ${nombre}! De parte de toda la comunidad de la Iglesia El Buen Pastor (${congregacion}), te enviamos un abrazo muy afectuoso en tu cumpleaños. Que pases un día maravilloso rodeado de bendición, salud y alegría junto a tu familia. ¡Muchas felicidades!`;
+    const mensaje = `¡Hola ${nombre}! De parte de toda la comunidad de la Iglesia El Buen Pastor (${congregacion}), te deseamos un muy feliz cumpleaños. Que pases un día lleno de salud, alegría y bendición junto a tus seres queridos. ¡Un fuerte abrazo!`;
     navigator.clipboard.writeText(mensaje);
-    setCopiedToast(`¡Saludo copiado para ${nombre}!`);
+    setCopiedToast(`Saludo copiado para ${nombre}`);
     setTimeout(() => setCopiedToast(null), 3000);
   };
 
   return (
-    <div className="pb-16 font-sans text-slate-900 space-y-6">
+    <div className="min-h-full font-sans text-slate-900 space-y-6 pb-12">
       
       {/* Toast Flotante */}
       {copiedToast && (
-        <div className="fixed top-6 right-6 z-50 bg-slate-900 text-white px-4 py-2.5 rounded-2xl shadow-2xl flex items-center gap-2.5 text-xs font-bold border border-slate-700 animate-in fade-in duration-200">
+        <div className="fixed top-6 right-6 z-50 bg-slate-900 text-white px-4 py-2.5 rounded-2xl shadow-xl flex items-center gap-2.5 text-xs font-bold border border-slate-700 animate-in fade-in duration-150">
           <Check className="w-4 h-4 text-emerald-400" />
           <span>{copiedToast}</span>
         </div>
       )}
 
       {/* ======================================================== */}
-      {/* 1. HERO HEADER: SALUDO + IDENTIDAD DE LA IGLESIA        */}
+      {/* 1. CABECERA LIMPIA (Idéntica al estilo de Finanzas)     */}
       {/* ======================================================== */}
-      <div className="rounded-[2.5rem] bg-gradient-to-br from-slate-900 via-slate-950 to-blue-950 text-white p-6 sm:p-8 shadow-xl border border-white/10 relative overflow-hidden">
-        {/* Destellos ambientales */}
-        <div className="absolute top-0 right-0 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-10 left-10 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
-
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div>
-            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/10 border border-white/20 text-xs font-bold text-blue-200 mb-3 shadow-inner">
-              <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-              <span>Gestión y Planificación Pastoral</span>
-            </div>
-
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-white leading-tight">
-              ¡Buen día, {user.nombre || user.username || 'Pastor'}!
-            </h1>
-
-            <p className="text-xs sm:text-sm text-slate-300 font-medium mt-1">
-              Iglesia Cristiana Luterana El Buen Pastor • {fechaHoyFormateada}
-            </p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-1">
+        <div>
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/70 border border-slate-200/80 shadow-2xs mb-2 backdrop-blur-md">
+            <span className="w-2 h-2 rounded-full bg-blue-600"></span>
+            <span className="text-[11px] font-bold tracking-wider text-slate-600 uppercase">
+              Panel Pastoral &bull; El Buen Pastor
+            </span>
           </div>
 
-          {/* Badge con el estado rápido del día */}
-          <div className="flex flex-wrap items-center gap-2.5 bg-white/10 backdrop-blur-md p-2 rounded-2xl border border-white/15 self-start md:self-auto">
-            <div className="px-3 py-1.5 rounded-xl bg-white/10 text-white text-xs font-bold flex items-center gap-1.5">
-              <Calendar className="w-3.5 h-3.5 text-blue-300" />
-              <span>{MONTH_NAMES[currMonth]} {currYear}</span>
-            </div>
-
-            {cumpleHoyCount > 0 && (
-              <div className="px-3 py-1.5 rounded-xl bg-rose-500 text-white text-xs font-black flex items-center gap-1.5 shadow-xs">
-                <PartyPopper className="w-3.5 h-3.5" />
-                <span>{cumpleHoyCount} cumpleaños hoy</span>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* ======================================================== */}
-      {/* 2. ACCIONES RÁPIDAS (BOTONERA MODERNA EN 1 CLIC)         */}
-      {/* ======================================================== */}
-      <div className="glass-panel rounded-3xl p-4 sm:p-5 shadow-xs border border-white/80">
-        <div className="flex items-center justify-between mb-3 px-1">
-          <span className="text-[11px] font-black uppercase tracking-wider text-slate-400">
-            Accesos Directos Frecuentes
-          </span>
-          <span className="text-[10px] font-bold text-slate-400">
-            Navegación instantánea
-          </span>
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
+            Resumen General
+          </h1>
+          <p className="text-xs sm:text-sm font-medium text-slate-500 mt-0.5">
+            {fechaHoyFormateada}
+          </p>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
-          <button
-            onClick={() => navigate('/finanzas')}
-            className="flex items-center gap-2.5 p-3 rounded-2xl bg-white/80 hover:bg-white text-slate-800 border border-slate-200/80 shadow-2xs hover:shadow-xs transition-all cursor-pointer text-left active:scale-95"
-          >
-            <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0 border border-emerald-100">
-              <Wallet className="w-4 h-4" />
-            </div>
-            <div className="min-w-0">
-              <span className="block text-xs font-black truncate leading-tight">Finanzas</span>
-              <span className="block text-[10px] text-slate-400 truncate mt-0.5">Ofrendas & Gastos</span>
-            </div>
-          </button>
-
+        <div className="flex items-center gap-2 self-start sm:self-auto">
           <button
             onClick={() => navigate('/agenda')}
-            className="flex items-center gap-2.5 p-3 rounded-2xl bg-white/80 hover:bg-white text-slate-800 border border-slate-200/80 shadow-2xs hover:shadow-xs transition-all cursor-pointer text-left active:scale-95"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-2xl bg-white border border-slate-200/80 text-xs font-bold text-slate-700 hover:text-slate-900 hover:bg-slate-50 shadow-2xs transition-colors cursor-pointer"
           >
-            <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center shrink-0 border border-blue-100">
-              <Calendar className="w-4 h-4" />
-            </div>
-            <div className="min-w-0">
-              <span className="block text-xs font-black truncate leading-tight">Agenda</span>
-              <span className="block text-[10px] text-slate-400 truncate mt-0.5">Actividades</span>
-            </div>
+            <Calendar className="w-4 h-4 text-blue-600" />
+            <span>Agenda</span>
           </button>
-
           <button
-            onClick={() => navigate('/miembros')}
-            className="flex items-center gap-2.5 p-3 rounded-2xl bg-white/80 hover:bg-white text-slate-800 border border-slate-200/80 shadow-2xs hover:shadow-xs transition-all cursor-pointer text-left active:scale-95"
+            onClick={() => navigate('/finanzas')}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-2xl bg-slate-900 text-white hover:bg-slate-800 text-xs font-bold shadow-[0_4px_14px_rgba(15,23,42,0.18)] transition-colors cursor-pointer"
           >
-            <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-700 flex items-center justify-center shrink-0 border border-indigo-100">
-              <Users className="w-4 h-4" />
-            </div>
-            <div className="min-w-0">
-              <span className="block text-xs font-black truncate leading-tight">Miembros</span>
-              <span className="block text-[10px] text-slate-400 truncate mt-0.5">Directorio</span>
-            </div>
-          </button>
-
-          <button
-            onClick={() => navigate('/cumpleaneros')}
-            className="flex items-center gap-2.5 p-3 rounded-2xl bg-white/80 hover:bg-white text-slate-800 border border-slate-200/80 shadow-2xs hover:shadow-xs transition-all cursor-pointer text-left active:scale-95"
-          >
-            <div className="w-9 h-9 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0 border border-rose-100">
-              <Cake className="w-4 h-4" />
-            </div>
-            <div className="min-w-0">
-              <span className="block text-xs font-black truncate leading-tight">Cumpleaños</span>
-              <span className="block text-[10px] text-slate-400 truncate mt-0.5">Celebraciones</span>
-            </div>
-          </button>
-
-          <button
-            onClick={() => navigate('/cartelera')}
-            className="flex items-center gap-2.5 p-3 rounded-2xl bg-white/80 hover:bg-white text-slate-800 border border-slate-200/80 shadow-2xs hover:shadow-xs transition-all cursor-pointer text-left active:scale-95"
-          >
-            <div className="w-9 h-9 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center shrink-0 border border-amber-100">
-              <LayoutTemplate className="w-4 h-4" />
-            </div>
-            <div className="min-w-0">
-              <span className="block text-xs font-black truncate leading-tight">Cartelera</span>
-              <span className="block text-[10px] text-slate-400 truncate mt-0.5">Pizarra Mural</span>
-            </div>
-          </button>
-
-          <button
-            onClick={() => navigate('/bautismos')}
-            className="flex items-center gap-2.5 p-3 rounded-2xl bg-white/80 hover:bg-white text-slate-800 border border-slate-200/80 shadow-2xs hover:shadow-xs transition-all cursor-pointer text-left active:scale-95"
-          >
-            <div className="w-9 h-9 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center shrink-0 border border-teal-100">
-              <FileCheck2 className="w-4 h-4" />
-            </div>
-            <div className="min-w-0">
-              <span className="block text-xs font-black truncate leading-tight">Bautismos</span>
-              <span className="block text-[10px] text-slate-400 truncate mt-0.5">Certificados</span>
-            </div>
+            <Wallet className="w-4 h-4 text-white" />
+            <span>Finanzas</span>
           </button>
         </div>
       </div>
 
       {/* ======================================================== */}
-      {/* 3. KPIS CLAVE 360° (4 TARJETAS PRINCIPALES)              */}
+      {/* 2. TARJETAS DE ESTADO PRINCIPAL (4 KPIS OPERATIVOS)      */}
       {/* ======================================================== */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         
-        {/* KPI 1: Membresía */}
-        <motion.div
-          whileHover={{ y: -2 }}
-          transition={SPRING_FAST}
-          onClick={() => navigate('/miembros')}
-          className="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-2xs hover:shadow-sm cursor-pointer transition-all flex flex-col justify-between"
-        >
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">
-                Membresía Congregacional
-              </span>
-              <div className="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-700 flex items-center justify-center">
-                <Users className="w-4 h-4" />
-              </div>
-            </div>
-
-            <p className="text-3xl font-black text-slate-900 tracking-tight">
-              {loadingMiembros ? '...' : totalMiembros}
-            </p>
-            <p className="text-xs font-semibold text-slate-500 mt-0.5">
-              Hermanos registrados
-            </p>
-          </div>
-
-          <div className="pt-3 mt-3 border-t border-slate-100 space-y-1.5">
-            <div className="flex items-center justify-between text-[11px] font-bold text-slate-600">
-              <span>Bautizados: {bautizadosCount}</span>
-              <span className="text-indigo-600">{pctBautizados}%</span>
-            </div>
-            <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
-              <div
-                className="bg-indigo-600 h-full rounded-full transition-all duration-500"
-                style={{ width: `${pctBautizados}%` }}
-              />
-            </div>
-            <div className="flex items-center justify-between text-[10px] text-slate-400 pt-0.5">
-              <span>Confirmados: {confirmadosCount} ({pctConfirmados}%)</span>
-              <span className="text-indigo-700 font-bold flex items-center gap-0.5">
-                Ver <ChevronRight className="w-3 h-3" />
-              </span>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* KPI 2: Finanzas del Mes */}
-        <motion.div
-          whileHover={{ y: -2 }}
-          transition={SPRING_FAST}
+        {/* KPI 1: Finanzas del Mes */}
+        <div
           onClick={() => navigate('/finanzas')}
           className="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-2xs hover:shadow-sm cursor-pointer transition-all flex flex-col justify-between"
         >
           <div>
             <div className="flex items-center justify-between mb-2">
               <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">
-                Balance del Mes
+                Finanzas del Mes
               </span>
               <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center">
                 <Wallet className="w-4 h-4" />
@@ -507,30 +345,28 @@ export default function HomeDashboardView() {
               {loadingFinanzas ? '...' : `L. ${balanceMes.toLocaleString('es-HN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
             </p>
             <p className="text-xs font-semibold text-slate-500 mt-0.5">
-              Saldo acumulado: L. {saldoTotal.toLocaleString('es-HN', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+              Saldo total: L. {saldoTotal.toLocaleString('es-HN', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
             </p>
           </div>
 
           <div className="pt-3 mt-3 border-t border-slate-100 grid grid-cols-2 gap-2 text-[11px]">
-            <div className="bg-emerald-50/70 p-2 rounded-xl border border-emerald-100">
+            <div className="bg-emerald-50/60 p-2 rounded-xl border border-emerald-100/80">
               <span className="text-[10px] font-bold text-emerald-800 block">Ingresos</span>
               <span className="font-black text-emerald-900 block truncate">
                 L. {ingresosMes.toLocaleString('es-HN', { maximumFractionDigits: 0 })}
               </span>
             </div>
-            <div className="bg-rose-50/70 p-2 rounded-xl border border-rose-100">
+            <div className="bg-rose-50/60 p-2 rounded-xl border border-rose-100/80">
               <span className="text-[10px] font-bold text-rose-800 block">Egresos</span>
               <span className="font-black text-rose-900 block truncate">
                 L. {egresosMes.toLocaleString('es-HN', { maximumFractionDigits: 0 })}
               </span>
             </div>
           </div>
-        </motion.div>
+        </div>
 
-        {/* KPI 3: Agenda Pastoral */}
-        <motion.div
-          whileHover={{ y: -2 }}
-          transition={SPRING_FAST}
+        {/* KPI 2: Agenda de Actividades */}
+        <div
           onClick={() => navigate('/agenda')}
           className="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-2xs hover:shadow-sm cursor-pointer transition-all flex flex-col justify-between"
         >
@@ -559,7 +395,7 @@ export default function HomeDashboardView() {
             </div>
             <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
               <div
-                className="bg-blue-600 h-full rounded-full transition-all duration-500"
+                className="bg-blue-600 h-full rounded-full transition-all duration-300"
                 style={{ width: `${pctAgendaMes}%` }}
               />
             </div>
@@ -570,12 +406,53 @@ export default function HomeDashboardView() {
               </span>
             </div>
           </div>
-        </motion.div>
+        </div>
+
+        {/* KPI 3: Membresía */}
+        <div
+          onClick={() => navigate('/miembros')}
+          className="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-2xs hover:shadow-sm cursor-pointer transition-all flex flex-col justify-between"
+        >
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">
+                Directorio de Miembros
+              </span>
+              <div className="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-700 flex items-center justify-center">
+                <Users className="w-4 h-4" />
+              </div>
+            </div>
+
+            <p className="text-3xl font-black text-slate-900 tracking-tight">
+              {loadingMiembros ? '...' : totalMiembros}
+            </p>
+            <p className="text-xs font-semibold text-slate-500 mt-0.5">
+              Hermanos registrados
+            </p>
+          </div>
+
+          <div className="pt-3 mt-3 border-t border-slate-100 space-y-1.5">
+            <div className="flex items-center justify-between text-[11px] font-bold text-slate-600">
+              <span>Bautizados: {bautizadosCount}</span>
+              <span className="text-indigo-600">{pctBautizados}%</span>
+            </div>
+            <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+              <div
+                className="bg-indigo-600 h-full rounded-full transition-all duration-300"
+                style={{ width: `${pctBautizados}%` }}
+              />
+            </div>
+            <div className="flex items-center justify-between text-[10px] text-slate-400 pt-0.5">
+              <span>Confirmados: {confirmadosCount} ({pctConfirmados}%)</span>
+              <span className="text-indigo-700 font-bold flex items-center gap-0.5">
+                Ver Lista <ChevronRight className="w-3 h-3" />
+              </span>
+            </div>
+          </div>
+        </div>
 
         {/* KPI 4: Cumpleaños del Mes */}
-        <motion.div
-          whileHover={{ y: -2 }}
-          transition={SPRING_FAST}
+        <div
           onClick={() => navigate('/cumpleaneros')}
           className="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-2xs hover:shadow-sm cursor-pointer transition-all flex flex-col justify-between"
         >
@@ -600,7 +477,7 @@ export default function HomeDashboardView() {
           <div className="pt-3 mt-3 border-t border-slate-100">
             {cumpleHoyCount > 0 ? (
               <div className="bg-rose-50 border border-rose-200 text-rose-800 p-2 rounded-xl text-center">
-                <span className="text-[11px] font-black block">¡{cumpleHoyCount} cumple años hoy!</span>
+                <span className="text-[11px] font-black block">¡{cumpleHoyCount} cumpleaños hoy!</span>
               </div>
             ) : (
               <div className="flex items-center justify-between text-[11px] font-bold text-slate-600 py-1">
@@ -611,12 +488,12 @@ export default function HomeDashboardView() {
               </div>
             )}
           </div>
-        </motion.div>
+        </div>
 
       </div>
 
       {/* ======================================================== */}
-      {/* 4. DOS COLUMNAS: ACTIVIDADES PRÓXIMAS & CUMPLEAÑOS       */}
+      {/* 3. DOS COLUMNAS: ACTIVIDADES PRÓXIMAS & CUMPLEAÑOS       */}
       {/* ======================================================== */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         
@@ -624,7 +501,7 @@ export default function HomeDashboardView() {
         <div className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200/80 shadow-2xs flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center">
                   <Calendar className="w-4 h-4" />
                 </div>
@@ -674,7 +551,6 @@ export default function HomeDashboardView() {
                       className="p-3 rounded-2xl bg-slate-50 hover:bg-slate-100/80 border border-slate-200/60 flex items-center justify-between gap-3 transition-colors cursor-pointer"
                     >
                       <div className="flex items-center gap-3 min-w-0">
-                        {/* Badge de fecha */}
                         <div className="w-11 h-11 rounded-xl bg-slate-900 text-white flex flex-col items-center justify-center shrink-0">
                           <span className="text-sm font-black leading-none">{dia}</span>
                           <span className="text-[8px] font-extrabold uppercase mt-0.5 opacity-80 leading-none">
@@ -703,7 +579,7 @@ export default function HomeDashboardView() {
           </div>
 
           <div className="pt-3 mt-4 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
-            <span>¿Deseas imprimir la cartelera física del mes?</span>
+            <span>Cartelera mural del mes para imprimir</span>
             <button
               onClick={() => navigate('/cartelera')}
               className="font-bold text-slate-900 hover:text-blue-700 flex items-center gap-1 cursor-pointer"
@@ -718,16 +594,16 @@ export default function HomeDashboardView() {
         <div className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200/80 shadow-2xs flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center">
                   <Cake className="w-4 h-4" />
                 </div>
                 <div>
                   <h3 className="text-sm font-black text-slate-900">
-                    Cumpleañeros de Esta Semana
+                    Cumpleañeros de la Semana
                   </h3>
                   <span className="text-[10px] font-bold text-slate-400 block">
-                    Hermanos que celebran vida en los próximos 7 días
+                    Celebraciones en los próximos 7 días
                   </span>
                 </div>
               </div>
@@ -736,7 +612,7 @@ export default function HomeDashboardView() {
                 onClick={() => navigate('/cumpleaneros')}
                 className="text-xs font-bold text-rose-600 hover:text-rose-800 flex items-center gap-1 cursor-pointer"
               >
-                <span>Ver Módulo</span>
+                <span>Ver Todos</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </div>
@@ -788,8 +664,8 @@ export default function HomeDashboardView() {
 
                     <button
                       onClick={() => handleCopyCongratulation(c.nombre, c.congregacion)}
-                      className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-700 hover:text-emerald-700 hover:border-emerald-300 transition-colors cursor-pointer shadow-2xs shrink-0"
-                      title="Copiar mensaje de felicitación para WhatsApp"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-700 hover:text-emerald-700 hover:border-emerald-300 transition-colors cursor-pointer shadow-2xs shrink-0"
+                      title="Copiar felicitación para WhatsApp"
                     >
                       <MessageCircle className="w-3.5 h-3.5 text-emerald-600" />
                       <span className="hidden sm:inline">Saludar</span>
@@ -801,12 +677,12 @@ export default function HomeDashboardView() {
           </div>
 
           <div className="pt-3 mt-4 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
-            <span>Directorio y cartelera imprimible de cumpleaños</span>
+            <span>Directorio e impresión mensual de cumpleaños</span>
             <button
               onClick={() => navigate('/cumpleaneros')}
               className="font-bold text-slate-900 hover:text-rose-600 flex items-center gap-1 cursor-pointer"
             >
-              <span>Ver Todo</span>
+              <span>Ver Módulo</span>
               <ChevronRight className="w-3.5 h-3.5" />
             </button>
           </div>
@@ -815,11 +691,11 @@ export default function HomeDashboardView() {
       </div>
 
       {/* ======================================================== */}
-      {/* 5. SECCIÓN INFERIOR: RESUMEN DE CULTOS Y EVENTOS         */}
+      {/* 4. SECCIÓN INFERIOR: RESUMEN DE CULTOS Y EVENTOS         */}
       {/* ======================================================== */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         
-        {/* Asistencia de Culto */}
+        {/* Asistencia de Culto Dominical */}
         <div className="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-2xs flex items-center justify-between gap-4">
           <div className="flex items-center gap-4 min-w-0">
             <div className="w-12 h-12 rounded-2xl bg-teal-50 text-teal-700 flex items-center justify-center shrink-0 border border-teal-100">
