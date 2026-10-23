@@ -24,7 +24,8 @@ import {
   X,
   UserX,
   Lock,
-  Plus
+  Plus,
+  ChevronDown
 } from 'lucide-react';
 
 export interface PermisosModulos {
@@ -273,7 +274,18 @@ export default function UsersView() {
       return;
     }
 
-    saveMutation.mutate(formData);
+    const payload: any = {
+      username: formData.username.trim(),
+      nombre_completo: formData.nombre_completo ? formData.nombre_completo.trim() : null,
+      rol: formData.rol,
+      permisos: formData.permisos
+    };
+
+    if (formData.password && formData.password.trim()) {
+      payload.password = formData.password.trim();
+    }
+
+    saveMutation.mutate(payload);
   };
 
   // Helper para badge de rol
@@ -331,13 +343,16 @@ export default function UsersView() {
           </p>
         </div>
 
-        <button
+        <motion.button
+          whileHover={{ scale: 1.02, y: -1 }}
+          whileTap={{ scale: 0.96 }}
+          transition={SPRING_FAST}
           onClick={openCreate}
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-slate-900 text-white hover:bg-slate-800 text-xs font-bold shadow-[0_4px_14px_rgba(15,23,42,0.18)] transition-colors cursor-pointer self-start sm:self-auto"
+          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-slate-900 text-white hover:bg-slate-800 text-xs font-bold shadow-[0_4px_14px_rgba(15,23,42,0.18)] transition-all cursor-pointer self-start sm:self-auto"
         >
           <Plus className="w-4 h-4" />
           <span>Nuevo Usuario</span>
-        </button>
+        </motion.button>
       </div>
 
       {/* ========== TARJETAS DE MÉTRICAS ========== */}
@@ -414,71 +429,73 @@ export default function UsersView() {
 
           {/* Filtros por Rol + Switch de Vista */}
           <div className="flex flex-wrap items-center justify-between lg:justify-end gap-2.5">
-            <div className="flex flex-wrap items-center gap-1 bg-slate-50 p-1 rounded-2xl border border-slate-200/60">
-              <button
-                onClick={() => setRoleFilter('todos')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                  roleFilter === 'todos' ? 'bg-slate-900 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                Todos ({total})
-              </button>
-              <button
-                onClick={() => setRoleFilter('admin')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                  roleFilter === 'admin' ? 'bg-purple-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                Admins ({admins})
-              </button>
-              <button
-                onClick={() => setRoleFilter('pastor')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                  roleFilter === 'pastor' ? 'bg-amber-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                Pastores ({pastoresCount})
-              </button>
-              <button
-                onClick={() => setRoleFilter('lideres')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                  roleFilter === 'lideres' ? 'bg-indigo-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                Líderes ({lideresCount})
-              </button>
-              {inactivos > 0 && (
-                <button
-                  onClick={() => setRoleFilter('inactivos')}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                    roleFilter === 'inactivos' ? 'bg-rose-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  Inactivos ({inactivos})
-                </button>
-              )}
+            <div className="flex flex-wrap items-center gap-1 bg-slate-100/80 p-1 rounded-2xl border border-slate-200/60">
+              {[
+                { id: 'todos', label: `Todos (${total})`, activeBg: 'bg-slate-900' },
+                { id: 'admin', label: `Admins (${admins})`, activeBg: 'bg-purple-600' },
+                { id: 'pastor', label: `Pastores (${pastoresCount})`, activeBg: 'bg-amber-600' },
+                { id: 'lideres', label: `Líderes (${lideresCount})`, activeBg: 'bg-indigo-600' },
+                ...(inactivos > 0 ? [{ id: 'inactivos', label: `Inactivos (${inactivos})`, activeBg: 'bg-rose-600' }] : [])
+              ].map((tab) => {
+                const isActive = roleFilter === tab.id;
+                return (
+                  <motion.button
+                    key={tab.id}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setRoleFilter(tab.id)}
+                    className={`relative px-3 py-1.5 rounded-xl text-xs font-bold transition-colors cursor-pointer select-none ${
+                      isActive ? 'text-white' : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    {isActive && (
+                      <motion.div
+                        layoutId="activeRoleFilter"
+                        className={`absolute inset-0 rounded-xl shadow-2xs ${tab.activeBg}`}
+                        transition={{ type: 'spring', stiffness: 500, damping: 32 }}
+                      />
+                    )}
+                    <span className="relative z-10">{tab.label}</span>
+                  </motion.button>
+                );
+              })}
             </div>
 
             {/* Alternador Vista Tabla vs Tarjetas */}
-            <div className="flex items-center gap-1 bg-slate-50 p-1 rounded-xl border border-slate-200/80">
-              <button
+            <div className="flex items-center gap-1 bg-slate-100/80 p-1 rounded-xl border border-slate-200/80">
+              <motion.button
+                whileTap={{ scale: 0.92 }}
                 onClick={() => setViewMode('tabla')}
-                className={`p-1.5 rounded-lg transition-all cursor-pointer ${
-                  viewMode === 'tabla' ? 'bg-slate-900 text-white shadow-2xs' : 'text-slate-400 hover:text-slate-800'
+                className={`relative p-1.5 rounded-lg transition-colors cursor-pointer select-none ${
+                  viewMode === 'tabla' ? 'text-white' : 'text-slate-400 hover:text-slate-800'
                 }`}
                 title="Vista Tabla"
               >
-                <TableIcon className="w-4 h-4" />
-              </button>
-              <button
+                {viewMode === 'tabla' && (
+                  <motion.div
+                    layoutId="activeViewMode"
+                    className="absolute inset-0 bg-slate-900 rounded-lg shadow-2xs"
+                    transition={{ type: 'spring', stiffness: 500, damping: 32 }}
+                  />
+                )}
+                <TableIcon className="w-4 h-4 relative z-10" />
+              </motion.button>
+              <motion.button
+                whileTap={{ scale: 0.92 }}
                 onClick={() => setViewMode('tarjetas')}
-                className={`p-1.5 rounded-lg transition-all cursor-pointer ${
-                  viewMode === 'tarjetas' ? 'bg-slate-900 text-white shadow-2xs' : 'text-slate-400 hover:text-slate-800'
+                className={`relative p-1.5 rounded-lg transition-colors cursor-pointer select-none ${
+                  viewMode === 'tarjetas' ? 'text-white' : 'text-slate-400 hover:text-slate-800'
                 }`}
                 title="Vista Fichas"
               >
-                <LayoutGrid className="w-4 h-4" />
-              </button>
+                {viewMode === 'tarjetas' && (
+                  <motion.div
+                    layoutId="activeViewMode"
+                    className="absolute inset-0 bg-slate-900 rounded-lg shadow-2xs"
+                    transition={{ type: 'spring', stiffness: 500, damping: 32 }}
+                  />
+                )}
+                <LayoutGrid className="w-4 h-4 relative z-10" />
+              </motion.button>
             </div>
           </div>
         </div>
@@ -565,16 +582,18 @@ export default function UsersView() {
                             <span className="text-xs font-bold text-slate-700 select-all font-mono tracking-wider w-20 truncate">
                               {isPassVisible ? plainPass : '••••••••'}
                             </span>
-                            <button
+                            <motion.button
+                              whileTap={{ scale: 0.9 }}
                               type="button"
                               onClick={() => togglePasswordVisibility(u.id)}
                               className="p-1 rounded-lg text-slate-400 hover:text-slate-800 hover:bg-white transition-colors cursor-pointer"
                               title={isPassVisible ? 'Ocultar contraseña' : 'Ver contraseña'}
                             >
                               {isPassVisible ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                            </button>
+                            </motion.button>
                             {u.password_plain && (
-                              <button
+                              <motion.button
+                                whileTap={{ scale: 0.9 }}
                                 type="button"
                                 onClick={() => copyPassword(u.id, u.password_plain)}
                                 className={`p-1 rounded-lg transition-colors cursor-pointer ${
@@ -583,12 +602,12 @@ export default function UsersView() {
                                 title="Copiar contraseña"
                               >
                                 {copiedId === u.id ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-                              </button>
+                              </motion.button>
                             )}
                           </div>
                         </td>
 
-                        {/* 4. Matriz de Permisos por Módulos (Diseño Limpio Alineado) */}
+                        {/* 4. Matriz de Permisos por Módulos */}
                         <td className="py-3.5 px-4">
                           {u.rol === 'admin' ? (
                             <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-purple-50 text-purple-700 border border-purple-200/80">
@@ -630,7 +649,8 @@ export default function UsersView() {
 
                         {/* 5. Estado */}
                         <td className="py-3.5 px-4 text-center whitespace-nowrap">
-                          <button
+                          <motion.button
+                            whileTap={{ scale: 0.94 }}
                             onClick={() => toggleStatusMutation.mutate({ id: u.id, activo: !u.activo })}
                             disabled={isCurrent}
                             className={`inline-flex items-center gap-1.5 rounded-xl px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wider transition-all border cursor-pointer ${
@@ -641,28 +661,32 @@ export default function UsersView() {
                           >
                             <span className={`w-1.5 h-1.5 rounded-full ${u.activo ? 'bg-emerald-500' : 'bg-slate-400'}`}></span>
                             <span>{u.activo ? 'Activo' : 'Inactivo'}</span>
-                          </button>
+                          </motion.button>
                         </td>
 
                         {/* 6. Acciones */}
                         <td className="py-3.5 px-5 text-right whitespace-nowrap">
                           <div className="flex items-center justify-end gap-1.5">
-                            <button
+                            <motion.button
+                              whileHover={{ scale: 1.03 }}
+                              whileTap={{ scale: 0.95 }}
                               onClick={() => openEdit(u)}
                               className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-bold transition-colors cursor-pointer"
                               title="Editar usuario y permisos"
                             >
                               <Pencil className="w-3.5 h-3.5 text-slate-500" />
                               <span className="hidden sm:inline">Editar</span>
-                            </button>
-                            <button
+                            </motion.button>
+                            <motion.button
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.9 }}
                               onClick={() => confirmAction('Eliminar Usuario', `¿Estás seguro de eliminar al usuario "${u.username}"? Perderá el acceso de inmediato.`, () => deleteMutation.mutate(u.id))}
                               disabled={isCurrent}
                               className="p-1.5 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-200 transition-colors disabled:opacity-20 disabled:pointer-events-none cursor-pointer"
                               title="Eliminar usuario"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
-                            </button>
+                            </motion.button>
                           </div>
                         </td>
 
@@ -696,8 +720,10 @@ export default function UsersView() {
                   const isCurrent = currentUser.username?.toLowerCase() === u.username.toLowerCase();
 
                   return (
-                    <div
+                    <motion.div
                       key={u.id}
+                      whileHover={{ y: -2 }}
+                      transition={SPRING_FAST}
                       className="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-2xs hover:shadow-xs transition-all flex flex-col justify-between"
                     >
                       <div>
@@ -724,7 +750,8 @@ export default function UsersView() {
                             </div>
                           </div>
 
-                          <button
+                          <motion.button
+                            whileTap={{ scale: 0.94 }}
                             onClick={() => toggleStatusMutation.mutate({ id: u.id, activo: !u.activo })}
                             disabled={isCurrent}
                             className={`inline-flex items-center gap-1 rounded-xl px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wider transition-all border shrink-0 cursor-pointer ${
@@ -735,7 +762,7 @@ export default function UsersView() {
                           >
                             <span className={`w-1.5 h-1.5 rounded-full ${u.activo ? 'bg-emerald-500' : 'bg-slate-400'}`}></span>
                             <span>{u.activo ? 'Activo' : 'Inactivo'}</span>
-                          </button>
+                          </motion.button>
                         </div>
 
                         {/* Fila de Rol y Contraseña */}
@@ -746,23 +773,25 @@ export default function UsersView() {
                             <span className="text-xs font-bold text-slate-700 select-all font-mono tracking-wider">
                               {isPassVisible ? plainPass : '••••••••'}
                             </span>
-                            <button
+                            <motion.button
+                              whileTap={{ scale: 0.9 }}
                               type="button"
                               onClick={() => togglePasswordVisibility(u.id)}
                               className="p-0.5 text-slate-400 hover:text-slate-800 cursor-pointer"
                               title="Ver / Ocultar"
                             >
                               {isPassVisible ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
-                            </button>
+                            </motion.button>
                             {u.password_plain && (
-                              <button
+                              <motion.button
+                                whileTap={{ scale: 0.9 }}
                                 type="button"
                                 onClick={() => copyPassword(u.id, u.password_plain)}
                                 className="p-0.5 text-slate-400 hover:text-slate-800 cursor-pointer"
                                 title="Copiar contraseña"
                               >
                                 {copiedId === u.id ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
-                              </button>
+                              </motion.button>
                             )}
                           </div>
                         </div>
@@ -810,23 +839,27 @@ export default function UsersView() {
 
                       {/* Pie de la ficha: Botones de acción */}
                       <div className="pt-3 mt-2 border-t border-slate-100 flex items-center justify-between gap-2">
-                        <button
+                        <motion.button
+                          whileHover={{ scale: 1.01 }}
+                          whileTap={{ scale: 0.97 }}
                           onClick={() => openEdit(u)}
                           className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-colors cursor-pointer"
                         >
                           <Pencil className="w-3.5 h-3.5" />
                           <span>Editar Permisos</span>
-                        </button>
-                        <button
+                        </motion.button>
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.9 }}
                           onClick={() => confirmAction('Eliminar Usuario', `¿Estás seguro de eliminar a "${u.username}"?`, () => deleteMutation.mutate(u.id))}
                           disabled={isCurrent}
                           className="p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 border border-slate-200 transition-colors disabled:opacity-20 cursor-pointer"
                           title="Eliminar"
                         >
                           <Trash2 className="w-4 h-4" />
-                        </button>
+                        </motion.button>
                       </div>
-                    </div>
+                    </motion.div>
                   );
                 })}
               </div>
@@ -872,9 +905,13 @@ export default function UsersView() {
               {/* Formulario */}
               <form onSubmit={handleSubmit} className="p-6 space-y-5 overflow-y-auto max-h-[calc(92vh-85px)] custom-scrollbar">
                 {formError && (
-                  <div className="text-xs font-bold text-rose-700 bg-rose-50 p-3.5 rounded-2xl border border-rose-200">
+                  <motion.div
+                    initial={{ opacity: 0, y: -6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="text-xs font-bold text-rose-700 bg-rose-50 p-3.5 rounded-2xl border border-rose-200"
+                  >
                     {formError}
-                  </div>
+                  </motion.div>
                 )}
 
                 {/* Campos Principales */}
@@ -889,7 +926,7 @@ export default function UsersView() {
                       placeholder="Ej. GPastrana"
                       value={formData.username}
                       onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:bg-white"
+                      className="w-full bg-slate-50 hover:bg-slate-100/50 focus:bg-white border border-slate-200 focus:border-slate-400 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-900 focus:outline-none transition-all shadow-2xs"
                     />
                   </div>
 
@@ -902,7 +939,7 @@ export default function UsersView() {
                       placeholder="Ej. Guadalupe Enrique Pastrana"
                       value={formData.nombre_completo}
                       onChange={(e) => setFormData({ ...formData, nombre_completo: e.target.value })}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:bg-white"
+                      className="w-full bg-slate-50 hover:bg-slate-100/50 focus:bg-white border border-slate-200 focus:border-slate-400 rounded-xl px-3.5 py-2.5 text-xs font-semibold text-slate-900 focus:outline-none transition-all shadow-2xs"
                     />
                   </div>
 
@@ -910,15 +947,20 @@ export default function UsersView() {
                     <label className="block text-[11px] font-black text-slate-500 uppercase tracking-wider mb-1.5">
                       Rol Principal &bull; Preset
                     </label>
-                    <select
-                      value={formData.rol}
-                      onChange={(e) => handleRoleChange(e.target.value)}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs font-bold text-slate-800 focus:outline-none cursor-pointer"
-                    >
-                      {Object.entries(ROL_PRESETS).map(([key, info]) => (
-                        <option key={key} value={key}>{info.label}</option>
-                      ))}
-                    </select>
+                    <div className="relative">
+                      <select
+                        value={formData.rol}
+                        onChange={(e) => handleRoleChange(e.target.value)}
+                        className="w-full bg-slate-50 hover:bg-slate-100/70 focus:bg-white border border-slate-200 focus:border-slate-400 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 focus:outline-none transition-all cursor-pointer appearance-none pr-9 shadow-2xs"
+                      >
+                        {Object.entries(ROL_PRESETS).map(([key, info]) => (
+                          <option key={key} value={key}>{info.label}</option>
+                        ))}
+                      </select>
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                        <ChevronDown className="w-4 h-4" />
+                      </div>
+                    </div>
                   </div>
 
                   <div>
@@ -931,12 +973,12 @@ export default function UsersView() {
                       placeholder={editingUser ? 'Dejar en blanco para conservar...' : 'Mínimo 4 caracteres...'}
                       value={formData.password}
                       onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs font-bold text-slate-900 focus:outline-none font-mono focus:ring-2 focus:ring-slate-900/10 focus:bg-white"
+                      className="w-full bg-slate-50 hover:bg-slate-100/50 focus:bg-white border border-slate-200 focus:border-slate-400 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-900 focus:outline-none font-mono transition-all shadow-2xs"
                     />
                   </div>
                 </div>
 
-                {/* MATRIZ DE PERMISOS POR MÓDULO */}
+                {/* MATRIZ DE PERMISOS POR MÓDULO CON SELECTORES SUAVES FLUIDOS */}
                 <div className="pt-2">
                   <div className="flex items-center justify-between mb-2.5">
                     <span className="text-[11px] font-black text-slate-700 uppercase tracking-wider block">
@@ -952,70 +994,71 @@ export default function UsersView() {
                       const currentVal = (formData.permisos as any)[mod.key] || 'ninguno';
                       const Icon = mod.icon;
 
+                      const options = [
+                        { value: 'ninguno', label: 'Sin Acceso', activeBg: 'bg-slate-900' },
+                        { value: 'lectura', label: 'Lectura', activeBg: 'bg-blue-600' },
+                        {
+                          value: mod.key === 'usuarios' ? 'admin' : 'escritura',
+                          label: mod.key === 'usuarios' ? 'Admin' : 'Edición',
+                          activeBg: 'bg-emerald-600'
+                        }
+                      ];
+
                       return (
                         <div
                           key={mod.key}
-                          className="flex flex-col sm:flex-row sm:items-center justify-between p-2 rounded-xl bg-white border border-slate-200/60 gap-2"
+                          className="flex flex-col sm:flex-row sm:items-center justify-between p-2.5 rounded-xl bg-white border border-slate-200/60 hover:border-slate-300 transition-colors gap-2.5"
                         >
                           <div className="flex items-center gap-2.5">
-                            <div className="w-7 h-7 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center shrink-0">
-                              <Icon className="w-3.5 h-3.5" />
+                            <div className="w-8 h-8 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center shrink-0">
+                              <Icon className="w-4 h-4" />
                             </div>
                             <div>
                               <span className="text-xs font-extrabold text-slate-900 block leading-tight">
                                 {mod.label}
                               </span>
-                              <span className="text-[10px] text-slate-400 block leading-tight">
+                              <span className="text-[10px] text-slate-400 block leading-tight mt-0.5">
                                 {mod.desc}
                               </span>
                             </div>
                           </div>
 
-                          <div className="flex items-center gap-1 self-end sm:self-auto">
-                            <button
-                              type="button"
-                              onClick={() => setFormData({
-                                ...formData,
-                                permisos: { ...formData.permisos, [mod.key]: 'ninguno' }
-                              })}
-                              className={`px-2.5 py-1 rounded-lg text-[10px] font-extrabold transition-all cursor-pointer ${
-                                currentVal === 'ninguno'
-                                  ? 'bg-slate-900 text-white shadow-2xs'
-                                  : 'bg-slate-100 text-slate-500 hover:text-slate-800'
-                              }`}
-                            >
-                              Sin Acceso
-                            </button>
+                          {/* Control Segmentado Suave con Animación Spring */}
+                          <div className="relative flex items-center p-1 bg-slate-100/90 rounded-xl border border-slate-200/50 self-end sm:self-auto shadow-inner">
+                            {options.map((opt) => {
+                              const isOptionActive =
+                                opt.value === 'ninguno'
+                                  ? currentVal === 'ninguno'
+                                  : opt.value === 'lectura'
+                                  ? currentVal === 'lectura'
+                                  : currentVal === 'escritura' || currentVal === 'admin';
 
-                            <button
-                              type="button"
-                              onClick={() => setFormData({
-                                ...formData,
-                                permisos: { ...formData.permisos, [mod.key]: 'lectura' }
-                              })}
-                              className={`px-2.5 py-1 rounded-lg text-[10px] font-extrabold transition-all cursor-pointer ${
-                                currentVal === 'lectura'
-                                  ? 'bg-blue-600 text-white shadow-2xs'
-                                  : 'bg-slate-100 text-slate-600 hover:text-slate-900'
-                              }`}
-                            >
-                              Lectura
-                            </button>
-
-                            <button
-                              type="button"
-                              onClick={() => setFormData({
-                                ...formData,
-                                permisos: { ...formData.permisos, [mod.key]: mod.key === 'usuarios' ? 'admin' : 'escritura' }
-                              })}
-                              className={`px-2.5 py-1 rounded-lg text-[10px] font-extrabold transition-all cursor-pointer ${
-                                currentVal === 'escritura' || currentVal === 'admin'
-                                  ? 'bg-emerald-600 text-white shadow-2xs'
-                                  : 'bg-slate-100 text-slate-600 hover:text-slate-900'
-                              }`}
-                            >
-                              {mod.key === 'usuarios' ? 'Admin' : 'Edición'}
-                            </button>
+                              return (
+                                <motion.button
+                                  key={opt.value}
+                                  type="button"
+                                  whileTap={{ scale: 0.94 }}
+                                  onClick={() => {
+                                    setFormData(prev => ({
+                                      ...prev,
+                                      permisos: { ...prev.permisos, [mod.key]: opt.value }
+                                    }));
+                                  }}
+                                  className={`relative px-3 py-1.5 text-[10px] font-black tracking-wide rounded-lg cursor-pointer transition-colors select-none ${
+                                    isOptionActive ? 'text-white' : 'text-slate-500 hover:text-slate-900'
+                                  }`}
+                                >
+                                  {isOptionActive && (
+                                    <motion.div
+                                      layoutId={`active-seg-${mod.key}`}
+                                      className={`absolute inset-0 rounded-lg shadow-2xs ${opt.activeBg}`}
+                                      transition={{ type: 'spring', stiffness: 500, damping: 32 }}
+                                    />
+                                  )}
+                                  <span className="relative z-10">{opt.label}</span>
+                                </motion.button>
+                              );
+                            })}
                           </div>
                         </div>
                       );
@@ -1025,20 +1068,23 @@ export default function UsersView() {
 
                 {/* Botones de acción modal */}
                 <div className="flex items-center gap-3 pt-3 border-t border-slate-100">
-                  <button
+                  <motion.button
+                    whileTap={{ scale: 0.96 }}
                     type="button"
                     onClick={closeModal}
                     className="flex-1 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
                   >
                     Cancelar
-                  </button>
-                  <button
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.96 }}
                     type="submit"
                     disabled={saveMutation.isPending}
-                    className="flex-1 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-xs font-bold text-white shadow-[0_4px_14px_rgba(15,23,42,0.18)] transition-colors disabled:opacity-50 cursor-pointer"
+                    className="flex-1 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-xs font-bold text-white shadow-[0_4px_14px_rgba(15,23,42,0.18)] transition-all disabled:opacity-50 cursor-pointer"
                   >
                     {saveMutation.isPending ? 'Guardando...' : editingUser ? 'Guardar Cambios' : 'Crear Usuario'}
-                  </button>
+                  </motion.button>
                 </div>
               </form>
             </motion.div>
