@@ -121,6 +121,8 @@ export default function UsersView() {
   // Modal de Credenciales / Reset Password
   const [credentialsUser, setCredentialsUser] = useState<Usuario | null>(null);
   const [showCredPassword, setShowCredPassword] = useState(false);
+  const [copiedWhatsApp, setCopiedWhatsApp] = useState(false);
+  const [copiedPassOnly, setCopiedPassOnly] = useState(false);
   const [resetPasswordInput, setResetPasswordInput] = useState('');
   const [resetError, setResetError] = useState('');
   const [resetSuccess, setResetSuccess] = useState(false);
@@ -279,6 +281,8 @@ export default function UsersView() {
   const openCredentials = (u: Usuario) => {
     setCredentialsUser(u);
     setShowCredPassword(false);
+    setCopiedWhatsApp(false);
+    setCopiedPassOnly(false);
     setResetPasswordInput('');
     setResetError('');
     setResetSuccess(false);
@@ -286,6 +290,8 @@ export default function UsersView() {
 
   const closeCredentials = () => {
     setCredentialsUser(null);
+    setCopiedWhatsApp(false);
+    setCopiedPassOnly(false);
     setResetPasswordInput('');
     setResetError('');
     setResetSuccess(false);
@@ -315,7 +321,9 @@ export default function UsersView() {
     const pass = u.password_plain || '(Sin contraseña registrada)';
     const text = `Hola ${u.nombre_completo || u.username}, aquí tienes tus datos de acceso al sistema Planner Pastoral ICLEB:\n\n👤 Usuario: ${u.username}\n🔑 Contraseña: ${pass}\n\nPuedes ingresar desde tu navegador para consultar la planificación y módulos correspondientes.`;
     navigator.clipboard.writeText(text);
-    showToast(`Credenciales de ${u.username} copiadas para WhatsApp`);
+    setCopiedWhatsApp(true);
+    setTimeout(() => setCopiedWhatsApp(false), 2500);
+    showToast(`Credenciales de ${u.username} copiadas`);
   };
 
   // Mutaciones
@@ -443,14 +451,6 @@ export default function UsersView() {
 
   return (
     <div className="min-h-full font-sans text-slate-900 space-y-6 pb-12">
-
-      {/* Toast Flotante */}
-      {toastMessage && (
-        <div className="fixed top-6 right-6 z-50 bg-slate-900 text-white px-4 py-2.5 rounded-2xl shadow-xl flex items-center gap-2.5 text-xs font-bold border border-slate-700 animate-in fade-in duration-150">
-          <Check className="w-4 h-4 text-emerald-400" />
-          <span>{toastMessage}</span>
-        </div>
-      )}
 
       {/* ========== CABECERA PRINCIPAL ========== */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-1">
@@ -1012,12 +1012,16 @@ export default function UsersView() {
                             type="button"
                             onClick={() => {
                               navigator.clipboard.writeText(credentialsUser.password_plain!);
+                              setCopiedPassOnly(true);
+                              setTimeout(() => setCopiedPassOnly(false), 2000);
                               showToast('Contraseña copiada al portapapeles');
                             }}
-                            className="p-1 rounded-lg text-slate-400 hover:text-slate-800 hover:bg-white transition-colors cursor-pointer"
+                            className={`p-1 rounded-lg transition-colors cursor-pointer ${
+                              copiedPassOnly ? 'text-emerald-600 bg-emerald-50' : 'text-slate-400 hover:text-slate-800 hover:bg-white'
+                            }`}
                             title="Copiar contraseña sola"
                           >
-                            <Copy className="w-3.5 h-3.5" />
+                            {copiedPassOnly ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                           </button>
                         )}
                       </div>
@@ -1028,10 +1032,23 @@ export default function UsersView() {
                   <motion.button
                     whileTap={{ scale: 0.97 }}
                     onClick={() => copyWhatsAppCredentials(credentialsUser)}
-                    className="w-full mt-2 inline-flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 text-xs font-bold text-slate-700 shadow-2xs transition-colors cursor-pointer"
+                    className={`w-full mt-2 inline-flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+                      copiedWhatsApp
+                        ? 'bg-emerald-50 border-emerald-300 text-emerald-800 shadow-2xs'
+                        : 'bg-white hover:bg-slate-100 border-slate-200 text-slate-700 shadow-2xs'
+                    }`}
                   >
-                    <MessageCircle className="w-4 h-4 text-emerald-600" />
-                    <span>Copiar mensaje para enviar por WhatsApp</span>
+                    {copiedWhatsApp ? (
+                      <>
+                        <Check className="w-4 h-4 text-emerald-600" />
+                        <span>¡Mensaje copiado para WhatsApp!</span>
+                      </>
+                    ) : (
+                      <>
+                        <MessageCircle className="w-4 h-4 text-emerald-600" />
+                        <span>Copiar mensaje para enviar por WhatsApp</span>
+                      </>
+                    )}
                   </motion.button>
                 </div>
 
@@ -1454,6 +1471,24 @@ export default function UsersView() {
               </form>
             </motion.div>
           </div>
+        )}
+      </AnimatePresence>
+
+      {/* Toast Flotante con Máximo z-index (z-[9999]) para superponer cualquier modal y backdrop */}
+      <AnimatePresence>
+        {toastMessage && (
+          <motion.div
+            initial={{ opacity: 0, y: -16, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -10, scale: 0.95 }}
+            transition={{ duration: 0.18 }}
+            className="fixed top-6 right-6 z-[9999] bg-slate-900/95 backdrop-blur-md text-white px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3 text-xs font-bold border border-slate-700/80 pointer-events-none"
+          >
+            <div className="w-5 h-5 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/30">
+              <Check className="w-3.5 h-3.5" />
+            </div>
+            <span className="tracking-wide text-slate-100">{toastMessage}</span>
+          </motion.div>
         )}
       </AnimatePresence>
 
