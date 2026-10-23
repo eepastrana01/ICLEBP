@@ -1110,7 +1110,7 @@ export default function UsersView() {
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 12 }}
               transition={SPRING_FAST}
-              className="bg-white rounded-[2rem] w-full max-w-xl overflow-hidden my-auto sm:my-8 shadow-2xl max-h-[92vh] flex flex-col border border-slate-200"
+              className="bg-white rounded-[2rem] w-full max-w-xl overflow-hidden my-auto shadow-2xl flex flex-col border border-slate-200"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header Modal */}
@@ -1131,235 +1131,313 @@ export default function UsersView() {
                 </button>
               </div>
 
-              {/* Pestañas de Navegación del Modal */}
-              <div className="px-6 pt-3 pb-1 border-b border-slate-100 bg-slate-50/50 flex items-center gap-2 shrink-0">
-                <button
-                  type="button"
-                  onClick={() => setEditModalTab('datos')}
-                  className={`relative px-4 py-2 text-xs font-bold rounded-xl transition-colors cursor-pointer ${
-                    editModalTab === 'datos' ? 'text-slate-900' : 'text-slate-500 hover:text-slate-800'
-                  }`}
-                >
-                  {editModalTab === 'datos' && (
-                    <motion.div
-                      layoutId="activeEditModalTab"
-                      className="absolute inset-0 bg-white rounded-xl shadow-xs border border-slate-200/80"
-                      transition={{ type: 'spring', stiffness: 500, damping: 32 }}
-                    />
-                  )}
-                  <span className="relative z-10">1. Datos & Rol</span>
-                </button>
+              {/* Pestañas de Navegación del Modal (Mismo Tamaño 50% / 50%) */}
+              <div className="px-6 py-2.5 border-b border-slate-100 bg-slate-50/60 shrink-0">
+                <div className="grid grid-cols-2 gap-1.5 p-1 bg-slate-100/90 rounded-2xl border border-slate-200/60">
+                  <button
+                    type="button"
+                    onClick={() => setEditModalTab('datos')}
+                    className={`relative py-2 text-xs font-bold rounded-xl transition-colors cursor-pointer text-center select-none ${
+                      editModalTab === 'datos' ? 'text-slate-900' : 'text-slate-500 hover:text-slate-800'
+                    }`}
+                  >
+                    {editModalTab === 'datos' && (
+                      <motion.div
+                        layoutId="activeEditModalTab"
+                        className="absolute inset-0 bg-white rounded-xl shadow-xs border border-slate-200/80"
+                        transition={{ type: 'spring', stiffness: 500, damping: 32 }}
+                      />
+                    )}
+                    <span className="relative z-10 flex items-center justify-center gap-1.5">
+                      <Users className="w-3.5 h-3.5 text-slate-500" />
+                      <span>1. Datos & Rol</span>
+                    </span>
+                  </button>
 
-                <button
-                  type="button"
-                  onClick={() => setEditModalTab('permisos')}
-                  className={`relative px-4 py-2 text-xs font-bold rounded-xl transition-colors cursor-pointer ${
-                    editModalTab === 'permisos' ? 'text-slate-900' : 'text-slate-500 hover:text-slate-800'
-                  }`}
-                >
-                  {editModalTab === 'permisos' && (
-                    <motion.div
-                      layoutId="activeEditModalTab"
-                      className="absolute inset-0 bg-white rounded-xl shadow-xs border border-slate-200/80"
-                      transition={{ type: 'spring', stiffness: 500, damping: 32 }}
-                    />
-                  )}
-                  <span className="relative z-10">2. Matriz de Permisos</span>
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => setEditModalTab('permisos')}
+                    className={`relative py-2 text-xs font-bold rounded-xl transition-colors cursor-pointer text-center select-none ${
+                      editModalTab === 'permisos' ? 'text-slate-900' : 'text-slate-500 hover:text-slate-800'
+                    }`}
+                  >
+                    {editModalTab === 'permisos' && (
+                      <motion.div
+                        layoutId="activeEditModalTab"
+                        className="absolute inset-0 bg-white rounded-xl shadow-xs border border-slate-200/80"
+                        transition={{ type: 'spring', stiffness: 500, damping: 32 }}
+                      />
+                    )}
+                    <span className="relative z-10 flex items-center justify-center gap-1.5">
+                      <Shield className="w-3.5 h-3.5 text-slate-500" />
+                      <span>2. Matriz de Permisos</span>
+                    </span>
+                  </button>
+                </div>
               </div>
 
-              {/* Formulario */}
-              <form onSubmit={handleSubmit} className="p-6 space-y-5 overflow-y-auto max-h-[calc(92vh-130px)] custom-scrollbar">
-                {formError && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="text-xs font-bold text-rose-700 bg-rose-50 p-3.5 rounded-2xl border border-rose-200"
-                  >
-                    {formError}
-                  </motion.div>
-                )}
+              {/* Formulario con altura fija y consistente para que ambas pestañas tengan exactamente el mismo tamaño */}
+              <form onSubmit={handleSubmit} className="flex flex-col">
+                
+                {/* Contenedor de Altura Fija y Sincronizada */}
+                <div className="p-6 space-y-4 h-[470px] overflow-y-auto custom-scrollbar">
+                  {formError && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="text-xs font-bold text-rose-700 bg-rose-50 p-3.5 rounded-2xl border border-rose-200"
+                    >
+                      {formError}
+                    </motion.div>
+                  )}
 
-                {/* PESTAÑA 1: DATOS & ROL */}
-                {editModalTab === 'datos' && (
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-[11px] font-black text-slate-500 uppercase tracking-wider mb-1.5">
-                          Nombre de Usuario <span className="text-rose-500">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          required
-                          placeholder="Ej. GPastrana"
-                          value={formData.username}
-                          onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                          className="w-full bg-slate-50 hover:bg-slate-100/50 focus:bg-white border border-slate-200 focus:border-slate-400 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-900 focus:outline-none transition-all shadow-2xs"
-                        />
-                      </div>
+                  {/* PESTAÑA 1: DATOS & ROL (Diseño estructurado y balanceado) */}
+                  {editModalTab === 'datos' && (
+                    <div className="space-y-4">
+                      {/* 1. Identificación */}
+                      <div className="bg-slate-50/70 p-4 rounded-2xl border border-slate-200/70 space-y-3">
+                        <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block">
+                          Identificación de Usuario
+                        </span>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                          <div>
+                            <label className="block text-[11px] font-black text-slate-600 mb-1">
+                              Nombre de Usuario <span className="text-rose-500">*</span>
+                            </label>
+                            <input
+                              type="text"
+                              required
+                              placeholder="Ej. GPastrana"
+                              value={formData.username}
+                              onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                              className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/10 shadow-2xs"
+                            />
+                          </div>
 
-                      <div>
-                        <label className="block text-[11px] font-black text-slate-500 uppercase tracking-wider mb-1.5">
-                          Nombre Completo
-                        </label>
-                        <input
-                          type="text"
-                          placeholder="Ej. Guadalupe Enrique Pastrana"
-                          value={formData.nombre_completo}
-                          onChange={(e) => setFormData({ ...formData, nombre_completo: e.target.value })}
-                          className="w-full bg-slate-50 hover:bg-slate-100/50 focus:bg-white border border-slate-200 focus:border-slate-400 rounded-xl px-3.5 py-2.5 text-xs font-semibold text-slate-900 focus:outline-none transition-all shadow-2xs"
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-[11px] font-black text-slate-500 uppercase tracking-wider mb-1.5">
-                        Rol Principal &bull; Preset
-                      </label>
-                      <div className="relative">
-                        <select
-                          value={formData.rol}
-                          onChange={(e) => handleRoleChange(e.target.value)}
-                          className="w-full bg-slate-50 hover:bg-slate-100/70 focus:bg-white border border-slate-200 focus:border-slate-400 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 focus:outline-none transition-all cursor-pointer appearance-none pr-9 shadow-2xs"
-                        >
-                          {Object.entries(ROL_PRESETS).map(([key, info]) => (
-                            <option key={key} value={key}>{info.label}</option>
-                          ))}
-                        </select>
-                        <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-                          <ChevronDown className="w-4 h-4" />
+                          <div>
+                            <label className="block text-[11px] font-black text-slate-600 mb-1">
+                              Nombre Completo
+                            </label>
+                            <input
+                              type="text"
+                              placeholder="Ej. Guadalupe Enrique Pastrana"
+                              value={formData.nombre_completo}
+                              onChange={(e) => setFormData({ ...formData, nombre_completo: e.target.value })}
+                              className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/10 shadow-2xs"
+                            />
+                          </div>
                         </div>
                       </div>
-                      <p className="text-[11px] text-slate-400 mt-1">
-                        Al seleccionar un rol, los permisos sugeridos se aplican automáticamente en la pestaña de matriz.
-                      </p>
-                    </div>
 
-                    {/* Si es creación nueva, pide contraseña obligatoria */}
-                    {!editingUser ? (
-                      <div>
-                        <label className="block text-[11px] font-black text-slate-500 uppercase tracking-wider mb-1.5">
-                          Contraseña Inicial <span className="text-rose-500">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          required
-                          placeholder="Mínimo 4 caracteres..."
-                          value={formData.password}
-                          onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                          className="w-full bg-slate-50 hover:bg-slate-100/50 focus:bg-white border border-slate-200 focus:border-slate-400 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-900 focus:outline-none font-mono transition-all shadow-2xs"
-                        />
-                      </div>
-                    ) : (
-                      <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200/80 flex items-center justify-between text-xs">
-                        <div>
-                          <span className="font-extrabold text-slate-800 block">Contraseña de Acceso</span>
-                          <span className="text-[11px] text-slate-400 block mt-0.5">
-                            La contraseña se gestiona con seguridad en el botón dedicado "Contraseña" de la tabla.
+                      {/* 2. Rol & Función */}
+                      <div className="bg-slate-50/70 p-4 rounded-2xl border border-slate-200/70 space-y-2.5">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block">
+                            Rol Principal &bull; Preset
+                          </span>
+                          <span className="text-[10px] text-slate-400">
+                            Auto-configura permisos sugeridos
                           </span>
                         </div>
-                      </div>
-                    )}
-                  </div>
-                )}
 
-                {/* PESTAÑA 2: MATRIZ DE PERMISOS */}
-                {editModalTab === 'permisos' && (
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[11px] font-black text-slate-700 uppercase tracking-wider block">
-                        Control de Acceso por Módulo
-                      </span>
-                      <span className="text-[10px] font-bold text-slate-400">
-                        Selecciona el nivel para cada sección
-                      </span>
-                    </div>
-
-                    <div className="space-y-2 bg-slate-50/70 p-3 rounded-2xl border border-slate-200/80">
-                      {MODULOS_INFO.map(mod => {
-                        const currentVal = (formData.permisos as any)[mod.key] || 'ninguno';
-                        const Icon = mod.icon;
-
-                        const options = [
-                          { value: 'ninguno', label: 'Sin Acceso', activeBg: 'bg-slate-900' },
-                          { value: 'lectura', label: 'Lectura', activeBg: 'bg-blue-600' },
-                          {
-                            value: mod.key === 'usuarios' ? 'admin' : 'escritura',
-                            label: mod.key === 'usuarios' ? 'Admin' : 'Edición',
-                            activeBg: 'bg-emerald-600'
-                          }
-                        ];
-
-                        return (
-                          <div
-                            key={mod.key}
-                            className="flex flex-col sm:flex-row sm:items-center justify-between p-2.5 rounded-xl bg-white border border-slate-200/60 hover:border-slate-300 transition-colors gap-2.5"
+                        <div className="relative">
+                          <select
+                            value={formData.rol}
+                            onChange={(e) => handleRoleChange(e.target.value)}
+                            className="w-full bg-white hover:bg-slate-50 focus:bg-white border border-slate-200 focus:border-slate-400 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 focus:outline-none transition-all cursor-pointer appearance-none pr-9 shadow-2xs"
                           >
-                            <div className="flex items-center gap-2.5">
-                              <div className="w-8 h-8 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center shrink-0">
-                                <Icon className="w-4 h-4" />
-                              </div>
-                              <div>
-                                <span className="text-xs font-extrabold text-slate-900 block leading-tight">
-                                  {mod.label}
-                                </span>
-                                <span className="text-[10px] text-slate-400 block leading-tight mt-0.5">
-                                  {mod.desc}
-                                </span>
-                              </div>
-                            </div>
-
-                            {/* Control Segmentado Suave con Animación Spring */}
-                            <div className="relative flex items-center p-1 bg-slate-100/90 rounded-xl border border-slate-200/50 self-end sm:self-auto shadow-inner">
-                              {options.map((opt) => {
-                                const isOptionActive =
-                                  opt.value === 'ninguno'
-                                    ? currentVal === 'ninguno'
-                                    : opt.value === 'lectura'
-                                    ? currentVal === 'lectura'
-                                    : currentVal === 'escritura' || currentVal === 'admin';
-
-                                return (
-                                  <motion.button
-                                    key={opt.value}
-                                    type="button"
-                                    whileTap={{ scale: 0.94 }}
-                                    onClick={() => {
-                                      setFormData(prev => ({
-                                        ...prev,
-                                        permisos: { ...prev.permisos, [mod.key]: opt.value }
-                                      }));
-                                    }}
-                                    className={`relative px-3 py-1.5 text-[10px] font-black tracking-wide rounded-lg cursor-pointer transition-colors select-none ${
-                                      isOptionActive ? 'text-white' : 'text-slate-500 hover:text-slate-900'
-                                    }`}
-                                  >
-                                    {isOptionActive && (
-                                      <motion.div
-                                        layoutId={`active-seg-${mod.key}`}
-                                        className={`absolute inset-0 rounded-lg shadow-2xs ${opt.activeBg}`}
-                                        transition={{ type: 'spring', stiffness: 500, damping: 32 }}
-                                      />
-                                    )}
-                                    <span className="relative z-10">{opt.label}</span>
-                                  </motion.button>
-                                );
-                              })}
-                            </div>
+                            {Object.entries(ROL_PRESETS).map(([key, info]) => (
+                              <option key={key} value={key}>{info.label}</option>
+                            ))}
+                          </select>
+                          <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                            <ChevronDown className="w-4 h-4" />
                           </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
+                        </div>
 
-                {/* Botones de acción modal */}
-                <div className="flex items-center gap-3 pt-3 border-t border-slate-100">
+                        {/* Tarjeta explicativa según el rol */}
+                        <div className="p-3 rounded-xl bg-white border border-slate-200/60 text-xs text-slate-600 flex items-start gap-2">
+                          <div className="p-1 rounded-lg bg-indigo-50 text-indigo-700 shrink-0 mt-0.5">
+                            <Shield className="w-3.5 h-3.5" />
+                          </div>
+                          <div>
+                            <span className="font-extrabold text-slate-900 block leading-tight">
+                              {formData.rol === 'admin'
+                                ? 'Administrador del Sistema'
+                                : formData.rol === 'pastor'
+                                ? 'Pastor / Dirección Ministerial'
+                                : formData.rol === 'secretaria'
+                                ? 'Secretaría Pastoral'
+                                : formData.rol === 'tesorera'
+                                ? 'Tesorería y Finanzas'
+                                : formData.rol === 'fiscal'
+                                ? 'Fiscalía y Auditoría'
+                                : formData.rol === 'lider'
+                                ? 'Liderazgo de Ministerio'
+                                : 'Invitado'}
+                            </span>
+                            <span className="text-[11px] text-slate-500 block leading-tight mt-0.5">
+                              {formData.rol === 'admin'
+                                ? 'Control absoluto de configuración, administración de usuarios y todos los módulos.'
+                                : formData.rol === 'pastor'
+                                ? 'Supervisión general pastoral con edición completa en agenda y actividades.'
+                                : formData.rol === 'secretaria'
+                                ? 'Edición en agenda, directorio de miembros y actas de bautismo.'
+                                : formData.rol === 'tesorera'
+                                ? 'Edición y emisión de recibos en finanzas y rifas pro-fondos.'
+                                : formData.rol === 'fiscal'
+                                ? 'Supervisión en modo lectura para auditoría y verificación.'
+                                : formData.rol === 'lider'
+                                ? 'Planificación de actividades de su grupo y registro de eventos.'
+                                : 'Acceso básico de consulta a la información pública.'}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* 3. Contraseña */}
+                      <div className="bg-slate-50/70 p-4 rounded-2xl border border-slate-200/70 space-y-2">
+                        <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block">
+                          Seguridad de Acceso
+                        </span>
+
+                        {!editingUser ? (
+                          <div>
+                            <label className="block text-[11px] font-black text-slate-600 mb-1">
+                              Contraseña Inicial <span className="text-rose-500">*</span>
+                            </label>
+                            <input
+                              type="text"
+                              required
+                              placeholder="Mínimo 4 caracteres..."
+                              value={formData.password}
+                              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                              className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-900 focus:outline-none font-mono shadow-2xs"
+                            />
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-between text-xs py-1">
+                            <div>
+                              <span className="font-extrabold text-slate-800 block">Contraseña Protegida</span>
+                              <span className="text-[11px] text-slate-400 block mt-0.5">
+                                Puedes restablecerla o copiarla para WhatsApp desde el botón "Contraseña" en la tabla.
+                              </span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setShowEditModal(false);
+                                openCredentials(editingUser);
+                              }}
+                              className="px-3 py-1.5 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 text-xs font-bold text-slate-700 shadow-2xs transition-colors cursor-pointer shrink-0 ml-3"
+                            >
+                              Ver / Cambiar
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* PESTAÑA 2: MATRIZ DE PERMISOS (Desglose limpio de los 6 módulos) */}
+                  {editModalTab === 'permisos' && (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block">
+                          Niveles de Acceso por Módulo
+                        </span>
+                        <span className="text-[10px] text-slate-400">
+                          Personaliza cada sección de forma independiente
+                        </span>
+                      </div>
+
+                      <div className="space-y-2 bg-slate-50/70 p-3 rounded-2xl border border-slate-200/80">
+                        {MODULOS_INFO.map(mod => {
+                          const currentVal = (formData.permisos as any)[mod.key] || 'ninguno';
+                          const Icon = mod.icon;
+
+                          const options = [
+                            { value: 'ninguno', label: 'Sin Acceso', activeBg: 'bg-slate-900' },
+                            { value: 'lectura', label: 'Lectura', activeBg: 'bg-blue-600' },
+                            {
+                              value: mod.key === 'usuarios' ? 'admin' : 'escritura',
+                              label: mod.key === 'usuarios' ? 'Admin' : 'Edición',
+                              activeBg: 'bg-emerald-600'
+                            }
+                          ];
+
+                          return (
+                            <div
+                              key={mod.key}
+                              className="flex flex-col sm:flex-row sm:items-center justify-between p-2.5 rounded-xl bg-white border border-slate-200/60 hover:border-slate-300 transition-colors gap-2.5"
+                            >
+                              <div className="flex items-center gap-2.5">
+                                <div className="w-8 h-8 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center shrink-0">
+                                  <Icon className="w-4 h-4" />
+                                </div>
+                                <div>
+                                  <span className="text-xs font-extrabold text-slate-900 block leading-tight">
+                                    {mod.label}
+                                  </span>
+                                  <span className="text-[10px] text-slate-400 block leading-tight mt-0.5">
+                                    {mod.desc}
+                                  </span>
+                                </div>
+                              </div>
+
+                              {/* Control Segmentado Suave con Animación Spring */}
+                              <div className="relative flex items-center p-1 bg-slate-100/90 rounded-xl border border-slate-200/50 self-end sm:self-auto shadow-inner">
+                                {options.map((opt) => {
+                                  const isOptionActive =
+                                    opt.value === 'ninguno'
+                                      ? currentVal === 'ninguno'
+                                      : opt.value === 'lectura'
+                                      ? currentVal === 'lectura'
+                                      : currentVal === 'escritura' || currentVal === 'admin';
+
+                                  return (
+                                    <motion.button
+                                      key={opt.value}
+                                      type="button"
+                                      whileTap={{ scale: 0.94 }}
+                                      onClick={() => {
+                                        setFormData(prev => ({
+                                          ...prev,
+                                          permisos: { ...prev.permisos, [mod.key]: opt.value }
+                                        }));
+                                      }}
+                                      className={`relative px-3 py-1.5 text-[10px] font-black tracking-wide rounded-lg cursor-pointer transition-colors select-none ${
+                                        isOptionActive ? 'text-white' : 'text-slate-500 hover:text-slate-900'
+                                      }`}
+                                    >
+                                      {isOptionActive && (
+                                        <motion.div
+                                          layoutId={`active-seg-${mod.key}`}
+                                          className={`absolute inset-0 rounded-lg shadow-2xs ${opt.activeBg}`}
+                                          transition={{ type: 'spring', stiffness: 500, damping: 32 }}
+                                        />
+                                      )}
+                                      <span className="relative z-10">{opt.label}</span>
+                                    </motion.button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                </div>
+
+                {/* Footer del Modal Fijo (Mismo tamaño y alineación siempre) */}
+                <div className="flex items-center gap-3 px-6 py-4 border-t border-slate-100 bg-slate-50/50 shrink-0">
                   <motion.button
                     whileTap={{ scale: 0.96 }}
                     type="button"
                     onClick={() => setShowEditModal(false)}
-                    className="flex-1 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
+                    className="flex-1 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
                   >
                     Cancelar
                   </motion.button>
