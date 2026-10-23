@@ -6,6 +6,7 @@ import Login from './components/Login'
 import ErrorBoundary from './components/ErrorBoundary'
 
 // Code Splitting: Carga diferida de módulos para reducir bundle inicial
+const HomeDashboardView = lazy(() => import('./components/HomeDashboardView'))
 const FinanceDashboard = lazy(() => import('./components/FinanceDashboard'))
 const CalendarView = lazy(() => import('./components/CalendarView'))
 const MembersView = lazy(() => import('./components/MembersView'))
@@ -40,12 +41,8 @@ const getUser = () => {
 };
 
 const getDefaultModule = (user: any): string => {
-  if (!user || user.rol === 'admin') return 'finanzas';
-  const perms = user.permisos || {};
-  if (perms.finanzas && perms.finanzas !== 'ninguno') return 'finanzas';
-  const order = ['agenda', 'miembros', 'bautismos', 'equipo', 'eventos', 'usuarios', 'perfil'];
-  const found = order.find(m => m === 'perfil' || (perms[m] && perms[m] !== 'ninguno'));
-  return found || 'perfil';
+  if (!user || user.rol === 'admin') return 'inicio';
+  return 'inicio';
 };
 
 interface ProtectedRouteProps {
@@ -63,7 +60,7 @@ function ProtectedRoute({ module, children }: ProtectedRouteProps) {
 
   const user = getUser();
 
-  if (module && module !== 'perfil') {
+  if (module && module !== 'perfil' && module !== 'inicio') {
     if (user.rol !== 'admin') {
       if (module === 'usuarios') {
         return <Navigate to={`/${getDefaultModule(user)}`} replace />;
@@ -157,6 +154,7 @@ function App() {
         }
       >
         <Route index element={<RootRedirect />} />
+        <Route path="/inicio" element={<ProtectedRoute module="inicio"><HomeDashboardView /></ProtectedRoute>} />
         <Route path="/finanzas" element={<ProtectedRoute module="finanzas"><FinanceDashboard /></ProtectedRoute>} />
         <Route path="/agenda" element={<ProtectedRoute module="agenda"><CalendarView /></ProtectedRoute>} />
         <Route path="/miembros" element={<ProtectedRoute module="miembros"><MembersView /></ProtectedRoute>} />
