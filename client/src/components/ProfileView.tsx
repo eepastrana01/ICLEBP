@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../lib/api';
@@ -22,6 +23,7 @@ interface FormState {
 }
 
 export default function ProfileView() {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [form, setForm] = useState<FormState>({
     password: '',
@@ -254,6 +256,39 @@ export default function ProfileView() {
         </motion.div>
 
       </form>
+
+      {/* Sección Informativa: App Info & Autor */}
+      <motion.div
+        whileHover={{ y: -2 }}
+        transition={SPRING_FAST}
+        className="glass-panel rounded-[2rem] p-6 border border-white/80 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+      >
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-700 font-black text-sm shrink-0">
+            EP
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h3 className="text-sm font-extrabold text-slate-900">Planner Pastoral ICLEB &bull; v2.4</h3>
+              <span className="text-[10px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-md">
+                App Info
+              </span>
+            </div>
+            <p className="text-xs text-slate-500 font-medium mt-0.5">
+              Desarrollado y creado por <strong className="text-slate-800">Edis Pastrana</strong>. Consulta el stack técnico, arquitectura y repositorio.
+            </p>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => navigate('/info')}
+          className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold shadow-2xs transition-all cursor-pointer shrink-0"
+        >
+          <span>Ver App Info</span>
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </motion.div>
     </div>
   );
 }

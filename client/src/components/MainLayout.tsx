@@ -62,7 +62,8 @@ export default function MainLayout({ children, activeModule: propActiveModule, o
     { id: 'equipo', label: 'Equipo Pastoral', icon: 'M12 2a3 3 0 1 0 0 6 3 3 0 0 0 0-6z M6 16a3 3 0 1 0 0 6 3 3 0 0 0 0-6z M18 16a3 3 0 1 0 0 6 3 3 0 0 0 0-6z M12 8v4 M12 12l-6 4 M12 12l6 4' },
     { id: 'eventos', label: 'Rifas & Eventos', icon: 'M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v2z M13 5v2 M13 11v2 M13 17v2' },
     { id: 'usuarios', label: 'Usuarios', icon: 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z' },
-    { id: 'perfil', label: 'Mi Perfil', icon: 'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z' }
+    { id: 'perfil', label: 'Mi Perfil', icon: 'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z' },
+    { id: 'info', label: 'App Info', icon: 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z' }
   ];
 
   const handleNav = (moduleId: string) => {
@@ -84,7 +85,7 @@ export default function MainLayout({ children, activeModule: propActiveModule, o
 
   const navItems = allNavItems.filter((item) => {
     if (user.rol === 'admin') return true;
-    if (item.id === 'inicio' || item.id === 'perfil') return true;
+    if (item.id === 'inicio' || item.id === 'perfil' || item.id === 'info') return true;
     const permisos = user.permisos || {};
     const modPerm = permisos[item.id];
     if (modPerm !== undefined) {
@@ -179,6 +180,17 @@ export default function MainLayout({ children, activeModule: propActiveModule, o
                 </svg>
                 Cerrar Sesión
               </button>
+
+              <div className="flex items-center justify-between px-1 pt-1 text-[10px] text-slate-400 font-semibold border-t border-slate-200/50">
+                <button
+                  type="button"
+                  onClick={() => handleNav('info')}
+                  className="hover:text-indigo-600 transition-colors cursor-pointer flex items-center gap-1 font-bold text-slate-500"
+                >
+                  <span>v2.4 &bull; App Info</span>
+                </button>
+                <span className="text-[9px] font-black uppercase text-slate-400">ICLEB</span>
+              </div>
             </div>
           </div>
         </div>
@@ -278,6 +290,17 @@ export default function MainLayout({ children, activeModule: propActiveModule, o
                   </svg>
                   Cerrar Sesión
                 </button>
+
+                <div className="flex items-center justify-between px-1 pt-1 text-[10px] text-slate-400 font-semibold border-t border-slate-100">
+                  <button
+                    type="button"
+                    onClick={() => handleNav('info')}
+                    className="hover:text-indigo-600 transition-colors cursor-pointer flex items-center gap-1 font-bold text-slate-500"
+                  >
+                    <span>v2.4 &bull; App Info</span>
+                  </button>
+                  <span className="text-[9px] font-black uppercase text-slate-400">ICLEB</span>
+                </div>
               </div>
             </div>
 

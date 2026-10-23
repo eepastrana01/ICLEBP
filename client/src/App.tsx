@@ -17,6 +17,7 @@ const EventsView = lazy(() => import('./components/EventsView'))
 const BaptismsView = lazy(() => import('./components/BaptismsView'))
 const CarteleraView = lazy(() => import('./components/CarteleraView'))
 const BirthdaysView = lazy(() => import('./components/BirthdaysView'))
+const AppInfoView = lazy(() => import('./components/AppInfoView'))
 
 function ModuleSkeleton() {
   return (
@@ -60,7 +61,7 @@ function ProtectedRoute({ module, children }: ProtectedRouteProps) {
 
   const user = getUser();
 
-  if (module && module !== 'perfil' && module !== 'inicio') {
+  if (module && module !== 'perfil' && module !== 'inicio' && module !== 'info') {
     if (user.rol !== 'admin') {
       if (module === 'usuarios') {
         return <Navigate to={`/${getDefaultModule(user)}`} replace />;
@@ -165,6 +166,7 @@ function App() {
         <Route path="/cumpleaneros" element={<ProtectedRoute module="cumpleaneros"><BirthdaysView /></ProtectedRoute>} />
         <Route path="/usuarios" element={<ProtectedRoute module="usuarios"><UsersView /></ProtectedRoute>} />
         <Route path="/perfil" element={<ProtectedRoute module="perfil"><ProfileView /></ProtectedRoute>} />
+        <Route path="/info" element={<ProtectedRoute module="info"><AppInfoView /></ProtectedRoute>} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />
