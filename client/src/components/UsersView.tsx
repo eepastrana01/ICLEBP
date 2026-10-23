@@ -8,6 +8,8 @@ import {
   Users,
   Shield,
   ShieldCheck,
+  ShieldAlert,
+  KeyRound,
   Eye,
   EyeOff,
   Copy,
@@ -25,7 +27,10 @@ import {
   UserX,
   Lock,
   Plus,
-  ChevronDown
+  ChevronDown,
+  MessageCircle,
+  RefreshCw,
+  CheckCircle2
 } from 'lucide-react';
 
 export interface PermisosModulos {
@@ -83,7 +88,7 @@ const ROL_PRESETS: Record<string, { label: string; permisos: PermisosModulos }> 
 };
 
 const MODULOS_INFO = [
-  { key: 'finanzas', label: 'Finanzas', short: 'Fin', icon: Wallet, desc: 'Ingresos, egresos y comprobantes' },
+  { key: 'finanzas', label: 'Finanzas', short: 'Fin', icon: Wallet, desc: 'Ingresos, egresos y talonarios' },
   { key: 'agenda', label: 'Agenda', short: 'Age', icon: Calendar, desc: 'Planificación de actividades' },
   { key: 'miembros', label: 'Miembros', short: 'Mbr', icon: Users, desc: 'Directorio y membresía' },
   { key: 'equipo', label: 'Equipo', short: 'Eqp', icon: UserCheck, desc: 'Equipo pastoral y ministerios' },
@@ -103,17 +108,27 @@ export default function UsersView() {
   const isAdmin = currentUser.rol === 'admin';
   const { confirmState, confirmAction, closeConfirm } = useConfirm();
 
+  // Estados principales
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('todos');
   const [viewMode, setViewMode] = useState<'tabla' | 'tarjetas'>('tabla');
-  const [showModal, setShowModal] = useState(false);
+
+  // Modales
+  const [showEditModal, setShowEditModal] = useState(false);
   const [editingUser, setEditingUser] = useState<Usuario | null>(null);
+  const [editModalTab, setEditModalTab] = useState<'datos' | 'permisos'>('datos');
 
-  // Visibilidad de contraseñas y copia
-  const [visiblePasswords, setVisiblePasswords] = useState<Record<number, boolean>>({});
-  const [copiedId, setCopiedId] = useState<number | null>(null);
+  // Modal de Credenciales / Reset Password
+  const [credentialsUser, setCredentialsUser] = useState<Usuario | null>(null);
+  const [showCredPassword, setShowCredPassword] = useState(false);
+  const [resetPasswordInput, setResetPasswordInput] = useState('');
+  const [resetError, setResetError] = useState('');
+  const [resetSuccess, setResetSuccess] = useState(false);
 
-  // Form State
+  // Toast flotante
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  // Form State para Crear / Editar
   const [formData, setFormData] = useState({
     username: '',
     nombre_completo: '',
@@ -156,38 +171,80 @@ export default function UsersView() {
     });
   }, [usuarios, searchTerm, roleFilter]);
 
-  // Alternar visibilidad de contraseña
-  const togglePasswordVisibility = (id: number) => {
-    setVisiblePasswords(prev => ({ ...prev, [id]: !prev[id] }));
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 3000);
   };
 
-  const copyPassword = (id: number, pass?: string | null) => {
-    if (!pass) return;
-    navigator.clipboard.writeText(pass);
-    setCopiedId(id);
-    setTimeout(() => setCopiedId(null), 2000);
-  };
+  // Resumen visual estructurado de permisos
+  const getPermissionsSummary = (u: Usuario) => {
+    if (u.rol === 'admin') {
+      return {
+        label: 'Acceso Total (Admin)',
+        badgeClass: 'bg-purple-50 text-purple-700 border-purple-200/80',
+        icon: ShieldCheck,
+        tooltip: 'Control total de administración en los 6 módulos'
+      };
+    }
 
-  // Helper para nivel de permiso de un módulo
-  const getPermLevel = (u: Usuario, modKey: string): 'admin' | 'escritura' | 'lectura' | 'ninguno' => {
-    if (u.rol === 'admin') return 'admin';
-    const val = (u.permisos as any)?.[modKey];
-    if (!val || val === 'ninguno') return 'ninguno';
-    return val;
-  };
+    const perms = u.permisos || {};
+    let editCount = 0;
+    let readCount = 0;
+    const editMods: string[] = [];
+    const readMods: string[] = [];
 
-  const countActiveModules = (u: Usuario): number => {
-    if (u.rol === 'admin') return 6;
-    if (!u.permisos) return 0;
-    return MODULOS_INFO.filter(m => {
-      const p = (u.permisos as any)?.[m.key];
-      return p && p !== 'ninguno';
-    }).length;
+    MODULOS_INFO.forEach(m => {
+      const val = (perms as any)[m.key];
+      if (val === 'escritura' || val === 'admin') {
+        editCount++;
+        editMods.push(m.label);
+      } else if (val === 'lectura') {
+        readCount++;
+        readMods.push(m.label);
+      }
+    });
+
+    const totalActive = editCount + readCount;
+
+    if (totalActive === 0) {
+      return {
+        label: 'Sin permisos asignados',
+        badgeClass: 'bg-slate-100 text-slate-500 border-slate-200',
+        icon: ShieldAlert,
+        tooltip: 'Sin acceso a módulos del sistema'
+      };
+    }
+
+    if (editCount > 0 && readCount > 0) {
+      return {
+        label: `${editCount} edición • ${readCount} lectura`,
+        badgeClass: 'bg-teal-50 text-teal-800 border-teal-200/80',
+        icon: CheckCircle2,
+        tooltip: `Edición: ${editMods.join(', ')} | Lectura: ${readMods.join(', ')}`
+      };
+    }
+
+    if (editCount > 0) {
+      return {
+        label: `Edición (${editCount} ${editCount === 1 ? 'módulo' : 'módulos'})`,
+        badgeClass: 'bg-emerald-50 text-emerald-800 border-emerald-200/80',
+        icon: CheckCircle2,
+        tooltip: `Edición completa: ${editMods.join(', ')}`
+      };
+    }
+
+    return {
+      label: `Solo lectura (${readCount} ${readCount === 1 ? 'módulo' : 'módulos'})`,
+      badgeClass: 'bg-blue-50 text-blue-800 border-blue-200/80',
+      icon: Eye,
+      tooltip: `Lectura: ${readMods.join(', ')}`
+    };
   };
 
   // Abrir Modal de Creación
   const openCreate = () => {
     setEditingUser(null);
+    setEditModalTab('datos');
     setFormData({
       username: '',
       nombre_completo: '',
@@ -196,12 +253,13 @@ export default function UsersView() {
       permisos: { ...ROL_PRESETS.lider.permisos }
     });
     setFormError('');
-    setShowModal(true);
+    setShowEditModal(true);
   };
 
   // Abrir Modal de Edición Completa
   const openEdit = (u: Usuario) => {
     setEditingUser(u);
+    setEditModalTab('datos');
     const initialPerms = u.permisos && typeof u.permisos === 'object'
       ? { ...u.permisos }
       : (ROL_PRESETS[u.rol]?.permisos || { ...ROL_PRESETS.invitado.permisos });
@@ -209,18 +267,28 @@ export default function UsersView() {
     setFormData({
       username: u.username,
       nombre_completo: u.nombre_completo || '',
-      password: u.password_plain || '',
+      password: '', // En edición se deja vacía; las credenciales se gestionan en su propio modal
       rol: u.rol,
       permisos: initialPerms
     });
     setFormError('');
-    setShowModal(true);
+    setShowEditModal(true);
   };
 
-  const closeModal = () => {
-    setShowModal(false);
-    setEditingUser(null);
-    setFormError('');
+  // Abrir Modal de Credenciales & Reset Password
+  const openCredentials = (u: Usuario) => {
+    setCredentialsUser(u);
+    setShowCredPassword(false);
+    setResetPasswordInput('');
+    setResetError('');
+    setResetSuccess(false);
+  };
+
+  const closeCredentials = () => {
+    setCredentialsUser(null);
+    setResetPasswordInput('');
+    setResetError('');
+    setResetSuccess(false);
   };
 
   const handleRoleChange = (newRole: string) => {
@@ -230,6 +298,24 @@ export default function UsersView() {
       rol: newRole,
       permisos: { ...preset }
     }));
+  };
+
+  // Generador de clave segura sugerida
+  const generateRandomPassword = () => {
+    const prefixes = ['Pastoral', 'Icleb', 'Gracia', 'Camino', 'Vida'];
+    const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
+    const year = new Date().getFullYear();
+    const randomNum = Math.floor(10 + Math.random() * 90);
+    const suggested = `${prefix}${year}${randomNum}!`;
+    setResetPasswordInput(suggested);
+  };
+
+  // Copiar formato para WhatsApp (sin textos bíblicos, estrictamente credenciales)
+  const copyWhatsAppCredentials = (u: Usuario) => {
+    const pass = u.password_plain || '(Sin contraseña registrada)';
+    const text = `Hola ${u.nombre_completo || u.username}, aquí tienes tus datos de acceso al sistema Planner Pastoral ICLEB:\n\n👤 Usuario: ${u.username}\n🔑 Contraseña: ${pass}\n\nPuedes ingresar desde tu navegador para consultar la planificación y módulos correspondientes.`;
+    navigator.clipboard.writeText(text);
+    showToast(`Credenciales de ${u.username} copiadas para WhatsApp`);
   };
 
   // Mutaciones
@@ -242,22 +328,45 @@ export default function UsersView() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['usuarios'] });
-      closeModal();
+      setShowEditModal(false);
+      showToast(editingUser ? 'Usuario actualizado exitosamente' : 'Nuevo usuario registrado');
     },
     onError: (err: any) => {
       setFormError(err.response?.data?.error || 'No se pudo guardar el usuario.');
     }
   });
 
+  const resetPasswordMutation = useMutation({
+    mutationFn: ({ id, password }: { id: number; password: string }) =>
+      api.put(`/usuarios/${id}/editar`, { password }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['usuarios'] });
+      setResetSuccess(true);
+      showToast('Contraseña actualizada correctamente');
+      setTimeout(() => {
+        closeCredentials();
+      }, 1500);
+    },
+    onError: (err: any) => {
+      setResetError(err.response?.data?.error || 'No se pudo actualizar la contraseña.');
+    }
+  });
+
   const toggleStatusMutation = useMutation({
     mutationFn: ({ id, activo }: { id: number; activo: boolean }) =>
       api.put(`/usuarios/${id}/estado`, { activo }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['usuarios'] })
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['usuarios'] });
+      showToast('Estado de usuario modificado');
+    }
   });
 
   const deleteMutation = useMutation({
     mutationFn: (id: number) => api.delete(`/usuarios/${id}`),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['usuarios'] })
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['usuarios'] });
+      showToast('Usuario eliminado del sistema');
+    }
   });
 
   const handleSubmit = (e: FormEvent) => {
@@ -270,7 +379,7 @@ export default function UsersView() {
     }
 
     if (!editingUser && (!formData.password || formData.password.length < 4)) {
-      setFormError('La contraseña debe tener al menos 4 caracteres.');
+      setFormError('La contraseña inicial debe tener al menos 4 caracteres.');
       return;
     }
 
@@ -288,7 +397,17 @@ export default function UsersView() {
     saveMutation.mutate(payload);
   };
 
-  // Helper para badge de rol
+  const handleResetPasswordSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    setResetError('');
+    if (!resetPasswordInput || resetPasswordInput.trim().length < 4) {
+      setResetError('La nueva contraseña debe tener al menos 4 caracteres.');
+      return;
+    }
+    if (!credentialsUser) return;
+    resetPasswordMutation.mutate({ id: credentialsUser.id, password: resetPasswordInput.trim() });
+  };
+
   const renderRoleBadge = (rol: string) => {
     const r = rol.toLowerCase();
     let style = 'bg-slate-100 text-slate-700 border-slate-200';
@@ -325,21 +444,29 @@ export default function UsersView() {
   return (
     <div className="min-h-full font-sans text-slate-900 space-y-6 pb-12">
 
+      {/* Toast Flotante */}
+      {toastMessage && (
+        <div className="fixed top-6 right-6 z-50 bg-slate-900 text-white px-4 py-2.5 rounded-2xl shadow-xl flex items-center gap-2.5 text-xs font-bold border border-slate-700 animate-in fade-in duration-150">
+          <Check className="w-4 h-4 text-emerald-400" />
+          <span>{toastMessage}</span>
+        </div>
+      )}
+
       {/* ========== CABECERA PRINCIPAL ========== */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-1">
         <div>
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/70 border border-slate-200/80 shadow-2xs mb-2 backdrop-blur-md">
             <span className="w-2 h-2 rounded-full bg-indigo-600"></span>
             <span className="text-[11px] font-bold tracking-wider text-slate-600 uppercase">
-              Seguridad & Accesos &bull; ICLEB
+              Panel de Seguridad &bull; ICLEB
             </span>
           </div>
 
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
-            Usuarios y Permisos
+            Administración de Usuarios
           </h1>
           <p className="text-xs sm:text-sm font-medium text-slate-500 mt-0.5">
-            Administración de credenciales, roles y matriz de permisos por módulo.
+            Gestión centralizada de cuentas, restablecimiento de claves y permisos por sección.
           </p>
         </div>
 
@@ -360,7 +487,7 @@ export default function UsersView() {
         <div className="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-2xs flex items-center justify-between">
           <div>
             <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block">
-              Total Cuentas
+              Directorio de Cuentas
             </span>
             <p className="text-2xl font-black text-slate-900 tracking-tight mt-1">{total}</p>
             <p className="text-[11px] font-semibold text-slate-500 mt-0.5">Usuarios registrados</p>
@@ -401,10 +528,10 @@ export default function UsersView() {
         </div>
       </div>
 
-      {/* ========== PANEL PRINCIPAL: FILTROS + TABLA/FICHAS ========== */}
+      {/* ========== PANEL PRINCIPAL: TABLA / FICHAS ========== */}
       <div className="bg-white rounded-3xl border border-slate-200/80 shadow-2xs overflow-hidden">
         
-        {/* Barra superior de controles */}
+        {/* Controles de Búsqueda y Filtros */}
         <div className="p-4 sm:p-5 border-b border-slate-100 flex flex-col lg:flex-row lg:items-center justify-between gap-3.5">
           
           {/* Buscador */}
@@ -427,7 +554,7 @@ export default function UsersView() {
             )}
           </div>
 
-          {/* Filtros por Rol + Switch de Vista */}
+          {/* Filtros por Rol + Alternador de Vista */}
           <div className="flex flex-wrap items-center justify-between lg:justify-end gap-2.5">
             <div className="flex flex-wrap items-center gap-1 bg-slate-100/80 p-1 rounded-2xl border border-slate-200/60">
               {[
@@ -500,37 +627,29 @@ export default function UsersView() {
           </div>
         </div>
 
-        {/* ========== CONTENIDO: VISTA TABLA ========== */}
+        {/* ========== VISTA TABLA LIMPIA Y DESPEJADA ========== */}
         {viewMode === 'tabla' && (
           <div className="overflow-x-auto custom-scrollbar">
-            <table className="w-full text-left text-sm min-w-[860px]">
+            <table className="w-full text-left text-sm min-w-[760px]">
               <thead>
                 <tr className="bg-slate-50/70 border-b border-slate-100 text-[10px] font-black uppercase tracking-wider text-slate-400">
-                  <th className="py-3 px-5">Usuario / Nombre</th>
-                  <th className="py-3 px-4">Rol</th>
-                  <th className="py-3 px-4">Contraseña</th>
-                  <th className="py-3 px-4">
-                    <div className="flex items-center gap-1.5">
-                      <span>Permisos de Módulos</span>
-                      <span className="text-[9px] font-bold text-slate-400 lowercase">
-                        (verde: edición &bull; azul: lectura)
-                      </span>
-                    </div>
-                  </th>
-                  <th className="py-3 px-4 text-center">Estado</th>
-                  <th className="py-3 px-5 text-right">Acciones</th>
+                  <th className="py-3.5 px-6">Usuario & Nombre</th>
+                  <th className="py-3.5 px-4">Rol Asignado</th>
+                  <th className="py-3.5 px-4">Nivel de Permisos</th>
+                  <th className="py-3.5 px-4 text-center">Estado</th>
+                  <th className="py-3.5 px-6 text-right">Opciones</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {isLoading ? (
                   <tr>
-                    <td colSpan={6} className="py-16 text-center text-xs font-semibold text-slate-400">
+                    <td colSpan={5} className="py-16 text-center text-xs font-semibold text-slate-400">
                       Cargando directorio de usuarios...
                     </td>
                   </tr>
                 ) : filteredUsers.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="py-16 text-center">
+                    <td colSpan={5} className="py-16 text-center">
                       <UserX className="w-8 h-8 mx-auto mb-2 text-slate-300" />
                       <p className="text-sm font-bold text-slate-800">No se encontraron usuarios</p>
                       <p className="text-xs text-slate-400 mt-0.5">Intenta con otro filtro o término de búsqueda.</p>
@@ -538,15 +657,15 @@ export default function UsersView() {
                   </tr>
                 ) : (
                   filteredUsers.map((u) => {
-                    const isPassVisible = !!visiblePasswords[u.id];
-                    const plainPass = u.password_plain || '(Sin clave)';
                     const isCurrent = currentUser.username?.toLowerCase() === u.username.toLowerCase();
+                    const permSummary = getPermissionsSummary(u);
+                    const SummaryIcon = permSummary.icon;
 
                     return (
                       <tr key={u.id} className="hover:bg-slate-50/70 transition-colors">
                         
                         {/* 1. Usuario & Nombre */}
-                        <td className="py-3.5 px-5">
+                        <td className="py-3.5 px-6">
                           <div className="flex items-center gap-3">
                             <div className="w-9 h-9 rounded-xl bg-slate-900 text-white flex items-center justify-center font-extrabold uppercase text-xs shrink-0 shadow-2xs">
                               {u.username.substring(0, 2)}
@@ -571,83 +690,23 @@ export default function UsersView() {
                           </div>
                         </td>
 
-                        {/* 2. Rol */}
+                        {/* 2. Rol Asignado */}
                         <td className="py-3.5 px-4 whitespace-nowrap">
                           {renderRoleBadge(u.rol)}
                         </td>
 
-                        {/* 3. Contraseña Asignada */}
-                        <td className="py-3.5 px-4 whitespace-nowrap">
-                          <div className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-50 border border-slate-200/80 shadow-2xs">
-                            <span className="text-xs font-bold text-slate-700 select-all font-mono tracking-wider w-20 truncate">
-                              {isPassVisible ? plainPass : '••••••••'}
-                            </span>
-                            <motion.button
-                              whileTap={{ scale: 0.9 }}
-                              type="button"
-                              onClick={() => togglePasswordVisibility(u.id)}
-                              className="p-1 rounded-lg text-slate-400 hover:text-slate-800 hover:bg-white transition-colors cursor-pointer"
-                              title={isPassVisible ? 'Ocultar contraseña' : 'Ver contraseña'}
-                            >
-                              {isPassVisible ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                            </motion.button>
-                            {u.password_plain && (
-                              <motion.button
-                                whileTap={{ scale: 0.9 }}
-                                type="button"
-                                onClick={() => copyPassword(u.id, u.password_plain)}
-                                className={`p-1 rounded-lg transition-colors cursor-pointer ${
-                                  copiedId === u.id ? 'text-emerald-600 bg-emerald-50' : 'text-slate-400 hover:text-slate-800 hover:bg-white'
-                                }`}
-                                title="Copiar contraseña"
-                              >
-                                {copiedId === u.id ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-                              </motion.button>
-                            )}
+                        {/* 3. Permisos (Resumen Claro, sin saturar la fila) */}
+                        <td className="py-3.5 px-4">
+                          <div
+                            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-[11px] font-bold cursor-default ${permSummary.badgeClass}`}
+                            title={permSummary.tooltip}
+                          >
+                            <SummaryIcon className="w-3.5 h-3.5 shrink-0" />
+                            <span>{permSummary.label}</span>
                           </div>
                         </td>
 
-                        {/* 4. Matriz de Permisos por Módulos */}
-                        <td className="py-3.5 px-4">
-                          {u.rol === 'admin' ? (
-                            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-purple-50 text-purple-700 border border-purple-200/80">
-                              <ShieldCheck className="w-3.5 h-3.5" />
-                              <span className="text-[11px] font-extrabold tracking-wide">Acceso Total a todos los módulos</span>
-                            </div>
-                          ) : (
-                            <div className="flex items-center gap-2">
-                              <div className="flex items-center gap-1 bg-slate-50 p-1 rounded-xl border border-slate-200/70">
-                                {MODULOS_INFO.map(mod => {
-                                  const level = getPermLevel(u, mod.key);
-                                  const Icon = mod.icon;
-                                  const isEdit = level === 'escritura' || level === 'admin';
-                                  const isRead = level === 'lectura';
-
-                                  return (
-                                    <div
-                                      key={mod.key}
-                                      className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all ${
-                                        isEdit
-                                          ? 'bg-emerald-500 text-white shadow-2xs'
-                                          : isRead
-                                          ? 'bg-blue-500 text-white shadow-2xs'
-                                          : 'bg-transparent text-slate-300 opacity-40'
-                                      }`}
-                                      title={`${mod.label}: ${isEdit ? 'Edición total' : isRead ? 'Solo lectura' : 'Sin acceso'}`}
-                                    >
-                                      <Icon className="w-3.5 h-3.5" />
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                              <span className="text-[10px] font-bold text-slate-500 whitespace-nowrap">
-                                {countActiveModules(u)} de 6 activos
-                              </span>
-                            </div>
-                          )}
-                        </td>
-
-                        {/* 5. Estado */}
+                        {/* 4. Estado */}
                         <td className="py-3.5 px-4 text-center whitespace-nowrap">
                           <motion.button
                             whileTap={{ scale: 0.94 }}
@@ -664,19 +723,35 @@ export default function UsersView() {
                           </motion.button>
                         </td>
 
-                        {/* 6. Acciones */}
-                        <td className="py-3.5 px-5 text-right whitespace-nowrap">
+                        {/* 5. Acciones: Clave, Editar, Eliminar */}
+                        <td className="py-3.5 px-6 text-right whitespace-nowrap">
                           <div className="flex items-center justify-end gap-1.5">
+                            
+                            {/* Botón de Clave y Credenciales */}
+                            <motion.button
+                              whileHover={{ scale: 1.03 }}
+                              whileTap={{ scale: 0.95 }}
+                              onClick={() => openCredentials(u)}
+                              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-bold transition-colors cursor-pointer"
+                              title="Ver credenciales o restablecer contraseña"
+                            >
+                              <KeyRound className="w-3.5 h-3.5 text-amber-600" />
+                              <span className="hidden sm:inline">Contraseña</span>
+                            </motion.button>
+
+                            {/* Botón de Editar Usuario & Permisos */}
                             <motion.button
                               whileHover={{ scale: 1.03 }}
                               whileTap={{ scale: 0.95 }}
                               onClick={() => openEdit(u)}
-                              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-bold transition-colors cursor-pointer"
-                              title="Editar usuario y permisos"
+                              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-colors cursor-pointer shadow-2xs"
+                              title="Editar rol y matriz de permisos"
                             >
-                              <Pencil className="w-3.5 h-3.5 text-slate-500" />
+                              <Pencil className="w-3.5 h-3.5" />
                               <span className="hidden sm:inline">Editar</span>
                             </motion.button>
+
+                            {/* Botón Eliminar */}
                             <motion.button
                               whileHover={{ scale: 1.05 }}
                               whileTap={{ scale: 0.9 }}
@@ -699,7 +774,7 @@ export default function UsersView() {
           </div>
         )}
 
-        {/* ========== CONTENIDO: VISTA FICHAS / TARJETAS ========== */}
+        {/* ========== VISTA FICHAS / TARJETAS ========== */}
         {viewMode === 'tarjetas' && (
           <div className="p-4 sm:p-5">
             {isLoading ? (
@@ -715,9 +790,9 @@ export default function UsersView() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                 {filteredUsers.map((u) => {
-                  const isPassVisible = !!visiblePasswords[u.id];
-                  const plainPass = u.password_plain || '(Sin clave)';
                   const isCurrent = currentUser.username?.toLowerCase() === u.username.toLowerCase();
+                  const permSummary = getPermissionsSummary(u);
+                  const SummaryIcon = permSummary.icon;
 
                   return (
                     <motion.div
@@ -765,41 +840,25 @@ export default function UsersView() {
                           </motion.button>
                         </div>
 
-                        {/* Fila de Rol y Contraseña */}
-                        <div className="flex items-center justify-between gap-2 py-2.5 border-y border-slate-100 text-xs">
-                          <div>{renderRoleBadge(u.rol)}</div>
-
-                          <div className="inline-flex items-center gap-1 px-2 py-1 rounded-xl bg-slate-50 border border-slate-200/80">
-                            <span className="text-xs font-bold text-slate-700 select-all font-mono tracking-wider">
-                              {isPassVisible ? plainPass : '••••••••'}
-                            </span>
-                            <motion.button
-                              whileTap={{ scale: 0.9 }}
-                              type="button"
-                              onClick={() => togglePasswordVisibility(u.id)}
-                              className="p-0.5 text-slate-400 hover:text-slate-800 cursor-pointer"
-                              title="Ver / Ocultar"
-                            >
-                              {isPassVisible ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
-                            </motion.button>
-                            {u.password_plain && (
-                              <motion.button
-                                whileTap={{ scale: 0.9 }}
-                                type="button"
-                                onClick={() => copyPassword(u.id, u.password_plain)}
-                                className="p-0.5 text-slate-400 hover:text-slate-800 cursor-pointer"
-                                title="Copiar contraseña"
-                              >
-                                {copiedId === u.id ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
-                              </motion.button>
-                            )}
+                        {/* Rol y Nivel de Acceso */}
+                        <div className="py-2.5 border-y border-slate-100 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Rol</span>
+                            <div>{renderRoleBadge(u.rol)}</div>
+                          </div>
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Permisos</span>
+                            <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl border text-[10px] font-bold ${permSummary.badgeClass}`}>
+                              <SummaryIcon className="w-3 h-3 shrink-0" />
+                              <span>{permSummary.label}</span>
+                            </div>
                           </div>
                         </div>
 
-                        {/* Matriz de Permisos */}
+                        {/* Módulos en cuadrícula limpia */}
                         <div className="py-3">
                           <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block mb-2">
-                            Acceso a Módulos ({countActiveModules(u)} de 6)
+                            Resumen de Módulos
                           </span>
 
                           {u.rol === 'admin' ? (
@@ -810,14 +869,14 @@ export default function UsersView() {
                           ) : (
                             <div className="grid grid-cols-2 gap-1.5">
                               {MODULOS_INFO.map(mod => {
-                                const level = getPermLevel(u, mod.key);
+                                const level = (u.permisos as any)?.[mod.key] || 'ninguno';
                                 const isEdit = level === 'escritura' || level === 'admin';
                                 const isRead = level === 'lectura';
 
                                 return (
                                   <div
                                     key={mod.key}
-                                    className={`px-2.5 py-1.5 rounded-xl border flex items-center justify-between text-[11px] font-bold ${
+                                    className={`px-2 py-1.5 rounded-xl border flex items-center justify-between text-[11px] font-bold ${
                                       isEdit
                                         ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
                                         : isRead
@@ -837,13 +896,22 @@ export default function UsersView() {
                         </div>
                       </div>
 
-                      {/* Pie de la ficha: Botones de acción */}
+                      {/* Pie de la ficha: Opciones */}
                       <div className="pt-3 mt-2 border-t border-slate-100 flex items-center justify-between gap-2">
+                        <motion.button
+                          whileTap={{ scale: 0.96 }}
+                          onClick={() => openCredentials(u)}
+                          className="px-3 py-2 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-bold transition-colors cursor-pointer flex items-center gap-1.5"
+                          title="Ver y restablecer contraseña"
+                        >
+                          <KeyRound className="w-3.5 h-3.5 text-amber-600" />
+                          <span>Clave</span>
+                        </motion.button>
                         <motion.button
                           whileHover={{ scale: 1.01 }}
                           whileTap={{ scale: 0.97 }}
                           onClick={() => openEdit(u)}
-                          className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-colors cursor-pointer"
+                          className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-colors cursor-pointer shadow-2xs"
                         >
                           <Pencil className="w-3.5 h-3.5" />
                           <span>Editar Permisos</span>
@@ -869,12 +937,173 @@ export default function UsersView() {
 
       </div>
 
-      {/* ========== MODAL DE CREACIÓN / EDICIÓN ========== */}
+      {/* ======================================================== */}
+      {/* MODAL 1: GESTIÓN DE CREDENCIALES & RESET PASSWORD        */}
+      {/* ======================================================== */}
       <AnimatePresence>
-        {showModal && (
+        {credentialsUser && (
           <div
             className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-3 sm:p-4 overflow-y-auto"
-            onClick={closeModal}
+            onClick={closeCredentials}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0, y: 12 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 12 }}
+              transition={SPRING_FAST}
+              className="bg-white rounded-[2rem] w-full max-w-md overflow-hidden shadow-2xl border border-slate-200"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header Modal */}
+              <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center border border-amber-200/60">
+                    <KeyRound className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h2 className="text-base font-extrabold text-slate-900">
+                      Credenciales de Acceso
+                    </h2>
+                    <p className="text-xs font-medium text-slate-500">
+                      Usuario: <span className="font-bold text-slate-900">{credentialsUser.username}</span>
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={closeCredentials}
+                  className="w-8 h-8 rounded-xl flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-slate-800 transition-colors cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="p-6 space-y-5">
+                
+                {/* 1. Tarjeta con credenciales actuales */}
+                <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200/80 space-y-3">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block">
+                    Credenciales Actuales Registradas
+                  </span>
+
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-slate-500 font-semibold">Usuario:</span>
+                      <span className="font-mono font-extrabold text-slate-900 select-all">{credentialsUser.username}</span>
+                    </div>
+
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-slate-500 font-semibold">Contraseña:</span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-mono font-bold text-slate-900 select-all tracking-wider">
+                          {showCredPassword
+                            ? credentialsUser.password_plain || '(Sin contraseña registrada)'
+                            : '••••••••••••'}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setShowCredPassword(!showCredPassword)}
+                          className="p-1 rounded-lg text-slate-400 hover:text-slate-800 hover:bg-white transition-colors cursor-pointer"
+                          title="Ver / Ocultar"
+                        >
+                          {showCredPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                        </button>
+                        {credentialsUser.password_plain && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              navigator.clipboard.writeText(credentialsUser.password_plain!);
+                              showToast('Contraseña copiada al portapapeles');
+                            }}
+                            className="p-1 rounded-lg text-slate-400 hover:text-slate-800 hover:bg-white transition-colors cursor-pointer"
+                            title="Copiar contraseña sola"
+                          >
+                            <Copy className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Botón rápido para copiar credenciales para WhatsApp */}
+                  <motion.button
+                    whileTap={{ scale: 0.97 }}
+                    onClick={() => copyWhatsAppCredentials(credentialsUser)}
+                    className="w-full mt-2 inline-flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 text-xs font-bold text-slate-700 shadow-2xs transition-colors cursor-pointer"
+                  >
+                    <MessageCircle className="w-4 h-4 text-emerald-600" />
+                    <span>Copiar mensaje para enviar por WhatsApp</span>
+                  </motion.button>
+                </div>
+
+                {/* 2. Sección de Restablecimiento de Contraseña */}
+                <form onSubmit={handleResetPasswordSubmit} className="space-y-3 pt-2 border-t border-slate-100">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-extrabold text-slate-900 block">
+                      Restablecer Nueva Contraseña
+                    </label>
+                    <button
+                      type="button"
+                      onClick={generateRandomPassword}
+                      className="text-[11px] font-bold text-indigo-600 hover:text-indigo-800 inline-flex items-center gap-1 cursor-pointer"
+                      title="Generar una contraseña aleatoria sugerida"
+                    >
+                      <RefreshCw className="w-3 h-3" />
+                      <span>Sugerir clave</span>
+                    </button>
+                  </div>
+
+                  <input
+                    type="text"
+                    placeholder="Escribe la nueva contraseña..."
+                    value={resetPasswordInput}
+                    onChange={(e) => setResetPasswordInput(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-bold font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:bg-white shadow-2xs"
+                  />
+
+                  {resetError && (
+                    <p className="text-xs font-bold text-rose-600">{resetError}</p>
+                  )}
+
+                  {resetSuccess && (
+                    <p className="text-xs font-bold text-emerald-600 flex items-center gap-1">
+                      <Check className="w-3.5 h-3.5" />
+                      <span>¡Contraseña actualizada exitosamente!</span>
+                    </p>
+                  )}
+
+                  <div className="flex items-center gap-2.5 pt-2">
+                    <button
+                      type="button"
+                      onClick={closeCredentials}
+                      className="flex-1 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
+                    >
+                      Cerrar
+                    </button>
+                    <motion.button
+                      whileTap={{ scale: 0.96 }}
+                      type="submit"
+                      disabled={resetPasswordMutation.isPending || !resetPasswordInput.trim()}
+                      className="flex-1 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-xs font-bold text-white shadow-[0_4px_14px_rgba(15,23,42,0.18)] transition-all disabled:opacity-40 cursor-pointer"
+                    >
+                      {resetPasswordMutation.isPending ? 'Guardando...' : 'Cambiar Clave'}
+                    </motion.button>
+                  </div>
+                </form>
+
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ======================================================== */}
+      {/* MODAL 2: CREACIÓN / EDICIÓN ORGANIZADA POR PESTAÑAS      */}
+      {/* ======================================================== */}
+      <AnimatePresence>
+        {showEditModal && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-3 sm:p-4 overflow-y-auto"
+            onClick={() => setShowEditModal(false)}
           >
             <motion.div
               initial={{ scale: 0.95, opacity: 0, y: 12 }}
@@ -888,22 +1117,59 @@ export default function UsersView() {
               <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 shrink-0">
                 <div>
                   <h2 className="text-base font-extrabold text-slate-900">
-                    {editingUser ? `Editar Usuario: ${editingUser.username}` : 'Nuevo Usuario'}
+                    {editingUser ? `Editar: ${editingUser.username}` : 'Registrar Nuevo Usuario'}
                   </h2>
                   <p className="text-xs font-medium text-slate-500 mt-0.5">
-                    Asigna credenciales y personaliza los niveles de acceso por módulo.
+                    Configuración de perfil y matriz de permisos por sección.
                   </p>
                 </div>
                 <button
-                  onClick={closeModal}
+                  onClick={() => setShowEditModal(false)}
                   className="w-8 h-8 rounded-xl flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-slate-800 transition-colors cursor-pointer"
                 >
                   <X className="w-4 h-4" />
                 </button>
               </div>
 
+              {/* Pestañas de Navegación del Modal */}
+              <div className="px-6 pt-3 pb-1 border-b border-slate-100 bg-slate-50/50 flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setEditModalTab('datos')}
+                  className={`relative px-4 py-2 text-xs font-bold rounded-xl transition-colors cursor-pointer ${
+                    editModalTab === 'datos' ? 'text-slate-900' : 'text-slate-500 hover:text-slate-800'
+                  }`}
+                >
+                  {editModalTab === 'datos' && (
+                    <motion.div
+                      layoutId="activeEditModalTab"
+                      className="absolute inset-0 bg-white rounded-xl shadow-xs border border-slate-200/80"
+                      transition={{ type: 'spring', stiffness: 500, damping: 32 }}
+                    />
+                  )}
+                  <span className="relative z-10">1. Datos & Rol</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setEditModalTab('permisos')}
+                  className={`relative px-4 py-2 text-xs font-bold rounded-xl transition-colors cursor-pointer ${
+                    editModalTab === 'permisos' ? 'text-slate-900' : 'text-slate-500 hover:text-slate-800'
+                  }`}
+                >
+                  {editModalTab === 'permisos' && (
+                    <motion.div
+                      layoutId="activeEditModalTab"
+                      className="absolute inset-0 bg-white rounded-xl shadow-xs border border-slate-200/80"
+                      transition={{ type: 'spring', stiffness: 500, damping: 32 }}
+                    />
+                  )}
+                  <span className="relative z-10">2. Matriz de Permisos</span>
+                </button>
+              </div>
+
               {/* Formulario */}
-              <form onSubmit={handleSubmit} className="p-6 space-y-5 overflow-y-auto max-h-[calc(92vh-85px)] custom-scrollbar">
+              <form onSubmit={handleSubmit} className="p-6 space-y-5 overflow-y-auto max-h-[calc(92vh-130px)] custom-scrollbar">
                 {formError && (
                   <motion.div
                     initial={{ opacity: 0, y: -6 }}
@@ -914,164 +1180,185 @@ export default function UsersView() {
                   </motion.div>
                 )}
 
-                {/* Campos Principales */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-[11px] font-black text-slate-500 uppercase tracking-wider mb-1.5">
-                      Nombre de Usuario <span className="text-rose-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="Ej. GPastrana"
-                      value={formData.username}
-                      onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                      className="w-full bg-slate-50 hover:bg-slate-100/50 focus:bg-white border border-slate-200 focus:border-slate-400 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-900 focus:outline-none transition-all shadow-2xs"
-                    />
-                  </div>
+                {/* PESTAÑA 1: DATOS & ROL */}
+                {editModalTab === 'datos' && (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-[11px] font-black text-slate-500 uppercase tracking-wider mb-1.5">
+                          Nombre de Usuario <span className="text-rose-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          placeholder="Ej. GPastrana"
+                          value={formData.username}
+                          onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                          className="w-full bg-slate-50 hover:bg-slate-100/50 focus:bg-white border border-slate-200 focus:border-slate-400 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-900 focus:outline-none transition-all shadow-2xs"
+                        />
+                      </div>
 
-                  <div>
-                    <label className="block text-[11px] font-black text-slate-500 uppercase tracking-wider mb-1.5">
-                      Nombre Completo
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="Ej. Guadalupe Enrique Pastrana"
-                      value={formData.nombre_completo}
-                      onChange={(e) => setFormData({ ...formData, nombre_completo: e.target.value })}
-                      className="w-full bg-slate-50 hover:bg-slate-100/50 focus:bg-white border border-slate-200 focus:border-slate-400 rounded-xl px-3.5 py-2.5 text-xs font-semibold text-slate-900 focus:outline-none transition-all shadow-2xs"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-[11px] font-black text-slate-500 uppercase tracking-wider mb-1.5">
-                      Rol Principal &bull; Preset
-                    </label>
-                    <div className="relative">
-                      <select
-                        value={formData.rol}
-                        onChange={(e) => handleRoleChange(e.target.value)}
-                        className="w-full bg-slate-50 hover:bg-slate-100/70 focus:bg-white border border-slate-200 focus:border-slate-400 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 focus:outline-none transition-all cursor-pointer appearance-none pr-9 shadow-2xs"
-                      >
-                        {Object.entries(ROL_PRESETS).map(([key, info]) => (
-                          <option key={key} value={key}>{info.label}</option>
-                        ))}
-                      </select>
-                      <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-                        <ChevronDown className="w-4 h-4" />
+                      <div>
+                        <label className="block text-[11px] font-black text-slate-500 uppercase tracking-wider mb-1.5">
+                          Nombre Completo
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="Ej. Guadalupe Enrique Pastrana"
+                          value={formData.nombre_completo}
+                          onChange={(e) => setFormData({ ...formData, nombre_completo: e.target.value })}
+                          className="w-full bg-slate-50 hover:bg-slate-100/50 focus:bg-white border border-slate-200 focus:border-slate-400 rounded-xl px-3.5 py-2.5 text-xs font-semibold text-slate-900 focus:outline-none transition-all shadow-2xs"
+                        />
                       </div>
                     </div>
-                  </div>
 
-                  <div>
-                    <label className="block text-[11px] font-black text-slate-500 uppercase tracking-wider mb-1.5">
-                      {editingUser ? 'Nueva Contraseña' : 'Contraseña Asignada'} <span className="text-rose-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      required={!editingUser}
-                      placeholder={editingUser ? 'Dejar en blanco para conservar...' : 'Mínimo 4 caracteres...'}
-                      value={formData.password}
-                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                      className="w-full bg-slate-50 hover:bg-slate-100/50 focus:bg-white border border-slate-200 focus:border-slate-400 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-900 focus:outline-none font-mono transition-all shadow-2xs"
-                    />
-                  </div>
-                </div>
-
-                {/* MATRIZ DE PERMISOS POR MÓDULO CON SELECTORES SUAVES FLUIDOS */}
-                <div className="pt-2">
-                  <div className="flex items-center justify-between mb-2.5">
-                    <span className="text-[11px] font-black text-slate-700 uppercase tracking-wider block">
-                      Matriz de Permisos por Módulo
-                    </span>
-                    <span className="text-[10px] font-bold text-slate-400">
-                      Personaliza el nivel de cada sección
-                    </span>
-                  </div>
-
-                  <div className="space-y-2 bg-slate-50/70 p-3 rounded-2xl border border-slate-200/80">
-                    {MODULOS_INFO.map(mod => {
-                      const currentVal = (formData.permisos as any)[mod.key] || 'ninguno';
-                      const Icon = mod.icon;
-
-                      const options = [
-                        { value: 'ninguno', label: 'Sin Acceso', activeBg: 'bg-slate-900' },
-                        { value: 'lectura', label: 'Lectura', activeBg: 'bg-blue-600' },
-                        {
-                          value: mod.key === 'usuarios' ? 'admin' : 'escritura',
-                          label: mod.key === 'usuarios' ? 'Admin' : 'Edición',
-                          activeBg: 'bg-emerald-600'
-                        }
-                      ];
-
-                      return (
-                        <div
-                          key={mod.key}
-                          className="flex flex-col sm:flex-row sm:items-center justify-between p-2.5 rounded-xl bg-white border border-slate-200/60 hover:border-slate-300 transition-colors gap-2.5"
+                    <div>
+                      <label className="block text-[11px] font-black text-slate-500 uppercase tracking-wider mb-1.5">
+                        Rol Principal &bull; Preset
+                      </label>
+                      <div className="relative">
+                        <select
+                          value={formData.rol}
+                          onChange={(e) => handleRoleChange(e.target.value)}
+                          className="w-full bg-slate-50 hover:bg-slate-100/70 focus:bg-white border border-slate-200 focus:border-slate-400 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 focus:outline-none transition-all cursor-pointer appearance-none pr-9 shadow-2xs"
                         >
-                          <div className="flex items-center gap-2.5">
-                            <div className="w-8 h-8 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center shrink-0">
-                              <Icon className="w-4 h-4" />
-                            </div>
-                            <div>
-                              <span className="text-xs font-extrabold text-slate-900 block leading-tight">
-                                {mod.label}
-                              </span>
-                              <span className="text-[10px] text-slate-400 block leading-tight mt-0.5">
-                                {mod.desc}
-                              </span>
-                            </div>
-                          </div>
-
-                          {/* Control Segmentado Suave con Animación Spring */}
-                          <div className="relative flex items-center p-1 bg-slate-100/90 rounded-xl border border-slate-200/50 self-end sm:self-auto shadow-inner">
-                            {options.map((opt) => {
-                              const isOptionActive =
-                                opt.value === 'ninguno'
-                                  ? currentVal === 'ninguno'
-                                  : opt.value === 'lectura'
-                                  ? currentVal === 'lectura'
-                                  : currentVal === 'escritura' || currentVal === 'admin';
-
-                              return (
-                                <motion.button
-                                  key={opt.value}
-                                  type="button"
-                                  whileTap={{ scale: 0.94 }}
-                                  onClick={() => {
-                                    setFormData(prev => ({
-                                      ...prev,
-                                      permisos: { ...prev.permisos, [mod.key]: opt.value }
-                                    }));
-                                  }}
-                                  className={`relative px-3 py-1.5 text-[10px] font-black tracking-wide rounded-lg cursor-pointer transition-colors select-none ${
-                                    isOptionActive ? 'text-white' : 'text-slate-500 hover:text-slate-900'
-                                  }`}
-                                >
-                                  {isOptionActive && (
-                                    <motion.div
-                                      layoutId={`active-seg-${mod.key}`}
-                                      className={`absolute inset-0 rounded-lg shadow-2xs ${opt.activeBg}`}
-                                      transition={{ type: 'spring', stiffness: 500, damping: 32 }}
-                                    />
-                                  )}
-                                  <span className="relative z-10">{opt.label}</span>
-                                </motion.button>
-                              );
-                            })}
-                          </div>
+                          {Object.entries(ROL_PRESETS).map(([key, info]) => (
+                            <option key={key} value={key}>{info.label}</option>
+                          ))}
+                        </select>
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                          <ChevronDown className="w-4 h-4" />
                         </div>
-                      );
-                    })}
+                      </div>
+                      <p className="text-[11px] text-slate-400 mt-1">
+                        Al seleccionar un rol, los permisos sugeridos se aplican automáticamente en la pestaña de matriz.
+                      </p>
+                    </div>
+
+                    {/* Si es creación nueva, pide contraseña obligatoria */}
+                    {!editingUser ? (
+                      <div>
+                        <label className="block text-[11px] font-black text-slate-500 uppercase tracking-wider mb-1.5">
+                          Contraseña Inicial <span className="text-rose-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          placeholder="Mínimo 4 caracteres..."
+                          value={formData.password}
+                          onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                          className="w-full bg-slate-50 hover:bg-slate-100/50 focus:bg-white border border-slate-200 focus:border-slate-400 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-900 focus:outline-none font-mono transition-all shadow-2xs"
+                        />
+                      </div>
+                    ) : (
+                      <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200/80 flex items-center justify-between text-xs">
+                        <div>
+                          <span className="font-extrabold text-slate-800 block">Contraseña de Acceso</span>
+                          <span className="text-[11px] text-slate-400 block mt-0.5">
+                            La contraseña se gestiona con seguridad en el botón dedicado "Contraseña" de la tabla.
+                          </span>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                </div>
+                )}
+
+                {/* PESTAÑA 2: MATRIZ DE PERMISOS */}
+                {editModalTab === 'permisos' && (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-black text-slate-700 uppercase tracking-wider block">
+                        Control de Acceso por Módulo
+                      </span>
+                      <span className="text-[10px] font-bold text-slate-400">
+                        Selecciona el nivel para cada sección
+                      </span>
+                    </div>
+
+                    <div className="space-y-2 bg-slate-50/70 p-3 rounded-2xl border border-slate-200/80">
+                      {MODULOS_INFO.map(mod => {
+                        const currentVal = (formData.permisos as any)[mod.key] || 'ninguno';
+                        const Icon = mod.icon;
+
+                        const options = [
+                          { value: 'ninguno', label: 'Sin Acceso', activeBg: 'bg-slate-900' },
+                          { value: 'lectura', label: 'Lectura', activeBg: 'bg-blue-600' },
+                          {
+                            value: mod.key === 'usuarios' ? 'admin' : 'escritura',
+                            label: mod.key === 'usuarios' ? 'Admin' : 'Edición',
+                            activeBg: 'bg-emerald-600'
+                          }
+                        ];
+
+                        return (
+                          <div
+                            key={mod.key}
+                            className="flex flex-col sm:flex-row sm:items-center justify-between p-2.5 rounded-xl bg-white border border-slate-200/60 hover:border-slate-300 transition-colors gap-2.5"
+                          >
+                            <div className="flex items-center gap-2.5">
+                              <div className="w-8 h-8 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center shrink-0">
+                                <Icon className="w-4 h-4" />
+                              </div>
+                              <div>
+                                <span className="text-xs font-extrabold text-slate-900 block leading-tight">
+                                  {mod.label}
+                                </span>
+                                <span className="text-[10px] text-slate-400 block leading-tight mt-0.5">
+                                  {mod.desc}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Control Segmentado Suave con Animación Spring */}
+                            <div className="relative flex items-center p-1 bg-slate-100/90 rounded-xl border border-slate-200/50 self-end sm:self-auto shadow-inner">
+                              {options.map((opt) => {
+                                const isOptionActive =
+                                  opt.value === 'ninguno'
+                                    ? currentVal === 'ninguno'
+                                    : opt.value === 'lectura'
+                                    ? currentVal === 'lectura'
+                                    : currentVal === 'escritura' || currentVal === 'admin';
+
+                                return (
+                                  <motion.button
+                                    key={opt.value}
+                                    type="button"
+                                    whileTap={{ scale: 0.94 }}
+                                    onClick={() => {
+                                      setFormData(prev => ({
+                                        ...prev,
+                                        permisos: { ...prev.permisos, [mod.key]: opt.value }
+                                      }));
+                                    }}
+                                    className={`relative px-3 py-1.5 text-[10px] font-black tracking-wide rounded-lg cursor-pointer transition-colors select-none ${
+                                      isOptionActive ? 'text-white' : 'text-slate-500 hover:text-slate-900'
+                                    }`}
+                                  >
+                                    {isOptionActive && (
+                                      <motion.div
+                                        layoutId={`active-seg-${mod.key}`}
+                                        className={`absolute inset-0 rounded-lg shadow-2xs ${opt.activeBg}`}
+                                        transition={{ type: 'spring', stiffness: 500, damping: 32 }}
+                                      />
+                                    )}
+                                    <span className="relative z-10">{opt.label}</span>
+                                  </motion.button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
 
                 {/* Botones de acción modal */}
                 <div className="flex items-center gap-3 pt-3 border-t border-slate-100">
                   <motion.button
                     whileTap={{ scale: 0.96 }}
                     type="button"
-                    onClick={closeModal}
+                    onClick={() => setShowEditModal(false)}
                     className="flex-1 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
                   >
                     Cancelar
