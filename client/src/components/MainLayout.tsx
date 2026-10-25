@@ -51,19 +51,29 @@ export default function MainLayout({ children, activeModule: propActiveModule, o
     };
   }, [isSidebarOpen]);
 
-  const allNavItems = [
-    { id: 'inicio', label: 'Inicio', icon: 'M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z M9 22V12h6v10' },
-    { id: 'agenda', label: 'Agenda Pastoral', icon: 'M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10z' },
-    { id: 'finanzas', label: 'Finanzas', icon: 'M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6' },
-    { id: 'miembros', label: 'Miembros', icon: 'M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75' },
-    { id: 'cartelera', label: 'Cartelera Mensual', icon: 'M4 5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5zm0 6a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-7zm10 0a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1v-7z' },
-    { id: 'cumpleaneros', label: 'Cumpleañeros', icon: 'M20 12v10H4V12 M2 7h20v5H2z M12 22V7 M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z' },
-    { id: 'bautismos', label: 'Fe de Bautismo', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' },
-    { id: 'equipo', label: 'Equipo Pastoral', icon: 'M12 2a3 3 0 1 0 0 6 3 3 0 0 0 0-6z M6 16a3 3 0 1 0 0 6 3 3 0 0 0 0-6z M18 16a3 3 0 1 0 0 6 3 3 0 0 0 0-6z M12 8v4 M12 12l-6 4 M12 12l6 4' },
-    { id: 'eventos', label: 'Rifas & Eventos', icon: 'M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v2z M13 5v2 M13 11v2 M13 17v2' },
-    { id: 'usuarios', label: 'Usuarios', icon: 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z' },
-    { id: 'perfil', label: 'Mi Perfil', icon: 'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z' },
-    { id: 'info', label: 'App Info', icon: 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z' }
+  interface NavItem {
+    id: string;
+    label: string;
+    section: 'principal' | 'congregacion' | 'sistema';
+    icon: string;
+  }
+
+  const allNavItems: NavItem[] = [
+    // Gestión Principal
+    { id: 'inicio', label: 'Inicio', section: 'principal', icon: 'M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z M9 22V12h6v10' },
+    { id: 'agenda', label: 'Agenda Pastoral', section: 'principal', icon: 'M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10z' },
+    { id: 'finanzas', label: 'Finanzas', section: 'principal', icon: 'M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6' },
+    { id: 'cartelera', label: 'Cartelera Mensual', section: 'principal', icon: 'M4 5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5zm0 6a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-7zm10 0a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1v-7z' },
+    // Congregación y Ministerios
+    { id: 'miembros', label: 'Miembros', section: 'congregacion', icon: 'M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75' },
+    { id: 'cumpleaneros', label: 'Cumpleañeros', section: 'congregacion', icon: 'M20 12v10H4V12 M2 7h20v5H2z M12 22V7 M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z' },
+    { id: 'bautismos', label: 'Fe de Bautismo', section: 'congregacion', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' },
+    { id: 'equipo', label: 'Equipo Pastoral', section: 'congregacion', icon: 'M12 2a3 3 0 1 0 0 6 3 3 0 0 0 0-6z M6 16a3 3 0 1 0 0 6 3 3 0 0 0 0-6z M18 16a3 3 0 1 0 0 6 3 3 0 0 0 0-6z M12 8v4 M12 12l-6 4 M12 12l6 4' },
+    { id: 'eventos', label: 'Rifas & Eventos', section: 'congregacion', icon: 'M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v2z M13 5v2 M13 11v2 M13 17v2' },
+    // Sistema & Configuración
+    { id: 'usuarios', label: 'Usuarios & Permisos', section: 'sistema', icon: 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z' },
+    { id: 'perfil', label: 'Mi Perfil', section: 'sistema', icon: 'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z' },
+    { id: 'info', label: 'App Info', section: 'sistema', icon: 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z' }
   ];
 
   const handleNav = (moduleId: string) => {
@@ -113,79 +123,154 @@ export default function MainLayout({ children, activeModule: propActiveModule, o
         <div className="flex flex-col h-full glass-panel rounded-[2rem] overflow-hidden">
           
           {/* Brand Header */}
-          <div className="flex h-24 items-center px-7 border-b border-white/60">
-            <div className="p-2 rounded-2xl bg-white/70 shadow-sm border border-white/80 shrink-0">
-              <img src="/LogoICLEB.svg" alt="Logo ICLEB" className="h-8 w-auto object-contain" />
+          <div className="flex h-20 items-center px-6 border-b border-slate-200/70 bg-white/40">
+            <div className="p-2 rounded-xl bg-white shadow-2xs border border-slate-200/80 shrink-0">
+              <img src="/LogoICLEB.svg" alt="Logo ICLEB" className="h-7 w-auto object-contain" />
             </div>
-            <div className="ml-3.5">
-              <span className="block text-base font-extrabold tracking-tight text-slate-900 leading-tight">Planner</span>
-              <span className="block text-[10px] font-extrabold tracking-widest text-slate-400 uppercase leading-tight mt-0.5">Pastoral</span>
+            <div className="ml-3 flex-1 min-w-0">
+              <div className="flex items-center gap-1.5">
+                <span className="block text-sm font-black tracking-tight text-slate-900 leading-tight">Planner Pastoral</span>
+                <span className="text-[9px] font-black uppercase text-indigo-700 bg-indigo-50 border border-indigo-200 px-1.5 py-0.2 rounded">v2.4</span>
+              </div>
+              <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-tight mt-0.5">ICLEB</span>
             </div>
           </div>
 
           {/* Navigation */}
-          <div className="flex-1 px-3.5 py-6 overflow-y-auto custom-scrollbar">
-            <p className="px-3 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-3">Menú Principal</p>
-            <nav className="space-y-1.5">
-              {navItems.map((item) => {
-                const isActive = currentModule === item.id;
-                return (
-                  <button
-                    key={item.id}
-                    onClick={() => handleNav(item.id)}
-                    className={`group flex w-full items-center rounded-2xl px-4 py-3 text-sm font-semibold transition-all duration-200 cursor-pointer ${
-                      isActive 
-                        ? 'bg-slate-900 text-white shadow-[0_4px_14px_rgba(15,23,42,0.18)]' 
-                        : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
-                    }`}
-                  >
-                    <svg 
-                      xmlns="http://www.w3.org/2000/svg" 
-                      viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={isActive ? "2.5" : "2"} strokeLinecap="round" strokeLinejoin="round" 
-                      className={`mr-3.5 h-4.5 w-4.5 transition-transform duration-200 ${isActive ? 'scale-110 text-white' : 'text-slate-400 group-hover:text-slate-900 group-hover:scale-105'}`}
+          <div className="flex-1 px-3 py-4 overflow-y-auto custom-scrollbar space-y-4">
+            {/* Sección: Principal */}
+            <div>
+              <p className="px-3 text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1.5">Principal</p>
+              <nav className="space-y-1">
+                {navItems.filter(item => item.section === 'principal').map((item) => {
+                  const isActive = currentModule === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => handleNav(item.id)}
+                      className={`group flex w-full items-center rounded-xl px-3 py-2 text-xs font-bold transition-all duration-150 cursor-pointer ${
+                        isActive 
+                          ? 'bg-slate-900 text-white shadow-2xs' 
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/80'
+                      }`}
                     >
-                      <path d={item.icon}></path>
-                    </svg>
-                    {item.label}
-                  </button>
-                );
-              })}
-            </nav>
+                      <svg 
+                        xmlns="http://www.w3.org/2000/svg" 
+                        viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={isActive ? "2.5" : "2"} strokeLinecap="round" strokeLinejoin="round" 
+                        className={`mr-3 h-4 w-4 shrink-0 transition-transform ${isActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-900'}`}
+                      >
+                        <path d={item.icon}></path>
+                      </svg>
+                      <span className="truncate">{item.label}</span>
+                    </button>
+                  );
+                })}
+              </nav>
+            </div>
+
+            {/* Sección: Congregación */}
+            <div>
+              <p className="px-3 text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1.5">Congregación</p>
+              <nav className="space-y-1">
+                {navItems.filter(item => item.section === 'congregacion').map((item) => {
+                  const isActive = currentModule === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => handleNav(item.id)}
+                      className={`group flex w-full items-center rounded-xl px-3 py-2 text-xs font-bold transition-all duration-150 cursor-pointer ${
+                        isActive 
+                          ? 'bg-slate-900 text-white shadow-2xs' 
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/80'
+                      }`}
+                    >
+                      <svg 
+                        xmlns="http://www.w3.org/2000/svg" 
+                        viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={isActive ? "2.5" : "2"} strokeLinecap="round" strokeLinejoin="round" 
+                        className={`mr-3 h-4 w-4 shrink-0 transition-transform ${isActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-900'}`}
+                      >
+                        <path d={item.icon}></path>
+                      </svg>
+                      <span className="truncate">{item.label}</span>
+                    </button>
+                  );
+                })}
+              </nav>
+            </div>
+
+            {/* Sección: Sistema */}
+            <div>
+              <p className="px-3 text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1.5">Sistema</p>
+              <nav className="space-y-1">
+                {navItems.filter(item => item.section === 'sistema').map((item) => {
+                  const isActive = currentModule === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => handleNav(item.id)}
+                      className={`group flex w-full items-center rounded-xl px-3 py-2 text-xs font-bold transition-all duration-150 cursor-pointer ${
+                        isActive 
+                          ? 'bg-slate-900 text-white shadow-2xs' 
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/80'
+                      }`}
+                    >
+                      <svg 
+                        xmlns="http://www.w3.org/2000/svg" 
+                        viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={isActive ? "2.5" : "2"} strokeLinecap="round" strokeLinejoin="round" 
+                        className={`mr-3 h-4 w-4 shrink-0 transition-transform ${isActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-900'}`}
+                      >
+                        <path d={item.icon}></path>
+                      </svg>
+                      <span className="truncate">{item.label}</span>
+                    </button>
+                  );
+                })}
+              </nav>
+            </div>
           </div>
           
           {/* User Footer */}
-          <div className="p-3.5 mt-auto border-t border-white/60">
-            <div className="glass-panel-subtle rounded-2xl p-3.5 flex flex-col gap-3">
-              <button 
-                onClick={() => handleNav('perfil')}
-                className="flex items-center gap-3 text-left hover:opacity-80 transition-opacity cursor-pointer group"
-              >
-                <div className="w-10 h-10 rounded-xl bg-slate-900 text-white shadow-sm border border-slate-700 flex items-center justify-center font-extrabold text-xs shrink-0 group-hover:scale-105 transition-transform">
-                  {user.username?.substring(0, 2).toUpperCase() || 'US'}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-slate-900 truncate leading-tight group-hover:text-indigo-600 transition-colors">{user.username || 'Usuario'}</p>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-0.5 leading-tight">{user.rol || 'Rol'}</p>
-                </div>
-              </button>
-              
-              <button 
-                onClick={() => handleNav('login')}
-                className="group flex w-full items-center justify-center gap-2 rounded-xl bg-white/70 hover:bg-rose-50 px-3 py-2 text-xs font-bold text-rose-500 hover:text-rose-600 transition-colors border border-white shadow-xs cursor-pointer"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="transition-transform group-hover:-translate-x-0.5">
-                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                  <polyline points="16 17 21 12 16 7"></polyline>
-                  <line x1="21" y1="12" x2="9" y2="12"></line>
-                </svg>
-                Cerrar Sesión
-              </button>
+          <div className="p-3 mt-auto border-t border-slate-200/70 bg-white/50 backdrop-blur-sm">
+            <div className="rounded-2xl p-2.5 flex flex-col gap-2">
+              <div className="flex items-center justify-between gap-2">
+                <button 
+                  onClick={() => handleNav('perfil')}
+                  className="flex items-center gap-2.5 text-left hover:opacity-85 transition-opacity cursor-pointer group min-w-0"
+                >
+                  <div className="relative">
+                    <div className="w-8 h-8 rounded-xl bg-slate-900 text-white shadow-2xs border border-slate-700 flex items-center justify-center font-extrabold text-[11px] shrink-0">
+                      {user.username?.substring(0, 2).toUpperCase() || 'US'}
+                    </div>
+                    <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-500 border border-white"></span>
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-slate-900 truncate leading-tight group-hover:text-indigo-600 transition-colors">
+                      {user.username || 'Usuario'}
+                    </p>
+                    <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mt-0.5 leading-tight">
+                      {user.rol || 'Rol'}
+                    </p>
+                  </div>
+                </button>
 
-              <div className="flex items-center justify-between px-1 pt-1 text-[10px] text-slate-400 font-semibold border-t border-slate-200/50">
+                <button 
+                  onClick={() => handleNav('login')}
+                  title="Cerrar Sesión"
+                  className="w-8 h-8 rounded-xl flex items-center justify-center text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors border border-transparent hover:border-rose-100 cursor-pointer shrink-0"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                    <polyline points="16 17 21 12 16 7"></polyline>
+                    <line x1="21" y1="12" x2="9" y2="12"></line>
+                  </svg>
+                </button>
+              </div>
+
+              <div className="flex items-center justify-between px-1 pt-1.5 text-[10px] text-slate-400 font-semibold border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => handleNav('info')}
-                  className="hover:text-indigo-600 transition-colors cursor-pointer flex items-center gap-1 font-bold text-slate-500"
+                  className="hover:text-indigo-600 transition-colors cursor-pointer font-bold text-slate-500"
                 >
                   <span>v2.4 &bull; App Info</span>
                 </button>
@@ -236,30 +321,87 @@ export default function MainLayout({ children, activeModule: propActiveModule, o
             </div>
 
             {/* Drawer Nav Items */}
-            <div className="flex-1 overflow-y-auto px-4 py-5 custom-scrollbar bg-white">
-              <p className="px-3 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-3">Módulos</p>
-              <nav className="space-y-1.5">
-                {navItems.map((item) => {
-                  const isActive = currentModule === item.id;
-                  return (
-                    <button
-                      key={item.id}
-                      type="button"
-                      onClick={() => handleNav(item.id)}
-                      className={`flex w-full items-center rounded-2xl px-4 py-3 text-sm font-semibold transition-colors duration-150 cursor-pointer touch-manipulation select-none ${
-                        isActive 
-                          ? 'bg-slate-900 text-white shadow-md shadow-slate-900/10' 
-                          : 'text-slate-600 hover:bg-slate-100 active:bg-slate-100 hover:text-slate-900'
-                      }`}
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={isActive ? "2.5" : "2"} strokeLinecap="round" strokeLinejoin="round" className="mr-3.5 h-5 w-5">
-                        <path d={item.icon}></path>
-                      </svg>
-                      {item.label}
-                    </button>
-                  );
-                })}
-              </nav>
+            <div className="flex-1 overflow-y-auto px-4 py-4 custom-scrollbar bg-white space-y-4">
+              {/* Sección: Principal */}
+              <div>
+                <p className="px-3 text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1.5">Principal</p>
+                <nav className="space-y-1">
+                  {navItems.filter(item => item.section === 'principal').map((item) => {
+                    const isActive = currentModule === item.id;
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => handleNav(item.id)}
+                        className={`flex w-full items-center rounded-xl px-3.5 py-2.5 text-xs font-bold transition-colors cursor-pointer touch-manipulation select-none ${
+                          isActive 
+                            ? 'bg-slate-900 text-white shadow-2xs' 
+                            : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                        }`}
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={isActive ? "2.5" : "2"} strokeLinecap="round" strokeLinejoin="round" className="mr-3 h-4 w-4 shrink-0">
+                          <path d={item.icon}></path>
+                        </svg>
+                        <span>{item.label}</span>
+                      </button>
+                    );
+                  })}
+                </nav>
+              </div>
+
+              {/* Sección: Congregación */}
+              <div>
+                <p className="px-3 text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1.5">Congregación</p>
+                <nav className="space-y-1">
+                  {navItems.filter(item => item.section === 'congregacion').map((item) => {
+                    const isActive = currentModule === item.id;
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => handleNav(item.id)}
+                        className={`flex w-full items-center rounded-xl px-3.5 py-2.5 text-xs font-bold transition-colors cursor-pointer touch-manipulation select-none ${
+                          isActive 
+                            ? 'bg-slate-900 text-white shadow-2xs' 
+                            : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                        }`}
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={isActive ? "2.5" : "2"} strokeLinecap="round" strokeLinejoin="round" className="mr-3 h-4 w-4 shrink-0">
+                          <path d={item.icon}></path>
+                        </svg>
+                        <span>{item.label}</span>
+                      </button>
+                    );
+                  })}
+                </nav>
+              </div>
+
+              {/* Sección: Sistema */}
+              <div>
+                <p className="px-3 text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1.5">Sistema</p>
+                <nav className="space-y-1">
+                  {navItems.filter(item => item.section === 'sistema').map((item) => {
+                    const isActive = currentModule === item.id;
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => handleNav(item.id)}
+                        className={`flex w-full items-center rounded-xl px-3.5 py-2.5 text-xs font-bold transition-colors cursor-pointer touch-manipulation select-none ${
+                          isActive 
+                            ? 'bg-slate-900 text-white shadow-2xs' 
+                            : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                        }`}
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={isActive ? "2.5" : "2"} strokeLinecap="round" strokeLinejoin="round" className="mr-3 h-4 w-4 shrink-0">
+                          <path d={item.icon}></path>
+                        </svg>
+                        <span>{item.label}</span>
+                      </button>
+                    );
+                  })}
+                </nav>
+              </div>
             </div>
 
             {/* Drawer User Footer */}

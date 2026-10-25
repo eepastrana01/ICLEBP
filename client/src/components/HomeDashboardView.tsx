@@ -1,6 +1,11 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { motion } from 'framer-motion';
+import { SPRING_FAST } from '../lib/animations';
+import { Button } from './ui/Button';
+import { Badge } from './ui/Badge';
+import { Card } from './ui/Card';
 import {
   Users,
   Calendar,
@@ -284,40 +289,42 @@ export default function HomeDashboardView() {
       )}
 
       {/* ======================================================== */}
-      {/* 1. CABECERA LIMPIA (Idéntica al estilo de Finanzas)     */}
+      {/* 1. CABECERA LIMPIA & ELEGANTE                            */}
       {/* ======================================================== */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-1">
         <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/70 border border-slate-200/80 shadow-2xs mb-2 backdrop-blur-md">
-            <span className="w-2 h-2 rounded-full bg-blue-600"></span>
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/80 border border-slate-200/80 shadow-2xs mb-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
             <span className="text-[11px] font-bold tracking-wider text-slate-600 uppercase">
-              Panel Pastoral &bull; El Buen Pastor
+              Planner Pastoral &bull; ICLEB
             </span>
           </div>
 
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">
             Resumen General
           </h1>
-          <p className="text-xs sm:text-sm font-medium text-slate-500 mt-0.5">
+          <p className="text-xs sm:text-sm font-medium text-slate-500 mt-0.5 capitalize">
             {fechaHoyFormateada}
           </p>
         </div>
 
         <div className="flex items-center gap-2 self-start sm:self-auto">
-          <button
+          <Button
+            variant="outline"
             onClick={() => navigate('/agenda')}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-2xl bg-white border border-slate-200/80 text-xs font-bold text-slate-700 hover:text-slate-900 hover:bg-slate-50 shadow-2xs transition-colors cursor-pointer"
+            className="shadow-2xs"
           >
-            <Calendar className="w-4 h-4 text-blue-600" />
-            <span>Agenda</span>
-          </button>
-          <button
+            <Calendar className="w-3.5 h-3.5 text-blue-600" />
+            <span>Ver Agenda</span>
+          </Button>
+          <Button
+            variant="default"
             onClick={() => navigate('/finanzas')}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-2xl bg-slate-900 text-white hover:bg-slate-800 text-xs font-bold shadow-[0_4px_14px_rgba(15,23,42,0.18)] transition-colors cursor-pointer"
+            className="shadow-xs"
           >
-            <Wallet className="w-4 h-4 text-white" />
+            <Wallet className="w-3.5 h-3.5 text-white" />
             <span>Finanzas</span>
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -327,9 +334,11 @@ export default function HomeDashboardView() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         
         {/* KPI 1: Finanzas del Mes */}
-        <div
+        <motion.div
+          whileHover={{ y: -2 }}
+          transition={SPRING_FAST}
           onClick={() => navigate('/finanzas')}
-          className="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-2xs hover:shadow-sm cursor-pointer transition-all flex flex-col justify-between"
+          className="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-2xs hover:shadow-xs cursor-pointer transition-all flex flex-col justify-between"
         >
           <div>
             <div className="flex items-center justify-between mb-2">
@@ -363,12 +372,14 @@ export default function HomeDashboardView() {
               </span>
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* KPI 2: Agenda de Actividades */}
-        <div
+        <motion.div
+          whileHover={{ y: -2 }}
+          transition={SPRING_FAST}
           onClick={() => navigate('/agenda')}
-          className="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-2xs hover:shadow-sm cursor-pointer transition-all flex flex-col justify-between"
+          className="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-2xs hover:shadow-xs cursor-pointer transition-all flex flex-col justify-between"
         >
           <div>
             <div className="flex items-center justify-between mb-2">
@@ -406,12 +417,14 @@ export default function HomeDashboardView() {
               </span>
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* KPI 3: Membresía */}
-        <div
+        <motion.div
+          whileHover={{ y: -2 }}
+          transition={SPRING_FAST}
           onClick={() => navigate('/miembros')}
-          className="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-2xs hover:shadow-sm cursor-pointer transition-all flex flex-col justify-between"
+          className="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-2xs hover:shadow-xs cursor-pointer transition-all flex flex-col justify-between"
         >
           <div>
             <div className="flex items-center justify-between mb-2">
@@ -449,12 +462,14 @@ export default function HomeDashboardView() {
               </span>
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* KPI 4: Cumpleaños del Mes */}
-        <div
+        <motion.div
+          whileHover={{ y: -2 }}
+          transition={SPRING_FAST}
           onClick={() => navigate('/cumpleaneros')}
-          className="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-2xs hover:shadow-sm cursor-pointer transition-all flex flex-col justify-between"
+          className="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-2xs hover:shadow-xs cursor-pointer transition-all flex flex-col justify-between"
         >
           <div>
             <div className="flex items-center justify-between mb-2">
@@ -488,8 +503,7 @@ export default function HomeDashboardView() {
               </div>
             )}
           </div>
-        </div>
-
+        </motion.div>
       </div>
 
       {/* ======================================================== */}
@@ -498,7 +512,7 @@ export default function HomeDashboardView() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         
         {/* Columna Izquierda: Próximas Actividades */}
-        <div className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200/80 shadow-2xs flex flex-col justify-between">
+        <Card className="p-5 sm:p-6 flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
               <div className="flex items-center gap-2.5">
@@ -515,25 +529,29 @@ export default function HomeDashboardView() {
                 </div>
               </div>
 
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => navigate('/agenda')}
-                className="text-xs font-bold text-blue-700 hover:text-blue-900 flex items-center gap-1 cursor-pointer"
+                className="text-xs text-blue-700 hover:text-blue-900 hover:bg-blue-50/60 font-bold"
               >
                 <span>Ver Todas</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
+                <ArrowRight className="w-3.5 h-3.5 ml-1" />
+              </Button>
             </div>
 
             {proximasActividades.length === 0 ? (
               <div className="py-10 text-center text-slate-400">
                 <Calendar className="w-8 h-8 mx-auto mb-2 text-slate-300" />
                 <p className="text-xs font-bold text-slate-600">No hay actividades próximas pendientes</p>
-                <button
+                <Button
+                  variant="subtle"
+                  size="sm"
                   onClick={() => navigate('/agenda')}
-                  className="mt-2 text-xs font-bold text-blue-700 hover:underline cursor-pointer"
+                  className="mt-3 text-blue-700 font-bold"
                 >
                   + Programar actividad en Agenda
-                </button>
+                </Button>
               </div>
             ) : (
               <div className="space-y-2.5">
@@ -548,11 +566,11 @@ export default function HomeDashboardView() {
                     <div
                       key={act.id}
                       onClick={() => navigate('/agenda')}
-                      className="p-3 rounded-2xl bg-slate-50 hover:bg-slate-100/80 border border-slate-200/60 flex items-center justify-between gap-3 transition-colors cursor-pointer"
+                      className="p-3 rounded-2xl bg-slate-50/70 hover:bg-slate-100/80 border border-slate-200/60 flex items-center justify-between gap-3 transition-colors cursor-pointer group"
                     >
                       <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-11 h-11 rounded-xl bg-slate-900 text-white flex flex-col items-center justify-center shrink-0">
-                          <span className="text-sm font-black leading-none">{dia}</span>
+                        <div className="w-10 h-10 rounded-xl bg-slate-900 text-white flex flex-col items-center justify-center shrink-0 shadow-2xs group-hover:scale-105 transition-transform">
+                          <span className="text-xs font-black leading-none">{dia}</span>
                           <span className="text-[8px] font-extrabold uppercase mt-0.5 opacity-80 leading-none">
                             {mes}
                           </span>
@@ -568,9 +586,9 @@ export default function HomeDashboardView() {
                         </div>
                       </div>
 
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-lg bg-amber-50 text-amber-700 border border-amber-200 shrink-0">
+                      <Badge variant="warning" className="shrink-0 text-[10px]">
                         Pendiente
-                      </span>
+                      </Badge>
                     </div>
                   );
                 })}
@@ -580,18 +598,20 @@ export default function HomeDashboardView() {
 
           <div className="pt-3 mt-4 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
             <span>Cartelera mural del mes para imprimir</span>
-            <button
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => navigate('/cartelera')}
-              className="font-bold text-slate-900 hover:text-blue-700 flex items-center gap-1 cursor-pointer"
+              className="text-slate-900 hover:text-blue-700 font-bold"
             >
               <span>Ir a Cartelera</span>
-              <ChevronRight className="w-3.5 h-3.5" />
-            </button>
+              <ChevronRight className="w-3.5 h-3.5 ml-1" />
+            </Button>
           </div>
-        </div>
+        </Card>
 
         {/* Columna Derecha: Cumpleaños de Esta Semana */}
-        <div className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200/80 shadow-2xs flex flex-col justify-between">
+        <Card className="p-5 sm:p-6 flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
               <div className="flex items-center gap-2.5">
@@ -608,13 +628,15 @@ export default function HomeDashboardView() {
                 </div>
               </div>
 
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => navigate('/cumpleaneros')}
-                className="text-xs font-bold text-rose-600 hover:text-rose-800 flex items-center gap-1 cursor-pointer"
+                className="text-xs text-rose-600 hover:text-rose-800 hover:bg-rose-50/60 font-bold"
               >
                 <span>Ver Todos</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
+                <ArrowRight className="w-3.5 h-3.5 ml-1" />
+              </Button>
             </div>
 
             {cumpleanerosEstaSemana.length === 0 ? (
@@ -633,12 +655,12 @@ export default function HomeDashboardView() {
                     className={`p-3 rounded-2xl border flex items-center justify-between gap-3 transition-colors ${
                       c.esHoy
                         ? 'bg-rose-50/60 border-rose-200'
-                        : 'bg-slate-50 border-slate-200/60'
+                        : 'bg-slate-50/70 border-slate-200/60'
                     }`}
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       <div
-                        className={`w-10 h-10 rounded-xl flex items-center justify-center text-xs font-black shrink-0 ${
+                        className={`w-10 h-10 rounded-xl flex items-center justify-center text-xs font-black shrink-0 shadow-2xs ${
                           c.esHoy ? 'bg-rose-500 text-white' : 'bg-slate-900 text-white'
                         }`}
                       >
@@ -651,9 +673,9 @@ export default function HomeDashboardView() {
                             {c.nombre}
                           </h4>
                           {c.esHoy && (
-                            <span className="text-[9px] font-black bg-rose-500 text-white px-1.5 py-0.2 rounded uppercase">
+                            <Badge variant="destructive" className="py-0 px-1.5 text-[9px]">
                               ¡Hoy!
-                            </span>
+                            </Badge>
                           )}
                         </div>
                         <p className="text-[10px] font-semibold text-slate-500 truncate mt-0.5">
@@ -662,14 +684,16 @@ export default function HomeDashboardView() {
                       </div>
                     </div>
 
-                    <button
+                    <Button
+                      variant="outline"
+                      size="sm"
                       onClick={() => handleCopyCongratulation(c.nombre, c.congregacion)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-700 hover:text-emerald-700 hover:border-emerald-300 transition-colors cursor-pointer shadow-2xs shrink-0"
+                      className="gap-1.5 text-xs text-slate-700 hover:text-emerald-700 hover:border-emerald-300 shrink-0 shadow-2xs"
                       title="Copiar felicitación para WhatsApp"
                     >
                       <MessageCircle className="w-3.5 h-3.5 text-emerald-600" />
                       <span className="hidden sm:inline">Saludar</span>
-                    </button>
+                    </Button>
                   </div>
                 ))}
               </div>
@@ -678,15 +702,17 @@ export default function HomeDashboardView() {
 
           <div className="pt-3 mt-4 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
             <span>Directorio e impresión mensual de cumpleaños</span>
-            <button
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => navigate('/cumpleaneros')}
-              className="font-bold text-slate-900 hover:text-rose-600 flex items-center gap-1 cursor-pointer"
+              className="text-slate-900 hover:text-rose-600 font-bold"
             >
               <span>Ver Módulo</span>
-              <ChevronRight className="w-3.5 h-3.5" />
-            </button>
+              <ChevronRight className="w-3.5 h-3.5 ml-1" />
+            </Button>
           </div>
-        </div>
+        </Card>
 
       </div>
 
@@ -696,9 +722,9 @@ export default function HomeDashboardView() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         
         {/* Asistencia de Culto Dominical */}
-        <div className="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-2xs flex items-center justify-between gap-4">
+        <Card className="p-5 flex items-center justify-between gap-4">
           <div className="flex items-center gap-4 min-w-0">
-            <div className="w-12 h-12 rounded-2xl bg-teal-50 text-teal-700 flex items-center justify-center shrink-0 border border-teal-100">
+            <div className="w-12 h-12 rounded-2xl bg-teal-50 text-teal-700 flex items-center justify-center shrink-0 border border-teal-100/80">
               <Users className="w-6 h-6" />
             </div>
             <div className="min-w-0">
@@ -718,18 +744,20 @@ export default function HomeDashboardView() {
             </div>
           </div>
 
-          <button
+          <Button
+            variant="outline"
+            size="sm"
             onClick={() => navigate('/finanzas')}
-            className="px-3.5 py-2 rounded-xl bg-slate-50 hover:bg-slate-100 text-xs font-bold text-slate-700 border border-slate-200 shrink-0 cursor-pointer"
+            className="shrink-0"
           >
             Ver Finanzas
-          </button>
-        </div>
+          </Button>
+        </Card>
 
         {/* Rifas y Eventos Especiales */}
-        <div className="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-2xs flex items-center justify-between gap-4">
+        <Card className="p-5 flex items-center justify-between gap-4">
           <div className="flex items-center gap-4 min-w-0">
-            <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-700 flex items-center justify-center shrink-0 border border-amber-100">
+            <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-700 flex items-center justify-center shrink-0 border border-amber-100/80">
               <Ticket className="w-6 h-6" />
             </div>
             <div className="min-w-0">
@@ -747,13 +775,15 @@ export default function HomeDashboardView() {
             </div>
           </div>
 
-          <button
+          <Button
+            variant="outline"
+            size="sm"
             onClick={() => navigate('/eventos')}
-            className="px-3.5 py-2 rounded-xl bg-slate-50 hover:bg-slate-100 text-xs font-bold text-slate-700 border border-slate-200 shrink-0 cursor-pointer"
+            className="shrink-0"
           >
             Ver Eventos
-          </button>
-        </div>
+          </Button>
+        </Card>
 
       </div>
 
