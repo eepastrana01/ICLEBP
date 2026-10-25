@@ -7,6 +7,9 @@ import { ConfirmModal, useConfirm } from './ConfirmModal';
 import { useNavigate } from 'react-router-dom';
 import { SPRING_SNAPPY, SPRING_FAST } from '../lib/animations';
 import { Gift, LayoutTemplate } from 'lucide-react';
+import { Button } from './ui/Button';
+import { Badge } from './ui/Badge';
+import { Card } from './ui/Card';
 import { ActivityModal, getCategoryTag, type Actividad } from './ActivityModal';
 
 interface Miembro { id: number; nombre: string; fecha_nacimiento: string; }
@@ -90,7 +93,7 @@ function AgendaTab({
       <div className="flex flex-wrap items-center justify-between gap-4">
         {/* Controles de lista */}
         <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 w-full sm:w-auto">
-          <div className="glass-panel-subtle flex items-center rounded-2xl p-1 gap-1 w-full sm:w-auto">
+          <div className="bg-slate-100 flex items-center rounded-2xl p-1 gap-1 w-full sm:w-auto border border-slate-200/80 shadow-2xs">
             {([1,2] as const).map(s => (
               <button key={s} onClick={() => setSemFilter(s)}
                 className={`relative flex-1 sm:flex-initial px-3 sm:px-4 py-2 rounded-xl text-[11px] sm:text-xs font-bold transition-colors text-center cursor-pointer ${
@@ -99,7 +102,7 @@ function AgendaTab({
                 {semFilter === s && (
                   <motion.div
                     layoutId="activeSemesterBadge"
-                    className="absolute inset-0 bg-white rounded-xl shadow-xs"
+                    className="absolute inset-0 bg-white rounded-xl shadow-2xs"
                     transition={IOS_SPRING_FAST}
                   />
                 )}
@@ -110,7 +113,7 @@ function AgendaTab({
 
           <div className="relative flex-1 sm:flex-initial">
             <select value={yearFilter} onChange={e => setYearFilter(Number(e.target.value))}
-              className="glass-input w-full sm:w-auto rounded-2xl px-4 py-2 text-xs font-bold text-slate-700 focus:outline-none cursor-pointer appearance-none pr-8">
+              className="w-full sm:w-auto h-10 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 cursor-pointer appearance-none pr-8 shadow-2xs">
               {[2024, 2025, 2026, 2027, 2028].map(y => (
                 <option key={y} value={y}>{y}</option>
               ))}
@@ -120,95 +123,103 @@ function AgendaTab({
         </div>
 
         <div className="flex items-center gap-2 sm:gap-2.5 w-full sm:w-auto justify-end">
-          <button
+          <Button
+            variant="outline"
             onClick={() => generarPDFActividades(filtered, yearFilter, semFilter)}
             disabled={filtered.length === 0}
-            className="glass-button-secondary flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 rounded-2xl px-3.5 sm:px-4 py-2.5 text-xs font-bold text-slate-700 disabled:opacity-40 cursor-pointer"
+            className="shadow-2xs"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            Exportar PDF
-          </button>
-          <button
+            <span>Exportar PDF</span>
+          </Button>
+          <Button
+            variant="outline"
             onClick={() => navigate('/cartelera')}
-            className="glass-button-secondary flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 rounded-2xl px-3.5 sm:px-4 py-2.5 text-xs font-bold text-blue-900 bg-blue-50/70 border border-blue-200/80 hover:bg-blue-100/80 transition-colors cursor-pointer"
+            className="text-blue-900 bg-blue-50/60 border-blue-200/80 hover:bg-blue-100/70 shadow-2xs"
             title="Diseñar e imprimir cartelera mural para la pizarra de anuncios"
           >
             <LayoutTemplate className="w-3.5 h-3.5 text-blue-800" />
-            Cartelera Mensual
-          </button>
+            <span>Cartelera Mensual</span>
+          </Button>
           {isAdmin && (
-            <motion.button
-              whileHover={{ scale: 1.02, y: -1 }}
-              whileTap={{ scale: 0.97 }}
-              transition={IOS_SPRING_FAST}
+            <Button
+              variant="default"
               onClick={() => onOpenCreate()}
-              className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 rounded-2xl bg-slate-900 px-4 sm:px-5 py-2.5 text-xs font-bold text-white shadow-[0_4px_14px_rgba(15,23,42,0.18)] hover:bg-slate-800 transition-colors cursor-pointer"
+              className="shadow-xs"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              Nueva Actividad
-            </motion.button>
+              <span>Nueva Actividad</span>
+            </Button>
           )}
         </div>
       </div>
 
       {/* Metric Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <motion.div whileHover={{ y: -3, scale: 1.005 }} transition={IOS_SPRING_FAST} className="glass-panel rounded-[1.75rem] p-5 flex items-center justify-between">
-          <div>
-            <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Total Planificadas</p>
-            <p className="text-2xl font-extrabold text-slate-900 mt-1">{total}</p>
-            <p className="text-[11px] font-medium text-slate-400 mt-0.5">{yearFilter} • {semFilter}er Semestre</p>
-          </div>
-          <div className="w-11 h-11 rounded-2xl bg-indigo-50/70 border border-indigo-100 flex items-center justify-center text-indigo-600 shadow-xs">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-          </div>
+        <motion.div whileHover={{ y: -2 }} transition={IOS_SPRING_FAST}>
+          <Card className="p-5 flex items-center justify-between">
+            <div>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Total Planificadas</p>
+              <p className="text-2xl font-black text-slate-900 mt-0.5">{total}</p>
+              <p className="text-[11px] font-semibold text-slate-400 mt-0.5">{yearFilter} • {semFilter}er Semestre</p>
+            </div>
+            <div className="w-11 h-11 rounded-2xl bg-indigo-50 border border-indigo-100/80 flex items-center justify-center text-indigo-600 shadow-2xs">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            </div>
+          </Card>
         </motion.div>
 
-        <motion.div whileHover={{ y: -3, scale: 1.005 }} transition={IOS_SPRING_FAST} className="glass-panel rounded-[1.75rem] p-5 flex items-center justify-between">
-          <div>
-            <p className="text-[10px] font-extrabold text-amber-600 uppercase tracking-widest">Pendientes</p>
-            <p className="text-2xl font-extrabold text-amber-600 mt-1">{pending}</p>
-            <p className="text-[11px] font-bold text-amber-500 mt-0.5">{total > 0 ? Math.round((pending/total)*100) : 0}% por realizar</p>
-          </div>
-          <div className="w-11 h-11 rounded-2xl bg-amber-50/80 border border-amber-100 flex items-center justify-center text-amber-600 shadow-xs">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-          </div>
+        <motion.div whileHover={{ y: -2 }} transition={IOS_SPRING_FAST}>
+          <Card className="p-5 flex items-center justify-between">
+            <div>
+              <p className="text-[10px] font-black text-amber-600 uppercase tracking-wider">Pendientes</p>
+              <p className="text-2xl font-black text-amber-600 mt-0.5">{pending}</p>
+              <p className="text-[11px] font-bold text-amber-600 mt-0.5">{total > 0 ? Math.round((pending/total)*100) : 0}% por realizar</p>
+            </div>
+            <div className="w-11 h-11 rounded-2xl bg-amber-50 border border-amber-100/80 flex items-center justify-center text-amber-600 shadow-2xs">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </div>
+          </Card>
         </motion.div>
 
-        <motion.div whileHover={{ y: -3, scale: 1.005 }} transition={IOS_SPRING_FAST} className="glass-panel rounded-[1.75rem] p-5 flex items-center justify-between">
-          <div className="w-full pr-3">
-            <div className="flex items-center justify-between">
-              <p className="text-[10px] font-extrabold text-emerald-600 uppercase tracking-widest">Progreso</p>
-              <span className="text-xs font-extrabold text-emerald-600">{progressPct}%</span>
+        <motion.div whileHover={{ y: -2 }} transition={IOS_SPRING_FAST}>
+          <Card className="p-5 flex items-center justify-between">
+            <div className="w-full pr-3">
+              <div className="flex items-center justify-between">
+                <p className="text-[10px] font-black text-emerald-600 uppercase tracking-wider">Progreso</p>
+                <Badge variant="success" className="text-[10px]">
+                  {progressPct}%
+                </Badge>
+              </div>
+              <p className="text-2xl font-black text-emerald-600 mt-0.5">{done} <span className="text-xs font-bold text-slate-400">/ {total}</span></p>
+              <div className="w-full h-2 rounded-full bg-emerald-100/70 overflow-hidden mt-2 border border-emerald-200/50">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${progressPct}%` }}
+                  transition={{ ...IOS_SPRING, stiffness: 260, damping: 28 }}
+                  className="h-full bg-emerald-500 rounded-full"
+                />
+              </div>
             </div>
-            <p className="text-2xl font-extrabold text-emerald-600 mt-1">{done} <span className="text-xs font-bold text-slate-400">/ {total} completadas</span></p>
-            <div className="w-full h-2 rounded-full bg-emerald-100/70 overflow-hidden mt-2 border border-emerald-200/50">
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: `${progressPct}%` }}
-                transition={{ ...IOS_SPRING, stiffness: 260, damping: 28 }}
-                className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full"
-              />
-            </div>
-          </div>
+          </Card>
         </motion.div>
       </div>
 
       {/* Timeline */}
-      <div className="glass-panel rounded-[2rem] p-6 sm:p-8">
+      <Card className="p-5 sm:p-7 shadow-2xs">
         {isLoading ? (
           <div className="py-20 text-center text-xs font-medium text-slate-400">Cargando cronograma congregacional...</div>
         ) : filtered.length === 0 ? (
           <div className="py-20 text-center">
-            <div className="mx-auto w-16 h-16 rounded-3xl bg-white/80 border border-white flex items-center justify-center mb-4 text-slate-400 shadow-sm">
+            <div className="mx-auto w-16 h-16 rounded-3xl bg-slate-50 border border-slate-100 flex items-center justify-center mb-4 text-slate-400 shadow-2xs">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
             </div>
-            <p className="text-base font-extrabold text-slate-800">Sin actividades planificadas</p>
+            <p className="text-base font-black text-slate-900">Sin actividades planificadas</p>
             <p className="text-xs font-medium text-slate-400 mt-1">No hay eventos registrados para el {semFilter}er semestre de {yearFilter}.</p>
             {isAdmin && (
-              <button onClick={() => onOpenCreate()} className="mt-4 px-4 py-2 rounded-xl bg-slate-900 text-white text-xs font-bold shadow-xs hover:bg-slate-800 transition-colors cursor-pointer">
+              <Button onClick={() => onOpenCreate()} className="mt-4 shadow-xs">
                 + Crear primera actividad
-              </button>
+              </Button>
             )}
           </div>
         ) : (
@@ -341,7 +352,7 @@ function AgendaTab({
             })}
           </div>
         )}
-      </div>
+      </Card>
 
       <ConfirmModal
         isOpen={confirmState.isOpen}
@@ -445,32 +456,34 @@ function CalendarTab({
   return (
     <div className="space-y-6">
       {/* Calendar Grid Container */}
-      <div className="glass-panel rounded-[2rem] overflow-hidden p-6 sm:p-7">
+      <Card className="overflow-hidden p-5 sm:p-7 shadow-2xs">
         
         {/* Calendar Header Controls */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-6 mb-6 border-b border-white/60 gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-6 mb-6 border-b border-slate-100 gap-4">
           <div className="flex items-center gap-3">
-            <h2 className="text-2xl font-black text-slate-900 tracking-tight">
+            <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
               {MONTH_NAMES[month]} <span className="text-slate-400 font-semibold">{year}</span>
             </h2>
             {isCurrentMonthToday && (
-              <span className="text-[10px] font-black uppercase tracking-widest bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-xl border border-emerald-200 shadow-2xs">
+              <Badge variant="success" className="text-[10px]">
                 Mes Actual
-              </span>
+              </Badge>
             )}
           </div>
 
           <div className="flex items-center gap-2">
             {!isCurrentMonthToday && (
-              <button 
+              <Button 
+                variant="outline"
+                size="sm"
                 onClick={goToToday} 
-                className="text-xs font-bold text-slate-700 bg-white/80 hover:bg-white border border-white px-3.5 py-2 rounded-xl transition-all shadow-xs cursor-pointer"
+                className="shadow-2xs"
               >
                 Hoy
-              </button>
+              </Button>
             )}
 
-            <div className="glass-panel-subtle inline-flex p-1 rounded-2xl gap-1">
+            <div className="bg-slate-100 inline-flex p-1 rounded-2xl gap-1 border border-slate-200/80 shadow-2xs">
               <button 
                 onClick={() => changeMonth(-1)}
                 className="w-8 h-8 rounded-xl flex items-center justify-center text-slate-600 hover:bg-white transition-colors cursor-pointer"
@@ -598,7 +611,7 @@ function CalendarTab({
             <Gift className="w-3.5 h-3.5 text-sky-500" /> Cumpleaños del día
           </span>
         </div>
-      </div>
+      </Card>
 
       {/* Interactive Day Inspector Drawer */}
       <AnimatePresence mode="wait">
@@ -608,90 +621,88 @@ function CalendarTab({
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: -8, scale: 0.99 }}
           transition={IOS_SPRING}
-          className="glass-panel-elevated rounded-[2rem] p-6 sm:p-7"
         >
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 mb-4 border-b border-white/70 gap-3">
-            <div>
-              <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 text-[10px] font-bold uppercase tracking-wider mb-1">
-                <span>Inspector del Día</span>
-              </div>
-              <h3 className="text-lg font-black text-slate-900">
-                {selectedDay} de {MONTH_NAMES[month]} {year}
-              </h3>
-            </div>
-
-            {isAdmin && (
-              <motion.button 
-                whileHover={{ scale: 1.02, y: -1 }}
-                whileTap={{ scale: 0.97 }}
-                transition={IOS_SPRING_FAST}
-                onClick={() => onOpenCreateWithDate(selectedDateStr)}
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-900 text-white text-xs font-bold hover:bg-slate-800 transition-colors shadow-xs cursor-pointer"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                Agregar Actividad
-              </motion.button>
-            )}
-          </div>
-
-          {selectedActs.length === 0 && selectedBirthdays.length === 0 ? (
-            <div className="py-8 text-center">
-              <p className="text-xs font-bold text-slate-400">Sin eventos registrados para este día.</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {/* Birthdays Section */}
-              {selectedBirthdays.map(m => (
-                <div key={`bday-inspect-${m.id}`} className="flex items-center gap-3 p-3.5 bg-sky-50/80 border border-sky-200/80 rounded-2xl text-sky-900 shadow-2xs">
-                  <div className="w-9 h-9 rounded-xl bg-sky-100 flex items-center justify-center text-sky-600 shrink-0">
-                    <Gift className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-extrabold">Cumpleaños de {m.nombre}</p>
-                    <p className="text-[10px] font-medium text-sky-700">Congregante de la iglesia</p>
-                  </div>
+          <Card className="p-5 sm:p-7 shadow-2xs">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 mb-4 border-b border-slate-100 gap-3">
+              <div>
+                <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 text-[10px] font-bold uppercase tracking-wider mb-1">
+                  <span>Inspector del Día</span>
                 </div>
-              ))}
+                <h3 className="text-lg font-black text-slate-900">
+                  {selectedDay} de {MONTH_NAMES[month]} {year}
+                </h3>
+              </div>
 
-              {/* Activities Section */}
-              {selectedActs.map(a => {
-                const tag = getCategoryTag(a.actividad, a.categoria);
-                return (
-                  <div key={`act-inspect-${a.id}`} className="flex items-center justify-between p-4 bg-white/80 border border-white rounded-2xl shadow-2xs">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <span className={`w-3 h-3 rounded-full shrink-0 ${a.completado ? 'bg-emerald-500' : 'bg-amber-500'}`} />
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className={`text-xs font-extrabold text-slate-900 ${a.completado ? 'line-through text-slate-400' : ''}`}>{a.actividad}</p>
-                          <span className={`text-[9px] font-extrabold px-2 py-0.5 rounded-lg border ${tag.bg} ${tag.text} ${tag.border}`}>
-                            {tag.label}
-                          </span>
+              {isAdmin && (
+                <Button 
+                  variant="default"
+                  size="sm"
+                  onClick={() => onOpenCreateWithDate(selectedDateStr)}
+                  className="shadow-xs"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  <span>Agregar Actividad</span>
+                </Button>
+              )}
+            </div>
+
+            {selectedActs.length === 0 && selectedBirthdays.length === 0 ? (
+              <div className="py-8 text-center">
+                <p className="text-xs font-bold text-slate-400">Sin eventos registrados para este día.</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {/* Birthdays Section */}
+                {selectedBirthdays.map(m => (
+                  <div key={`bday-inspect-${m.id}`} className="flex items-center gap-3 p-3.5 bg-sky-50/80 border border-sky-200/80 rounded-2xl text-sky-900 shadow-2xs">
+                    <div className="w-9 h-9 rounded-xl bg-sky-100 flex items-center justify-center text-sky-600 shrink-0">
+                      <Gift className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-extrabold">Cumpleaños de {m.nombre}</p>
+                      <p className="text-[10px] font-medium text-sky-700">Congregante de la iglesia</p>
+                    </div>
+                  </div>
+                ))}
+
+                {/* Activities Section */}
+                {selectedActs.map(a => {
+                  const tag = getCategoryTag(a.actividad, a.categoria);
+                  return (
+                    <div key={`act-inspect-${a.id}`} className="flex items-center justify-between p-4 bg-slate-50/70 border border-slate-200/80 rounded-2xl shadow-2xs">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <span className={`w-3 h-3 rounded-full shrink-0 ${a.completado ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2">
+                            <p className={`text-xs font-extrabold text-slate-900 ${a.completado ? 'line-through text-slate-400' : ''}`}>{a.actividad}</p>
+                            <span className={`text-[9px] font-extrabold px-2 py-0.5 rounded-lg border ${tag.bg} ${tag.text} ${tag.border}`}>
+                              {tag.label}
+                            </span>
+                          </div>
+                          {a.detalles && <p className="text-[11px] font-medium text-slate-500 mt-0.5 truncate">{a.detalles}</p>}
                         </div>
-                        {a.detalles && <p className="text-[11px] font-medium text-slate-500 mt-0.5 truncate">{a.detalles}</p>}
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <Badge variant={a.completado ? 'success' : 'warning'} className="shrink-0 text-[10px]">
+                          {a.completado ? 'Completada' : 'Pendiente'}
+                        </Badge>
+                        {isAdmin && onOpenEdit && (
+                          <button
+                            onClick={() => onOpenEdit(a)}
+                            className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer"
+                            title="Editar"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                          </button>
+                        )}
                       </div>
                     </div>
-
-                    <div className="flex items-center gap-2">
-                      <span className={`text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-xl border shrink-0 ${
-                        a.completado ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200'
-                      }`}>
-                        {a.completado ? 'Completada' : 'Pendiente'}
-                      </span>
-                      {isAdmin && onOpenEdit && (
-                        <button
-                          onClick={() => onOpenEdit(a)}
-                          className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer"
-                          title="Editar"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
+                  );
+                })}
+              </div>
+            )}
+          </Card>
         </motion.div>
       </AnimatePresence>
     </div>
@@ -734,34 +745,36 @@ export default function CalendarView() {
   return (
     <div className="pb-12 font-sans text-slate-900">
       {/* Dynamic Header */}
-      <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div className="mb-6 sm:mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/60 border border-white/80 shadow-xs mb-2.5 backdrop-blur-md">
-            <span className="w-2 h-2 rounded-full bg-indigo-500"></span>
-            <span className="text-[11px] font-bold tracking-wider text-slate-600 uppercase">Planificación Congregacional</span>
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/80 border border-slate-200/80 shadow-2xs mb-2">
+            <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
+            <span className="text-[11px] font-bold tracking-wider text-slate-600 uppercase">
+              Planificación &bull; ICLEB
+            </span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
-            Agenda de Actividades
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">
+            Agenda Pastoral
           </h1>
           <p className="text-xs sm:text-sm font-medium text-slate-500 mt-0.5">
-            Cronograma operativo de aseos, rifas, kermesses, asambleas y celebraciones congregacionales.
+            Cronograma operativo de asambleas, cultos, aseos y actividades de la congregación.
           </p>
         </div>
 
         {/* Tab Switcher with Framer Motion layoutId */}
-        <div className="glass-panel-subtle flex p-1.5 rounded-2xl gap-1 w-full sm:w-auto">
+        <div className="bg-slate-100 flex p-1 rounded-2xl gap-1 border border-slate-200/80 shadow-2xs w-full sm:w-auto">
           {(['agenda','calendario'] as const).map(tab => (
             <button 
               key={tab} 
               onClick={() => setActiveTab(tab)}
-              className={`relative flex-1 sm:flex-initial px-3 sm:px-5 py-2.5 text-xs font-bold transition-colors rounded-xl cursor-pointer text-center ${
-                activeTab === tab ? 'text-slate-900' : 'text-slate-600 hover:text-slate-900'
+              className={`relative flex-1 sm:flex-initial px-3 sm:px-5 py-2 text-xs font-bold transition-colors rounded-xl cursor-pointer text-center ${
+                activeTab === tab ? 'text-slate-900' : 'text-slate-500 hover:text-slate-900'
               }`}
             >
               {activeTab === tab && (
                 <motion.div
                   layoutId="activeTabBadge"
-                  className="absolute inset-0 bg-white rounded-xl shadow-xs"
+                  className="absolute inset-0 bg-white rounded-xl shadow-2xs"
                   transition={SPRING_FAST}
                 />
               )}

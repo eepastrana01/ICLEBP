@@ -3,6 +3,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../lib/api';
 import { SPRING_FAST } from '../lib/animations';
+import { Button } from './ui/Button';
+import { Badge } from './ui/Badge';
+import { ShieldCheck, Pencil, Check, X } from 'lucide-react';
 
 interface MiembroEquipo {
   id: number;
@@ -185,31 +188,31 @@ export default function TeamView() {
       {/* ========== TOPBAR ========== */}
       <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/60 border border-white/80 shadow-xs mb-2.5 backdrop-blur-md">
-            <span className="w-2 h-2 rounded-full bg-indigo-500"></span>
-            <span className="text-[11px] font-bold tracking-wider text-slate-600 uppercase">
-              Liderazgo &bull; El Buen Pastor
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/80 border border-slate-200/80 shadow-2xs mb-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
+            <span className="text-[11px] font-black uppercase tracking-wider text-slate-500">
+              Liderazgo • ICLEB
             </span>
           </div>
 
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">
             Equipo Pastoral
           </h1>
           <p className="text-xs sm:text-sm font-medium text-slate-500 mt-0.5">
-            Estructura organizativa, directiva y coordinadores de ministerios de la congregación.
+            Estructura organizativa, directiva y coordinadores ministeriales de la congregación.
           </p>
         </div>
 
         {isAdmin && (
-          <div className="inline-flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-white/70 border border-white/90 shadow-2xs text-xs font-semibold text-slate-600">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="text-indigo-600"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <div className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white border border-slate-200/80 shadow-2xs text-xs font-semibold text-slate-600">
+            <ShieldCheck className="w-4 h-4 text-indigo-600" />
             <span>Modo Administrador: Haz clic en el lápiz para reasignar cargos</span>
           </div>
         )}
       </div>
 
       {isLoading ? (
-        <div className="glass-panel rounded-[2rem] p-16 text-center">
+        <div className="bg-white rounded-3xl p-16 text-center border border-slate-200/80 shadow-2xs">
           <p className="text-xs font-semibold text-slate-400">Cargando estructura del equipo pastoral...</p>
         </div>
       ) : (
@@ -225,19 +228,19 @@ export default function TeamView() {
                 {/* Encabezado del Nivel / Categoría */}
                 <div className="flex items-center justify-between border-b border-slate-200/80 pb-2.5 px-1">
                   <div>
-                    <h2 className="text-base font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
+                    <h2 className="text-base font-black text-slate-900 tracking-tight flex items-center gap-2">
                       <span>{config.titulo}</span>
                     </h2>
-                    <p className="text-[11px] font-medium text-slate-400 mt-0.5">
+                    <p className="text-xs font-medium text-slate-500 mt-0.5">
                       {config.subtitulo}
                     </p>
                   </div>
-                  <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest bg-white/70 px-2.5 py-1 rounded-xl border border-white/80 shadow-2xs">
+                  <Badge variant="secondary" className="text-[10px] font-black uppercase tracking-wider">
                     {grupo.length} {grupo.length === 1 ? 'Cargo' : 'Cargos'}
-                  </span>
+                  </Badge>
                 </div>
 
-                {/* Grid de Tarjetas Bento */}
+                {/* Grid de Tarjetas */}
                 <div className={`grid gap-4 ${
                   grupo.length === 1
                     ? 'grid-cols-1 max-w-md mx-auto'
@@ -251,39 +254,37 @@ export default function TeamView() {
                     return (
                       <motion.div
                         key={item.id}
-                        whileHover={{ y: -2, scale: 1.008 }}
+                        whileHover={{ y: -2 }}
                         transition={SPRING_FAST}
-                        className={`glass-panel rounded-[1.75rem] p-5 relative flex flex-col justify-between border border-white/90 shadow-2xs group transition-all duration-200 ${config.borderHover}`}
+                        className={`bg-white rounded-3xl p-5 relative flex flex-col justify-between border border-slate-200/80 shadow-2xs group transition-all duration-200 ${config.borderHover}`}
                       >
                         {/* Botón de edición para usuarios con permiso de escritura */}
                         {canWrite && (
                           <button
                             onClick={() => openEditModal(item)}
-                            className="absolute top-4 right-4 w-7 h-7 rounded-xl bg-white/80 hover:bg-slate-900 hover:text-white text-slate-400 flex items-center justify-center transition-all duration-200 shadow-2xs border border-white/80 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 cursor-pointer"
+                            className="absolute top-4 right-4 w-7 h-7 rounded-xl bg-slate-50 hover:bg-slate-900 hover:text-white text-slate-400 flex items-center justify-center transition-all duration-200 shadow-2xs border border-slate-200 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 cursor-pointer"
                             title="Reasignar persona a este cargo"
                           >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                              <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
-                            </svg>
+                            <Pencil className="w-3.5 h-3.5" />
                           </button>
                         )}
 
                         {/* Contenido de la tarjeta */}
                         <div className="flex items-start gap-3.5 mb-3">
                           {/* Avatar / Icono */}
-                          <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 border border-white/80 shadow-2xs ${
-                            isUnassigned ? 'bg-slate-100 text-slate-400' : 'bg-white text-slate-900 font-extrabold text-xs'
+                          <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 border border-slate-100 shadow-2xs ${
+                            isUnassigned ? 'bg-slate-50 text-slate-400' : 'bg-slate-50 text-slate-900 font-extrabold text-xs'
                           }`}>
                             {config.iconSvg}
                           </div>
 
                           {/* Textos del Cargo y Nombre */}
                           <div className="min-w-0 flex-1 pr-6">
-                            <span className={`inline-block text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md mb-1 border border-slate-200/50 ${config.badgeBg} ${config.badgeText}`}>
+                            <span className={`inline-block text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md mb-1 border border-slate-200/50 ${config.badgeBg} ${config.badgeText}`}>
                               {item.cargo}
                             </span>
-                            <h3 className={`text-sm font-bold truncate leading-tight ${
-                              isUnassigned ? 'text-slate-400 italic' : 'text-slate-900'
+                            <h3 className={`text-sm font-black truncate leading-tight ${
+                              isUnassigned ? 'text-slate-400 italic font-semibold' : 'text-slate-900'
                             }`}>
                               {item.nombre}
                             </h3>
@@ -291,8 +292,8 @@ export default function TeamView() {
                         </div>
 
                         {/* Footer de estado */}
-                        <div className="pt-2.5 border-t border-white/60 flex items-center justify-between text-[11px]">
-                          <span className="text-slate-400 font-medium">Estado:</span>
+                        <div className="pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs font-semibold">
+                          <span className="text-slate-400">Estado:</span>
                           <span className={`inline-flex items-center gap-1.5 font-bold ${
                             isUnassigned ? 'text-amber-600' : 'text-emerald-600'
                           }`}>
@@ -317,20 +318,20 @@ export default function TeamView() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/30 backdrop-blur-md p-4"
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4"
             onClick={closeEditModal}
           >
             <motion.div
-              initial={{ scale: 0.94, opacity: 0, y: 12 }}
+              initial={{ scale: 0.95, opacity: 0, y: 10 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.94, opacity: 0, y: 12 }}
+              exit={{ scale: 0.95, opacity: 0, y: 10 }}
               transition={SPRING_FAST}
-              className="glass-panel-elevated rounded-[2rem] w-full max-w-md overflow-hidden p-6 sm:p-7 shadow-lg"
+              className="bg-white rounded-3xl w-full max-w-md overflow-hidden p-6 sm:p-7 shadow-2xl border border-slate-200/80 space-y-4"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex items-center justify-between pb-4 border-b border-slate-200/80 mb-5">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                 <div>
-                  <h3 className="text-base font-extrabold text-slate-900">
+                  <h3 className="text-base font-black text-slate-900">
                     Asignar Cargo Eclesiástico
                   </h3>
                   <p className="text-xs font-medium text-slate-500 mt-0.5">
@@ -339,21 +340,21 @@ export default function TeamView() {
                 </div>
                 <button
                   onClick={closeEditModal}
-                  className="w-8 h-8 rounded-xl bg-white/70 text-slate-400 hover:text-slate-700 flex items-center justify-center text-xs transition-colors cursor-pointer"
+                  className="w-8 h-8 rounded-xl bg-slate-100 text-slate-400 hover:text-slate-700 flex items-center justify-center text-xs transition-colors cursor-pointer"
                 >
-                  ✕
+                  <X className="w-4 h-4" />
                 </button>
               </div>
 
               {errorMsg && (
-                <div className="p-3 mb-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold">
+                <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold">
                   {errorMsg}
                 </div>
               )}
 
               <form onSubmit={handleSave} className="space-y-4">
                 <div>
-                  <label className="block text-[11px] font-extrabold text-slate-500 uppercase tracking-wider mb-1.5">
+                  <label className="block text-[10px] font-black uppercase tracking-wider text-slate-500 mb-1.5">
                     Título / Cargo Oficial
                   </label>
                   <input
@@ -361,50 +362,51 @@ export default function TeamView() {
                     required
                     value={editCargo}
                     onChange={(e) => setEditCargo(e.target.value)}
-                    className="glass-input w-full rounded-2xl px-4 py-2.5 text-xs font-semibold text-slate-900 focus:outline-none"
+                    className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 shadow-2xs"
                     placeholder="Ej. Pastor Presidente, Tesorera..."
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-extrabold text-slate-500 uppercase tracking-wider mb-1.5">
+                  <label className="block text-[10px] font-black uppercase tracking-wider text-slate-500 mb-1.5">
                     Nombre del Miembro Asignado
                   </label>
                   <input
                     type="text"
                     value={editNombre}
                     onChange={(e) => setEditNombre(e.target.value)}
-                    className="glass-input w-full rounded-2xl px-4 py-2.5 text-xs font-semibold text-slate-900 focus:outline-none"
+                    className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 shadow-2xs"
                     placeholder="Escribe el nombre completo o deja vacío para 'Por asignar'..."
                     autoFocus
                   />
-                  <div className="mt-2 flex items-center gap-2">
+                  <div className="mt-1.5 flex items-center gap-2">
                     <button
                       type="button"
                       onClick={() => setEditNombre('Por asignar')}
-                      className="text-[10px] font-bold text-indigo-600 hover:underline cursor-pointer"
+                      className="text-[11px] font-bold text-indigo-600 hover:underline cursor-pointer"
                     >
                       Establecer como "Por asignar"
                     </button>
                   </div>
                 </div>
 
-                <div className="pt-3 border-t border-slate-200/80 flex gap-2.5">
-                  <button
+                <div className="pt-3 border-t border-slate-100 flex gap-2.5">
+                  <Button
                     type="button"
+                    variant="outline"
                     onClick={closeEditModal}
-                    className="glass-button-secondary flex-1 rounded-2xl text-slate-700 text-xs font-bold py-2.5 cursor-pointer"
+                    className="flex-1"
                   >
                     Cancelar
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="submit"
                     disabled={updateMutation.isPending}
-                    className="flex-1 rounded-2xl bg-slate-900 text-white text-xs font-extrabold py-2.5 hover:bg-slate-800 transition-colors shadow-xs disabled:opacity-60 cursor-pointer flex items-center justify-center gap-1.5"
+                    className="flex-1 bg-slate-900 hover:bg-slate-800 text-white gap-1.5"
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                    {updateMutation.isPending ? 'Guardando...' : 'Guardar Asignación'}
-                  </button>
+                    <Check className="w-3.5 h-3.5" />
+                    <span>{updateMutation.isPending ? 'Guardando...' : 'Guardar Asignación'}</span>
+                  </Button>
                 </div>
               </form>
             </motion.div>

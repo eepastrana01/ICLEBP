@@ -23,6 +23,7 @@ import {
 import api from '../lib/api';
 import { LOGO_WHITE_BASE64 } from '../lib/logoWhiteBase64';
 import { detectCategoryFromTitle, type Actividad } from './ActivityModal';
+import { Button } from './ui/Button';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
@@ -470,49 +471,52 @@ export default function CarteleraView() {
       `}</style>
 
       {/* Cabecera del Módulo */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white/80 backdrop-blur-md p-6 rounded-3xl border border-white/60 shadow-xs">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2.5">
-            <span className="p-2 rounded-xl bg-blue-50 text-blue-900 border border-blue-100">
-              <Calendar className="w-5 h-5" />
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/80 border border-slate-200/80 shadow-2xs mb-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-blue-600" />
+            <span className="text-[11px] font-black uppercase tracking-wider text-slate-500">
+              Cartelera Mural • ICLEB
             </span>
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
-              Cartelera Mensual de Actividades
-            </h1>
           </div>
-          <p className="text-sm text-slate-500 mt-1 max-w-2xl">
-            Diseña e imprime el calendario visual de actividades en tamaño carta para colocar en la pizarra informativa o mampara del templo.
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">
+            Cartelera Mensual de Actividades
+          </h1>
+          <p className="text-xs sm:text-sm font-medium text-slate-500 mt-0.5 max-w-2xl">
+            Diseña e imprime el calendario visual de actividades en tamaño carta para la pizarra informativa del templo.
           </p>
         </div>
 
         {/* Acciones principales de exportación */}
-        <div className="flex items-center gap-2.5 flex-wrap">
-          <button
+        <div className="flex items-center gap-2 flex-wrap">
+          <Button
             onClick={handlePrint}
             disabled={exportingType !== null || displayedActivities.length === 0}
-            className="flex items-center gap-2 px-4 py-2.5 bg-slate-900 text-white rounded-xl text-sm font-semibold hover:bg-slate-800 transition-all shadow-xs active:scale-95 disabled:opacity-50"
+            className="gap-2 bg-slate-900 hover:bg-slate-800 text-white"
           >
             <Printer className="w-4 h-4" />
             <span>Imprimir Hoja</span>
-          </button>
+          </Button>
 
-          <button
+          <Button
+            variant="outline"
             onClick={handleDownloadPdf}
             disabled={exportingType !== null || displayedActivities.length === 0}
-            className="flex items-center gap-2 px-3.5 py-2.5 bg-white border border-slate-200 text-slate-700 rounded-xl text-sm font-semibold hover:bg-slate-50 transition-all shadow-2xs active:scale-95 disabled:opacity-50"
+            className="gap-2"
           >
-            <Download className={`w-4 h-4 text-blue-700 ${exportingType === 'pdf' ? 'animate-bounce' : ''}`} />
+            <Download className={`w-4 h-4 text-blue-600 ${exportingType === 'pdf' ? 'animate-bounce' : ''}`} />
             <span>{exportingType === 'pdf' ? 'Generando PDF...' : 'Descargar PDF'}</span>
-          </button>
+          </Button>
 
-          <button
+          <Button
+            variant="outline"
             onClick={handleDownloadImage}
             disabled={exportingType !== null || displayedActivities.length === 0}
-            className="flex items-center gap-2 px-3.5 py-2.5 bg-white border border-slate-200 text-slate-700 rounded-xl text-sm font-semibold hover:bg-slate-50 transition-all shadow-2xs active:scale-95 disabled:opacity-50"
+            className="gap-2"
           >
-            <ImageIcon className={`w-4 h-4 text-emerald-700 ${exportingType === 'image' ? 'animate-bounce' : ''}`} />
+            <ImageIcon className={`w-4 h-4 text-emerald-600 ${exportingType === 'image' ? 'animate-bounce' : ''}`} />
             <span>{exportingType === 'image' ? 'Guardando imagen...' : 'Guardar Imagen'}</span>
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -523,16 +527,16 @@ export default function CarteleraView() {
         <div className="lg:col-span-4 space-y-5 no-print">
           
           {/* 1. Selector de Mes y Año */}
-          <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-2xs space-y-3">
-            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
-              <Calendar className="w-3.5 h-3.5 text-blue-900" />
+          <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-2xs space-y-3">
+            <label className="text-[10px] font-black uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+              <Calendar className="w-3.5 h-3.5 text-blue-600" />
               Período a Imprimir
             </label>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-2.5">
               <select
                 value={selectedMonth}
                 onChange={(e) => setSelectedMonth(Number(e.target.value))}
-                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-900/20"
+                className="w-full h-10 px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 shadow-2xs cursor-pointer"
               >
                 {MONTH_NAMES.map((m, idx) => (
                   <option key={idx} value={idx}>{m}</option>
@@ -541,7 +545,7 @@ export default function CarteleraView() {
               <select
                 value={selectedYear}
                 onChange={(e) => setSelectedYear(Number(e.target.value))}
-                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-900/20"
+                className="w-full h-10 px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 shadow-2xs cursor-pointer"
               >
                 {[selectedYear - 1, selectedYear, selectedYear + 1].map((y) => (
                   <option key={y} value={y}>{y}</option>
@@ -551,7 +555,7 @@ export default function CarteleraView() {
           </div>
 
           {/* 2. Orientación y Paleta de Colores */}
-          <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-2xs space-y-4">
+          <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-2xs space-y-4">
             <div>
               <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5 mb-2.5">
                 <Layers className="w-3.5 h-3.5 text-blue-900" />

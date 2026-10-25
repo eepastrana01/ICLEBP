@@ -5,6 +5,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../lib/api';
 import { ConfirmModal, useConfirm } from './ConfirmModal';
 import { SPRING_FAST } from '../lib/animations';
+import { Button } from './ui/Button';
+import { Badge } from './ui/Badge';
 import {
   Users,
   Shield,
@@ -417,18 +419,18 @@ export default function UsersView() {
 
   const renderRoleBadge = (rol: string) => {
     const r = rol.toLowerCase();
-    let style = 'bg-slate-100 text-slate-700 border-slate-200';
-    if (r === 'admin') style = 'bg-purple-50 text-purple-700 border-purple-200';
-    else if (r === 'pastor') style = 'bg-amber-50 text-amber-700 border-amber-200';
-    else if (r === 'secretaria') style = 'bg-sky-50 text-sky-700 border-sky-200';
-    else if (r === 'tesorera') style = 'bg-emerald-50 text-emerald-700 border-emerald-200';
-    else if (r === 'fiscal') style = 'bg-orange-50 text-orange-700 border-orange-200';
-    else if (r === 'lider') style = 'bg-indigo-50 text-indigo-700 border-indigo-200';
+    let variant: 'purple' | 'warning' | 'info' | 'success' | 'destructive' | 'secondary' = 'secondary';
+    if (r === 'admin') variant = 'purple';
+    else if (r === 'pastor') variant = 'warning';
+    else if (r === 'secretaria') variant = 'info';
+    else if (r === 'tesorera') variant = 'success';
+    else if (r === 'fiscal') variant = 'destructive';
+    else if (r === 'lider') variant = 'info';
 
     return (
-      <span className={`inline-flex items-center rounded-xl px-2.5 py-1 text-[10px] font-extrabold border uppercase tracking-wider ${style}`}>
+      <Badge variant={variant}>
         {rol}
-      </span>
+      </Badge>
     );
   };
 
@@ -454,14 +456,14 @@ export default function UsersView() {
       {/* ========== CABECERA PRINCIPAL ========== */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-1">
         <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/70 border border-slate-200/80 shadow-2xs mb-2 backdrop-blur-md">
-            <span className="w-2 h-2 rounded-full bg-indigo-600"></span>
-            <span className="text-[11px] font-bold tracking-wider text-slate-600 uppercase">
-              Panel de Seguridad &bull; ICLEB
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/80 border border-slate-200/80 shadow-2xs mb-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-indigo-600"></span>
+            <span className="text-[11px] font-black uppercase tracking-wider text-slate-500">
+              Sistema & Permisos • ICLEB
             </span>
           </div>
 
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">
             Administración de Usuarios
           </h1>
           <p className="text-xs sm:text-sm font-medium text-slate-500 mt-0.5">
@@ -469,62 +471,68 @@ export default function UsersView() {
           </p>
         </div>
 
-        <motion.button
-          whileHover={{ scale: 1.02, y: -1 }}
-          whileTap={{ scale: 0.96 }}
-          transition={SPRING_FAST}
+        <Button
           onClick={openCreate}
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-slate-900 text-white hover:bg-slate-800 text-xs font-bold shadow-[0_4px_14px_rgba(15,23,42,0.18)] transition-all cursor-pointer self-start sm:self-auto"
+          className="gap-2 bg-slate-900 hover:bg-slate-800 text-white self-start sm:self-auto"
         >
           <Plus className="w-4 h-4" />
           <span>Nuevo Usuario</span>
-        </motion.button>
+        </Button>
       </div>
 
       {/* ========== TARJETAS DE MÉTRICAS ========== */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-2xs flex items-center justify-between">
+        <motion.div
+          whileHover={{ y: -2 }}
+          className="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-2xs flex items-center justify-between"
+        >
           <div>
             <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block">
               Directorio de Cuentas
             </span>
-            <p className="text-2xl font-black text-slate-900 tracking-tight mt-1">{total}</p>
-            <p className="text-[11px] font-semibold text-slate-500 mt-0.5">Usuarios registrados</p>
+            <p className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight mt-1">{total}</p>
+            <p className="text-xs font-semibold text-slate-500 mt-0.5">Usuarios registrados</p>
           </div>
           <div className="w-11 h-11 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-700">
             <Users className="w-5 h-5" />
           </div>
-        </div>
+        </motion.div>
 
-        <div className="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-2xs flex items-center justify-between">
+        <motion.div
+          whileHover={{ y: -2 }}
+          className="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-2xs flex items-center justify-between"
+        >
           <div>
             <span className="text-[10px] font-black uppercase tracking-wider text-purple-600 block">
               Administradores
             </span>
-            <p className="text-2xl font-black text-slate-900 tracking-tight mt-1">{admins}</p>
-            <p className="text-[11px] font-bold text-purple-600 mt-0.5">Control y acceso total</p>
+            <p className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight mt-1">{admins}</p>
+            <p className="text-xs font-bold text-purple-600 mt-0.5">Control y acceso total</p>
           </div>
           <div className="w-11 h-11 rounded-2xl bg-purple-50 border border-purple-100 flex items-center justify-center text-purple-700">
             <ShieldCheck className="w-5 h-5" />
           </div>
-        </div>
+        </motion.div>
 
-        <div className="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-2xs flex items-center justify-between">
+        <motion.div
+          whileHover={{ y: -2 }}
+          className="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-2xs flex items-center justify-between"
+        >
           <div>
             <span className="text-[10px] font-black uppercase tracking-wider text-emerald-700 block">
               Cuentas Activas
             </span>
-            <p className="text-2xl font-black text-slate-900 tracking-tight mt-1">
+            <p className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight mt-1">
               {activos} <span className="text-xs font-semibold text-slate-400">/ {total}</span>
             </p>
-            <p className="text-[11px] font-bold text-emerald-700 mt-0.5">
+            <p className="text-xs font-bold text-emerald-700 mt-0.5">
               {total > 0 ? Math.round((activos / total) * 100) : 0}% habilitadas
             </p>
           </div>
           <div className="w-11 h-11 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-700">
             <Check className="w-5 h-5" />
           </div>
-        </div>
+        </motion.div>
       </div>
 
       {/* ========== PANEL PRINCIPAL: TABLA / FICHAS ========== */}
@@ -541,7 +549,7 @@ export default function UsersView() {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Buscar por usuario o nombre..."
-              className="w-full bg-slate-50 border border-slate-200/80 rounded-2xl pl-10 pr-9 py-2 text-xs font-bold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:bg-white transition-all"
+              className="w-full h-10 bg-white border border-slate-200 rounded-xl pl-10 pr-9 py-2 text-xs font-semibold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 shadow-2xs transition-all"
             />
             {searchTerm && (
               <button

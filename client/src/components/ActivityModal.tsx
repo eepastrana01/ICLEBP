@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import api from '../lib/api';
 import { SPRING_FAST } from '../lib/animations';
+import { Button } from './ui/Button';
 
 export interface Actividad {
   id: number;
@@ -558,30 +559,23 @@ export function ActivityModal({
 
               {/* Footer Acciones */}
               <div className="pt-4 border-t border-slate-100 flex flex-col-reverse sm:flex-row items-center justify-between gap-3">
-                <button
+                <Button
                   type="button"
+                  variant="outline"
                   onClick={onClose}
-                  className="w-full sm:w-auto px-5 py-2.5 rounded-2xl text-slate-600 hover:text-slate-900 bg-slate-100/70 hover:bg-slate-100 text-xs font-bold transition-colors cursor-pointer"
+                  className="w-full sm:w-auto shadow-2xs"
                 >
                   Cancelar
-                </button>
-                <button
+                </Button>
+                <Button
                   type="submit"
                   disabled={isSaving}
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-2xl bg-slate-900 text-white text-xs font-extrabold shadow-sm hover:bg-slate-800 transition-colors disabled:opacity-60 cursor-pointer"
+                  isLoading={isSaving}
+                  className="w-full sm:w-auto shadow-xs gap-1.5"
                 >
-                  {isSaving ? (
-                    <>
-                      <svg className="animate-spin -ml-1 mr-1 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                      <span>Guardando...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Check className="w-4 h-4" />
-                      <span>{editingItem ? 'Guardar Cambios' : 'Crear Actividad'}</span>
-                    </>
-                  )}
-                </button>
+                  <Check className="w-4 h-4" />
+                  <span>{editingItem ? 'Guardar Cambios' : 'Crear Actividad'}</span>
+                </Button>
               </div>
 
             </form>

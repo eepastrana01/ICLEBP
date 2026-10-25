@@ -23,6 +23,8 @@ import {
 } from 'lucide-react';
 import api from '../lib/api';
 import { LOGO_WHITE_BASE64 } from '../lib/logoWhiteBase64';
+import { Button } from './ui/Button';
+import { Badge } from './ui/Badge';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
@@ -566,10 +568,54 @@ export default function BirthdaysView() {
         )}
       </AnimatePresence>
 
-      <div className="pantalla-cumpleaneros space-y-5">
+      <div className="pantalla-cumpleaneros space-y-6">
         
         {/* ======================================================== */}
-        {/* 1. TOP BAR: BUSCADOR + ALCANCE + ACCIONES               */}
+        {/* 1. HEADER ESTANDARIZADO                                 */}
+        {/* ======================================================== */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/80 border border-slate-200/80 shadow-2xs mb-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+              <span className="text-[11px] font-black uppercase tracking-wider text-slate-500">
+                Cumpleaños • ICLEB
+              </span>
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">
+              Directorio de Cumpleañeros
+            </h1>
+            <p className="text-xs sm:text-sm font-medium text-slate-500 mt-0.5">
+              Celebraciones del mes, felicitaciones congregacionales y carteleras de vida.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setActiveTab('cartel');
+                setTimeout(() => handlePrint(), 200);
+              }}
+              className="gap-1.5"
+            >
+              <Printer className="w-3.5 h-3.5 text-slate-600" />
+              <span>Imprimir Reporte</span>
+            </Button>
+
+            <Button
+              size="sm"
+              onClick={() => setIsAddManualOpen(true)}
+              className="bg-rose-600 hover:bg-rose-700 text-white gap-1.5"
+            >
+              <UserPlus className="w-3.5 h-3.5 text-white" />
+              <span>Añadir Cumpleaños</span>
+            </Button>
+          </div>
+        </div>
+
+        {/* ======================================================== */}
+        {/* 2. TOP BAR: BUSCADOR + ALCANCE                          */}
         {/* ======================================================== */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
           {/* Buscador */}
@@ -580,17 +626,17 @@ export default function BirthdaysView() {
               placeholder="Buscar por nombre o congregación..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-white/80 border border-slate-200/90 rounded-2xl pl-10 pr-4 py-2.5 text-xs font-bold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-400 transition-all shadow-2xs"
+              className="w-full bg-white border border-slate-200 rounded-xl pl-10 pr-4 py-2 text-xs font-semibold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition-all shadow-2xs h-10"
             />
           </div>
 
           {/* Selector de Alcance (Mes Actual / Trimestre / Año Completo) */}
-          <div className="flex items-center gap-1 bg-white/80 p-1 rounded-2xl border border-slate-200/80 shadow-2xs self-start sm:self-auto">
+          <div className="flex items-center gap-1 bg-white p-1 rounded-xl border border-slate-200/80 shadow-2xs self-start sm:self-auto">
             <button
               onClick={() => setTimeScope('mes')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                 timeScope === 'mes'
-                  ? 'bg-rose-500 text-white shadow-2xs font-extrabold'
+                  ? 'bg-rose-600 text-white shadow-2xs font-black'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
@@ -598,9 +644,9 @@ export default function BirthdaysView() {
             </button>
             <button
               onClick={() => setTimeScope('trimestre')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                 timeScope === 'trimestre'
-                  ? 'bg-rose-500 text-white shadow-2xs font-extrabold'
+                  ? 'bg-rose-600 text-white shadow-2xs font-black'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
@@ -608,43 +654,21 @@ export default function BirthdaysView() {
             </button>
             <button
               onClick={() => setTimeScope('anio')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                 timeScope === 'anio'
-                  ? 'bg-rose-500 text-white shadow-2xs font-extrabold'
+                  ? 'bg-rose-600 text-white shadow-2xs font-black'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
               Año Completo
             </button>
           </div>
-
-          {/* Botones de Acción Superiores */}
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => {
-                setActiveTab('cartel');
-                setTimeout(() => handlePrint(), 200);
-              }}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-2xl bg-white border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-all cursor-pointer shadow-2xs"
-            >
-              <Printer className="w-3.5 h-3.5 text-slate-600" />
-              <span>Imprimir Reporte</span>
-            </button>
-
-            <button
-              onClick={() => setIsAddManualOpen(true)}
-              className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-rose-500 to-rose-600 text-white text-xs font-black hover:from-rose-600 hover:to-rose-700 transition-all cursor-pointer shadow-sm active:scale-95"
-            >
-              <UserPlus className="w-3.5 h-3.5 text-white" />
-              <span>+ Añadir Cumpleaños</span>
-            </button>
-          </div>
         </div>
 
         {/* ======================================================== */}
-        {/* 2. CINTA HORIZONTAL DE MESES CON CONTEOS                */}
+        {/* 3. CINTA HORIZONTAL DE MESES CON CONTEOS                */}
         {/* ======================================================== */}
-        <div className="bg-white/80 rounded-2xl p-2 border border-slate-200/80 shadow-2xs overflow-x-auto custom-scrollbar flex items-center justify-between gap-1">
+        <div className="bg-white rounded-2xl p-1.5 border border-slate-200/80 shadow-2xs overflow-x-auto custom-scrollbar flex items-center justify-between gap-1">
           {MONTH_SHORT.map((mShort, idx) => {
             const isSelected = selectedMonth === idx;
             const count = monthCounts[idx];
@@ -653,7 +677,7 @@ export default function BirthdaysView() {
               return (
                 <div
                   key={idx}
-                  className="flex items-center gap-2 bg-gradient-to-r from-rose-500 to-rose-600 text-white px-4 py-2 rounded-xl shadow-xs font-black text-xs shrink-0 select-none"
+                  className="flex items-center gap-2 bg-rose-600 text-white px-4 py-2 rounded-xl shadow-2xs font-black text-xs shrink-0 select-none"
                 >
                   <button
                     onClick={() => {
@@ -697,19 +721,22 @@ export default function BirthdaysView() {
         </div>
 
         {/* ======================================================== */}
-        {/* 3. TRES TARJETAS HERO SUPERIORES (Estilo Stitch Reference)*/}
+        {/* 4. TRES TARJETAS HERO SUPERIORES                        */}
         {/* ======================================================== */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Card 1: Celebraciones del Mes */}
-          <div className="bg-white rounded-3xl p-5 border border-slate-200/90 shadow-2xs flex items-center justify-between gap-4">
+          <motion.div
+            whileHover={{ y: -2 }}
+            className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200/80 shadow-2xs flex items-center justify-between gap-4"
+          >
             <div>
               <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block mb-1">
                 Celebraciones del Mes
               </span>
-              <p className="text-2xl font-black text-slate-900 leading-tight">
-                {monthBirthdays.length} {monthBirthdays.length === 1 ? 'cumpleañero' : 'cumpleañeros'}
+              <p className="text-2xl sm:text-3xl font-black text-slate-900 leading-tight">
+                {monthBirthdays.length}
               </p>
-              <p className="text-[11px] font-semibold text-slate-500 mt-1 truncate">
+              <p className="text-xs font-semibold text-slate-500 mt-1 truncate">
                 {congregacionesList.length > 0
                   ? congregacionesList
                       .slice(0, 3)
@@ -718,37 +745,35 @@ export default function BirthdaysView() {
                   : 'Sin registros para este mes'}
               </p>
             </div>
-            <div className="w-12 h-12 rounded-2xl bg-rose-50 border border-rose-100 text-rose-500 flex items-center justify-center shrink-0">
+            <div className="w-12 h-12 rounded-2xl bg-rose-50 border border-rose-100 text-rose-600 flex items-center justify-center shrink-0">
               <Cake className="w-6 h-6" />
             </div>
-          </div>
+          </motion.div>
 
           {/* Card 2: ¡HOY ES SU DÍA! (Spotlight Card) */}
-          <div
-            className={`rounded-3xl p-5 border shadow-2xs flex items-center justify-between gap-4 transition-all ${
+          <motion.div
+            whileHover={{ y: -2 }}
+            className={`rounded-3xl p-5 sm:p-6 border shadow-2xs flex items-center justify-between gap-4 transition-all ${
               todayHighlight
-                ? 'bg-rose-50/50 border-rose-200 ring-2 ring-rose-400/20'
-                : 'bg-white border-slate-200/90'
+                ? 'bg-rose-50/40 border-rose-300 ring-2 ring-rose-400/20'
+                : 'bg-white border-slate-200/80'
             }`}
           >
             <div className="min-w-0">
-              <span
-                className={`inline-flex items-center gap-1 text-[9.5px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md mb-1.5 ${
-                  todayHighlight
-                    ? 'bg-rose-500 text-white'
-                    : 'bg-slate-100 text-slate-400'
-                }`}
+              <Badge
+                variant={todayHighlight ? 'danger' : 'secondary'}
+                className="mb-1.5 uppercase tracking-wider text-[10px] font-black"
               >
-                <PartyPopper className="w-3 h-3" />
-                <span>{todayHighlight ? '¡HOY ES SU DÍA!' : 'HOY'}</span>
-              </span>
+                <PartyPopper className="w-3 h-3 mr-1 inline" />
+                {todayHighlight ? '¡Hoy es su día!' : 'Hoy'}
+              </Badge>
 
               {todayHighlight ? (
                 <>
                   <h4 className="text-base font-black text-slate-900 truncate leading-tight">
                     {todayHighlight.nombre}
                   </h4>
-                  <p className="text-[11px] font-semibold text-slate-600 mt-0.5 truncate">
+                  <p className="text-xs font-semibold text-slate-600 mt-0.5 truncate">
                     {showAge && todayHighlight.edad ? `Cumple ${todayHighlight.edad} años • ` : ''}
                     {todayHighlight.congregacion}
                   </p>
@@ -756,7 +781,7 @@ export default function BirthdaysView() {
               ) : (
                 <>
                   <h4 className="text-sm font-bold text-slate-700">Ningún cumpleaños hoy</h4>
-                  <p className="text-[11px] font-medium text-slate-400 mt-0.5">
+                  <p className="text-xs font-medium text-slate-400 mt-0.5">
                     Revisa los próximos días en la lista.
                   </p>
                 </>
@@ -777,33 +802,39 @@ export default function BirthdaysView() {
                 <Gift className="w-5 h-5" />
               </div>
             )}
-          </div>
+          </motion.div>
 
           {/* Card 3: Próximo Cumpleaños */}
-          <div className="bg-white rounded-3xl p-5 border border-slate-200/90 shadow-2xs flex items-center justify-between gap-4">
+          <motion.div
+            whileHover={{ y: -2 }}
+            className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200/80 shadow-2xs flex items-center justify-between gap-4"
+          >
             <div className="min-w-0">
               {nextHighlight ? (
                 <>
-                  <span className="inline-block bg-amber-50 text-amber-700 border border-amber-200 text-[9.5px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md mb-1.5">
+                  <Badge
+                    variant="warning"
+                    className="mb-1.5 uppercase tracking-wider text-[10px] font-black"
+                  >
                     {nextHighlight.esManana
                       ? `Mañana • ${nextHighlight.dia} de ${MONTH_SHORT[selectedMonth]}`
                       : `${nextHighlight.dia} de ${MONTH_SHORT[selectedMonth]} • En ${nextHighlight.diasFaltantes} días`}
-                  </span>
+                  </Badge>
                   <h4 className="text-base font-black text-slate-900 truncate leading-tight">
                     {nextHighlight.nombre}
                   </h4>
-                  <p className="text-[11px] font-semibold text-slate-600 mt-0.5 truncate">
+                  <p className="text-xs font-semibold text-slate-600 mt-0.5 truncate">
                     {showAge && nextHighlight.edad ? `Cumple ${nextHighlight.edad} años • ` : ''}
                     {nextHighlight.congregacion}
                   </p>
                 </>
               ) : (
                 <>
-                  <span className="inline-block bg-slate-100 text-slate-400 text-[9.5px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md mb-1.5">
+                  <Badge variant="secondary" className="mb-1.5 uppercase tracking-wider text-[10px] font-black">
                     Próximos
-                  </span>
+                  </Badge>
                   <h4 className="text-sm font-bold text-slate-700">Sin próximos este mes</h4>
-                  <p className="text-[11px] font-medium text-slate-400 mt-0.5">
+                  <p className="text-xs font-medium text-slate-400 mt-0.5">
                     Todos los del mes ya pasaron.
                   </p>
                 </>
@@ -813,7 +844,7 @@ export default function BirthdaysView() {
             <div className="w-12 h-12 rounded-2xl bg-amber-50 border border-amber-100 text-amber-600 flex items-center justify-center shrink-0">
               <Gift className="w-6 h-6" />
             </div>
-          </div>
+          </motion.div>
         </div>
 
         {/* ======================================================== */}
@@ -1063,10 +1094,11 @@ export default function BirthdaysView() {
                         {bdaysOnDay.slice(0, 2).map((b) => (
                           <div
                             key={b.uid}
-                            className="text-[9.5px] font-bold bg-white text-slate-800 px-1.5 py-0.5 rounded-md border border-rose-200 truncate shadow-2xs"
+                            className="text-[9.5px] font-bold bg-white text-slate-800 px-1.5 py-0.5 rounded-md border border-rose-200 truncate shadow-2xs flex items-center gap-1"
                             title={b.nombre}
                           >
-                            🎉 {b.nombre}
+                            <PartyPopper className="w-2.5 h-2.5 text-rose-500 shrink-0" />
+                            <span className="truncate">{b.nombre}</span>
                           </div>
                         ))}
                         {bdaysOnDay.length > 2 && (
@@ -1247,11 +1279,16 @@ export default function BirthdaysView() {
       {/* Modal para Agregar Cumpleañero Adicional */}
       {isAddManualOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-3xl w-full max-w-sm p-6 shadow-2xl space-y-4 border border-slate-200">
+          <div className="bg-white rounded-3xl w-full max-w-sm p-6 shadow-2xl space-y-4 border border-slate-200/80">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="text-sm font-black text-slate-900">
-                Añadir Cumpleañero Adicional
-              </h3>
+              <div>
+                <h3 className="text-sm font-black text-slate-900">
+                  Añadir Cumpleañero Adicional
+                </h3>
+                <p className="text-[11px] font-medium text-slate-500">
+                  Registro para el listado del mes actual.
+                </p>
+              </div>
               <button
                 onClick={() => setIsAddManualOpen(false)}
                 className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-800 cursor-pointer"
@@ -1260,9 +1297,9 @@ export default function BirthdaysView() {
               </button>
             </div>
 
-            <form onSubmit={handleAddManualBirthday} className="space-y-3">
+            <form onSubmit={handleAddManualBirthday} className="space-y-3.5">
               <div>
-                <label className="block text-[11px] font-extrabold text-slate-500 uppercase tracking-wider mb-1">
+                <label className="block text-[10px] font-black uppercase tracking-wider text-slate-500 mb-1">
                   Nombre Completo
                 </label>
                 <input
@@ -1271,14 +1308,14 @@ export default function BirthdaysView() {
                   placeholder="Ej. Pastor Juan Pérez..."
                   value={manualName}
                   onChange={(e) => setManualName(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-400"
+                  className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 shadow-2xs"
                   autoFocus
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-2.5">
                 <div>
-                  <label className="block text-[11px] font-extrabold text-slate-500 uppercase tracking-wider mb-1">
+                  <label className="block text-[10px] font-black uppercase tracking-wider text-slate-500 mb-1">
                     Día de {MONTH_NAMES[selectedMonth]}
                   </label>
                   <input
@@ -1288,37 +1325,38 @@ export default function BirthdaysView() {
                     required
                     value={manualDay}
                     onChange={(e) => setManualDay(parseInt(e.target.value, 10) || 1)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-400"
+                    className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 shadow-2xs"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-extrabold text-slate-500 uppercase tracking-wider mb-1">
+                  <label className="block text-[10px] font-black uppercase tracking-wider text-slate-500 mb-1">
                     Congregación
                   </label>
                   <input
                     type="text"
                     value={manualCongregation}
                     onChange={(e) => setManualCongregation(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-400"
+                    className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 shadow-2xs"
                   />
                 </div>
               </div>
 
               <div className="flex gap-2 pt-2 border-t border-slate-100">
-                <button
+                <Button
                   type="button"
+                  variant="outline"
                   onClick={() => setIsAddManualOpen(false)}
-                  className="flex-1 py-2 rounded-xl text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 cursor-pointer"
+                  className="flex-1"
                 >
                   Cancelar
-                </button>
-                <button
+                </Button>
+                <Button
                   type="submit"
-                  className="flex-1 py-2 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold cursor-pointer shadow-xs"
+                  className="flex-1 bg-rose-600 hover:bg-rose-700 text-white"
                 >
                   Guardar
-                </button>
+                </Button>
               </div>
             </form>
           </div>

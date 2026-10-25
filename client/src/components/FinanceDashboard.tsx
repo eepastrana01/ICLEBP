@@ -4,6 +4,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../lib/api';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { SPRING_SNAPPY, SPRING_FAST } from '../lib/animations';
+import { Button } from './ui/Button';
+import { Badge } from './ui/Badge';
+import { Card } from './ui/Card';
 
 const CAT_COLORS = ['#6366f1', '#8b5cf6', '#3b82f6', '#14b8a6', '#f59e0b'];
 
@@ -352,42 +355,48 @@ export default function FinanceDashboard() {
     <div className="min-h-full font-sans text-slate-900 pb-12">
 
       {/* ========== TOPBAR ========== */}
-      <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div className="mb-6 sm:mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           {activeView === 'form' ? (
-            <div className="flex items-center gap-2 mb-2.5">
-              <button
+            <div className="flex items-center gap-2 mb-2">
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={closeForm}
-                className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-slate-900 transition-colors cursor-pointer"
+                className="h-7 px-2 text-xs font-bold text-slate-500 hover:text-slate-900"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><polyline points="15 18 9 12 15 6"/></svg>
                 Finanzas
-              </button>
+              </Button>
               <span className="text-slate-300">/</span>
               <span className="text-xs font-bold text-slate-900">
                 {editingTx ? 'Editar Comprobante' : txForm.tipo === 'ingreso' ? 'Comprobante de Ingresos' : 'Comprobante de Egreso'}
               </span>
             </div>
           ) : activeView === 'configuracion' ? (
-            <div className="flex items-center gap-2 mb-2.5">
-              <button
+            <div className="flex items-center gap-2 mb-2">
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => setActiveView('dashboard')}
-                className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-slate-900 transition-colors cursor-pointer"
+                className="h-7 px-2 text-xs font-bold text-slate-500 hover:text-slate-900"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><polyline points="15 18 9 12 15 6"/></svg>
                 Finanzas
-              </button>
+              </Button>
               <span className="text-slate-300">/</span>
               <span className="text-xs font-bold text-slate-900">Configuración Independiente</span>
             </div>
           ) : (
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/60 border border-white/80 shadow-xs mb-2.5 backdrop-blur-md">
-              <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-              <span className="text-[11px] font-bold tracking-wider text-slate-600 uppercase">Control Financiero &bull; El Buen Pastor</span>
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/80 border border-slate-200/80 shadow-2xs mb-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span className="text-[11px] font-bold tracking-wider text-slate-600 uppercase">
+                Control Financiero &bull; ICLEB
+              </span>
             </div>
           )}
 
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">
             Control de Finanzas
           </h1>
           <p className="text-xs sm:text-sm font-medium text-slate-500 mt-0.5">
@@ -399,43 +408,37 @@ export default function FinanceDashboard() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto justify-end">
+        <div className="flex items-center gap-2 sm:gap-2.5 w-full sm:w-auto justify-end">
           {activeView === 'dashboard' ? (
             <>
-              <motion.button
-                whileHover={{ scale: 1.02, y: -1 }}
-                whileTap={{ scale: 0.97 }}
-                transition={IOS_SPRING_FAST}
+              <Button
+                variant="outline"
                 onClick={() => setActiveView('configuracion')}
-                className="glass-button-secondary flex-1 sm:flex-initial inline-flex items-center justify-center rounded-2xl text-xs font-bold text-slate-700 h-11 px-4 gap-2 cursor-pointer shadow-xs"
+                className="shadow-2xs"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-500"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                Configuración
-              </motion.button>
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-500"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                <span>Configuración</span>
+              </Button>
               {canWrite && (
-                <motion.button
-                  whileHover={{ scale: 1.02, y: -1 }}
-                  whileTap={{ scale: 0.97 }}
-                  transition={IOS_SPRING_FAST}
+                <Button
+                  variant="default"
                   onClick={() => openCreate('ingreso')}
-                  className="flex-1 sm:flex-initial inline-flex items-center justify-center rounded-2xl text-xs font-bold bg-slate-900 text-white hover:bg-slate-800 shadow-[0_4px_14px_rgba(15,23,42,0.18)] h-11 px-5 transition-colors gap-2 cursor-pointer"
+                  className="shadow-xs"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                  Nuevo Comprobante
-                </motion.button>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  <span>Nuevo Comprobante</span>
+                </Button>
               )}
             </>
           ) : (
-            <motion.button
-              whileHover={{ scale: 1.02, y: -1 }}
-              whileTap={{ scale: 0.97 }}
-              transition={IOS_SPRING_FAST}
+            <Button
+              variant="outline"
               onClick={() => setActiveView('dashboard')}
-              className="glass-button-secondary w-full sm:w-auto inline-flex items-center justify-center rounded-2xl text-xs font-bold text-slate-700 h-11 px-5 gap-2 cursor-pointer shadow-xs"
+              className="shadow-2xs"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-              Volver al Resumen
-            </motion.button>
+              <span>Volver al Resumen</span>
+            </Button>
           )}
         </div>
       </div>
@@ -454,37 +457,47 @@ export default function FinanceDashboard() {
           >
 
             {/* ── Monthly Context Banner ── */}
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <Card className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="flex items-center gap-3.5">
-                <div className="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center shrink-0 text-indigo-500">
+                <div className="w-10 h-10 rounded-2xl bg-indigo-50 border border-indigo-100/80 flex items-center justify-center shrink-0 text-indigo-600 shadow-2xs">
                   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                 </div>
                 <div>
-                  <p className="text-base font-bold text-slate-900 leading-tight capitalize">
+                  <p className="text-base font-black text-slate-900 leading-tight capitalize">
                     {new Date().toLocaleDateString('es-HN', { month: 'long', year: 'numeric' })}
                   </p>
-                  <p className="text-xs text-slate-400 mt-0.5 font-medium">{txCountMes} transacciones registradas este mes</p>
+                  <p className="text-xs text-slate-500 mt-0.5 font-medium">{txCountMes} transacciones registradas este mes</p>
                 </div>
               </div>
               <div className="flex items-center gap-2.5 flex-wrap">
-                <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${balanceMes >= 0 ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-rose-50 text-rose-600 border-rose-100'}`}>
-                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${balanceMes >= 0 ? 'bg-emerald-500' : 'bg-rose-400'}`}></span>
+                <Badge variant={balanceMes >= 0 ? 'success' : 'destructive'} className="py-1 px-3 text-xs normal-case tracking-normal">
+                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${balanceMes >= 0 ? 'bg-emerald-500' : 'bg-rose-500'}`}></span>
                   {balanceMes >= 0 ? 'Superávit' : 'Déficit'} {formatLps(Math.abs(balanceMes))}
-                </span>
+                </Badge>
                 {canWrite && (
                   <div className="flex items-center gap-2">
-                    <button type="button" onClick={() => openCreate('ingreso')} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-emerald-600 text-white hover:bg-emerald-700 transition-colors cursor-pointer shadow-sm">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => openCreate('ingreso')}
+                      className="text-emerald-700 hover:text-emerald-900 hover:bg-emerald-50/70 border-emerald-200/80"
+                    >
                       <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                      Ingreso
-                    </button>
-                    <button type="button" onClick={() => openCreate('egreso')} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-slate-800 text-white hover:bg-slate-700 transition-colors cursor-pointer shadow-sm">
+                      <span>Ingreso</span>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => openCreate('egreso')}
+                      className="text-slate-700 hover:text-slate-900"
+                    >
                       <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                      Egreso
-                    </button>
+                      <span>Egreso</span>
+                    </Button>
                   </div>
                 )}
               </div>
-            </div>
+            </Card>
 
             {/* ── 4 KPI Cards ── */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -517,20 +530,27 @@ export default function FinanceDashboard() {
                   rose: 'bg-rose-50 border-rose-100 text-rose-500',
                 };
                 return (
-                  <div key={card.label} className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
-                    <div className="flex items-start justify-between mb-3">
-                      <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest leading-tight max-w-[80%]">{card.label}</p>
-                      <div className={`w-8 h-8 rounded-xl border flex items-center justify-center shrink-0 ${colorMap[card.color]}`}>
-                        {card.icon}
+                  <motion.div
+                    key={card.label}
+                    whileHover={{ y: -2 }}
+                    transition={SPRING_FAST}
+                    className="bg-white rounded-3xl border border-slate-200/80 shadow-2xs hover:shadow-xs p-5 flex flex-col justify-between transition-all"
+                  >
+                    <div>
+                      <div className="flex items-start justify-between mb-3">
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider leading-tight max-w-[80%]">{card.label}</p>
+                        <div className={`w-8 h-8 rounded-xl border flex items-center justify-center shrink-0 ${colorMap[card.color]}`}>
+                          {card.icon}
+                        </div>
                       </div>
+                      <p className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight leading-none mb-2">{card.value}</p>
                     </div>
-                    <p className="text-xl font-extrabold text-slate-900 tracking-tight leading-none mb-2">{card.value}</p>
-                    <p className={`text-[11px] font-semibold flex items-center gap-1.5 ${card.trend === 'positive' ? 'text-emerald-600' : card.trend === 'negative' ? 'text-rose-500' : 'text-slate-400'}`}>
+                    <p className={`text-[11px] font-semibold flex items-center gap-1.5 pt-2 border-t border-slate-100 ${card.trend === 'positive' ? 'text-emerald-600' : card.trend === 'negative' ? 'text-rose-500' : 'text-slate-400'}`}>
                       {card.trend === 'positive' && <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4l8 8H4z"/></svg>}
                       {card.trend === 'negative' && <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 20l-8-8h16z"/></svg>}
                       <span className="truncate">{card.sub}</span>
                     </p>
-                  </div>
+                  </motion.div>
                 );
               })}
             </div>
@@ -539,23 +559,23 @@ export default function FinanceDashboard() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
 
               {/* Area Chart */}
-              <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-100 shadow-sm p-5 sm:p-6">
+              <Card className="lg:col-span-2 p-5 sm:p-6">
                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-5">
                   <div>
-                    <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Actividad Financiera</p>
-                    <p className="text-lg font-extrabold text-slate-900 mt-1 capitalize">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Actividad Financiera</p>
+                    <p className="text-base sm:text-lg font-black text-slate-900 mt-0.5 capitalize">
                       {new Date().toLocaleDateString('es-HN', { month: 'long', year: 'numeric' })}
                     </p>
                   </div>
                   <div className="flex items-center gap-4 text-xs text-slate-500 shrink-0">
-                    <span className="flex items-center gap-1.5 font-semibold"><span className="w-8 h-[3px] rounded-full bg-indigo-500 inline-block"></span>Ingresos</span>
-                    <span className="flex items-center gap-1.5 font-semibold"><span className="w-8 h-[3px] rounded-full bg-rose-400 inline-block"></span>Egresos</span>
+                    <span className="flex items-center gap-1.5 font-bold"><span className="w-6 h-[3px] rounded-full bg-indigo-500 inline-block"></span>Ingresos</span>
+                    <span className="flex items-center gap-1.5 font-bold"><span className="w-6 h-[3px] rounded-full bg-rose-400 inline-block"></span>Egresos</span>
                   </div>
                 </div>
                 {monthlyChartData.length === 0 ? (
                   <div className="h-[200px] flex flex-col items-center justify-center text-slate-300">
                     <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-                    <p className="text-xs mt-2 font-medium text-slate-400">Sin datos para el mes actual</p>
+                    <p className="text-xs mt-2 font-bold text-slate-400">Sin datos para el mes actual</p>
                   </div>
                 ) : (
                   <ResponsiveContainer width="100%" height={220}>
@@ -574,34 +594,34 @@ export default function FinanceDashboard() {
                       <XAxis dataKey="dia" tick={{ fontSize: 10, fill: '#94a3b8', fontWeight: 600 }} axisLine={false} tickLine={false} />
                       <YAxis tick={{ fontSize: 10, fill: '#94a3b8', fontWeight: 600 }} axisLine={false} tickLine={false} tickFormatter={(v: number) => v >= 1000 ? `L.${(v / 1000).toFixed(0)}k` : `L.${v}`} />
                       <Tooltip
-                        contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 20px rgba(0,0,0,0.08)', fontSize: 12, fontWeight: 600, padding: '10px 14px' }}
+                        contentStyle={{ borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 20px rgba(0,0,0,0.08)', fontSize: 12, fontWeight: 700, padding: '10px 14px' }}
                         formatter={((value: any, name: any) => [formatLps(Number(value)), name === 'ingresos' ? 'Ingresos' : 'Egresos']) as any}
-                        labelStyle={{ color: '#475569', fontWeight: 700, marginBottom: 4 }}
+                        labelStyle={{ color: '#0f172a', fontWeight: 800, marginBottom: 4 }}
                       />
                       <Area type="monotone" dataKey="ingresos" stroke="#6366f1" strokeWidth={2.5} fill="url(#gradIngresos)" dot={false} activeDot={{ r: 4, fill: '#6366f1', strokeWidth: 0 }} />
                       <Area type="monotone" dataKey="egresos" stroke="#f43f5e" strokeWidth={2.5} fill="url(#gradEgresos)" dot={false} activeDot={{ r: 4, fill: '#f43f5e', strokeWidth: 0 }} />
                     </AreaChart>
                   </ResponsiveContainer>
                 )}
-              </div>
+              </Card>
 
               {/* Right Panel */}
               <div className="space-y-4">
 
                 {/* Category Breakdown */}
-                <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
-                  <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-4">Ingresos por Categoría</p>
+                <Card className="p-5">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-4">Ingresos por Categoría</p>
                   {categoryBreakdown.length === 0 ? (
-                    <p className="text-xs text-slate-300 py-6 text-center font-medium">Sin ingresos registrados este mes</p>
+                    <p className="text-xs text-slate-400 py-6 text-center font-semibold">Sin ingresos registrados este mes</p>
                   ) : (
                     <div className="space-y-3.5">
                       {categoryBreakdown.map((cat, i) => (
                         <div key={cat.name}>
                           <div className="flex items-center justify-between mb-1.5">
-                            <span className="text-xs font-semibold text-slate-700 truncate max-w-[130px]">{cat.name}</span>
+                            <span className="text-xs font-bold text-slate-700 truncate max-w-[130px]">{cat.name}</span>
                             <div className="flex items-center gap-2 shrink-0 ml-1">
-                              <span className="text-[10px] text-slate-400 font-bold">{cat.pct}%</span>
-                              <span className="text-xs font-extrabold text-slate-900">{formatLps(cat.value)}</span>
+                              <span className="text-[10px] text-slate-400 font-extrabold">{cat.pct}%</span>
+                              <span className="text-xs font-black text-slate-900">{formatLps(cat.value)}</span>
                             </div>
                           </div>
                           <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
@@ -611,7 +631,7 @@ export default function FinanceDashboard() {
                       ))}
                     </div>
                   )}
-                </div>
+                </Card>
 
                 {/* Talonario Activo */}
                 {(() => {
@@ -620,20 +640,20 @@ export default function FinanceDashboard() {
                   const used = tal ? Math.max(0, (tal.actual || tal.rango_inicio) - tal.rango_inicio) : 0;
                   const pct = totalRng > 0 ? Math.min(100, Math.round(used / totalRng * 100)) : 0;
                   return (
-                    <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
+                    <Card className="p-5">
                       <div className="flex items-center justify-between mb-3">
-                        <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Talonario Activo</p>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Talonario Activo</p>
                         {tal && (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-100">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Activo
-                          </span>
+                          <Badge variant="success" className="text-[9px]">
+                            Activo
+                          </Badge>
                         )}
                       </div>
                       {tal ? (
                         <>
-                          <p className="text-sm font-extrabold text-slate-900 mb-0.5 truncate">{tal.nombre}</p>
-                          <p className="text-[11px] text-slate-400 mb-3 font-medium">Recibos {tal.rango_inicio} — {tal.rango_fin}</p>
-                          <div className="h-2 bg-slate-100 rounded-full overflow-hidden mb-1.5">
+                          <p className="text-sm font-black text-slate-900 mb-0.5 truncate">{tal.nombre}</p>
+                          <p className="text-[11px] text-slate-500 mb-3 font-semibold">Recibos {tal.rango_inicio} — {tal.rango_fin}</p>
+                          <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden mb-1.5">
                             <div className="h-full bg-emerald-500 rounded-full transition-all duration-700" style={{ width: `${pct}%` }} />
                           </div>
                           <div className="flex justify-between text-[10px] text-slate-400 font-bold mb-3">
@@ -641,17 +661,17 @@ export default function FinanceDashboard() {
                             <span>{pct}% de {totalRng}</span>
                           </div>
                           <div className="flex items-center justify-between pt-3 border-t border-slate-100">
-                            <span className="text-[11px] text-slate-500 font-medium">Próximo recibo</span>
-                            <span className="text-sm font-extrabold text-slate-900 font-mono">N° {String(tal.actual || tal.rango_inicio).padStart(6, '0')}</span>
+                            <span className="text-[11px] text-slate-500 font-semibold">Próximo recibo</span>
+                            <span className="text-xs font-black text-slate-900 font-mono">N° {String(tal.actual || tal.rango_inicio).padStart(6, '0')}</span>
                           </div>
                         </>
                       ) : (
                         <div className="text-center py-4">
-                          <p className="text-xs text-slate-400 font-medium">Sin talonario activo de ingresos</p>
-                          <button onClick={() => setActiveView('configuracion')} className="mt-2 text-xs font-bold text-indigo-600 hover:underline cursor-pointer">Configurar →</button>
+                          <p className="text-xs text-slate-400 font-semibold">Sin talonario activo de ingresos</p>
+                          <Button variant="ghost" size="sm" onClick={() => setActiveView('configuracion')} className="mt-2 text-xs font-bold text-indigo-600">Configurar →</Button>
                         </div>
                       )}
-                    </div>
+                    </Card>
                   );
                 })()}
 
@@ -659,20 +679,20 @@ export default function FinanceDashboard() {
             </div>
 
             {/* ── Transaction Table ── */}
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+            <Card className="overflow-hidden p-0">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between px-5 py-3.5 border-b border-slate-100 gap-3">
                 <div className="flex items-center gap-3">
-                  <div className="bg-slate-50 flex p-1 rounded-xl gap-0.5">
-                    <button onClick={() => setActiveTab('ingreso')} className={`inline-flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-xs font-bold transition-all cursor-pointer ${activeTab === 'ingreso' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}>
+                  <div className="bg-slate-100 flex p-1 rounded-xl gap-1">
+                    <button onClick={() => setActiveTab('ingreso')} className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition-all cursor-pointer ${activeTab === 'ingreso' ? 'bg-white text-slate-900 shadow-2xs' : 'text-slate-500 hover:text-slate-900'}`}>
                       <span className={`w-1.5 h-1.5 rounded-full ${activeTab === 'ingreso' ? 'bg-emerald-500' : 'bg-slate-300'}`}></span>
                       Ingresos
                     </button>
-                    <button onClick={() => setActiveTab('egreso')} className={`inline-flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-xs font-bold transition-all cursor-pointer ${activeTab === 'egreso' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}>
+                    <button onClick={() => setActiveTab('egreso')} className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition-all cursor-pointer ${activeTab === 'egreso' ? 'bg-white text-slate-900 shadow-2xs' : 'text-slate-500 hover:text-slate-900'}`}>
                       <span className={`w-1.5 h-1.5 rounded-full ${activeTab === 'egreso' ? 'bg-rose-500' : 'bg-slate-300'}`}></span>
                       Egresos
                     </button>
                   </div>
-                  <span className="text-xs text-slate-400 font-semibold">{filteredTxs.length} registros</span>
+                  <span className="text-xs text-slate-400 font-bold">{filteredTxs.length} registros</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="relative">
@@ -682,14 +702,14 @@ export default function FinanceDashboard() {
                       placeholder="Buscar por categoría, recibo..."
                       value={searchQuery}
                       onChange={e => setSearchQuery(e.target.value)}
-                      className="pl-8 pr-3 py-1.5 rounded-xl text-xs font-semibold text-slate-700 bg-slate-50 border border-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-200 w-44 sm:w-52 transition-all placeholder:text-slate-300"
+                      className="pl-8 pr-3 py-1.5 rounded-xl text-xs font-semibold text-slate-900 bg-slate-50/80 border border-slate-200/80 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 w-44 sm:w-56 transition-all placeholder:text-slate-400 shadow-2xs"
                     />
                   </div>
                   {canWrite && (
-                    <button onClick={() => openCreate(activeTab)} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 text-white text-xs font-bold hover:bg-slate-800 transition-colors cursor-pointer">
+                    <Button size="sm" onClick={() => openCreate(activeTab)} className="gap-1.5 shadow-2xs">
                       <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                      Nuevo
-                    </button>
+                      <span>Nuevo</span>
+                    </Button>
                   )}
                 </div>
               </div>
@@ -697,14 +717,14 @@ export default function FinanceDashboard() {
               <div className="overflow-x-auto">
                 <table className="w-full text-left min-w-[680px]">
                   <thead>
-                    <tr className="border-b border-slate-100">
-                      <th className="h-10 px-5 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider w-[110px]">Fecha</th>
-                      <th className="h-10 px-5 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">No. Recibo</th>
-                      <th className="h-10 px-5 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Concepto</th>
-                      {activeTab === 'ingreso' && <th className="h-10 px-5 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Asistencia</th>}
-                      <th className="h-10 px-5 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">{activeTab === 'ingreso' ? 'Recibido Por' : 'Descripción'}</th>
-                      <th className="h-10 px-5 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider text-right">Monto</th>
-                      {canWrite && <th className="h-10 px-5 w-20 text-right text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Acc.</th>}
+                    <tr className="border-b border-slate-100 bg-slate-50/60">
+                      <th className="h-10 px-5 text-[10px] font-black text-slate-400 uppercase tracking-wider w-[110px]">Fecha</th>
+                      <th className="h-10 px-5 text-[10px] font-black text-slate-400 uppercase tracking-wider">No. Recibo</th>
+                      <th className="h-10 px-5 text-[10px] font-black text-slate-400 uppercase tracking-wider">Concepto</th>
+                      {activeTab === 'ingreso' && <th className="h-10 px-5 text-[10px] font-black text-slate-400 uppercase tracking-wider">Asistencia</th>}
+                      <th className="h-10 px-5 text-[10px] font-black text-slate-400 uppercase tracking-wider">{activeTab === 'ingreso' ? 'Recibido Por' : 'Descripción'}</th>
+                      <th className="h-10 px-5 text-[10px] font-black text-slate-400 uppercase tracking-wider text-right">Monto</th>
+                      {canWrite && <th className="h-10 px-5 w-20 text-right text-[10px] font-black text-slate-400 uppercase tracking-wider">Acc.</th>}
                     </tr>
                   </thead>
                   <tbody>
@@ -785,7 +805,7 @@ export default function FinanceDashboard() {
                   </tbody>
                 </table>
               </div>
-            </div>
+            </Card>
 
           </motion.div>
         )}
@@ -816,7 +836,7 @@ export default function FinanceDashboard() {
 
               {/* Selector de Tipo (Ingreso / Egreso) si no está editando */}
               {!editingTx && (
-                <div className="glass-panel-subtle flex items-center rounded-2xl p-1 gap-1 max-w-sm mx-auto w-full">
+                <div className="bg-slate-100 flex items-center rounded-2xl p-1 gap-1 max-w-sm mx-auto w-full border border-slate-200/80 shadow-2xs">
                   <button
                     type="button"
                     onClick={() => {
@@ -828,8 +848,8 @@ export default function FinanceDashboard() {
                       });
                       setIsCustomCategory(false);
                     }}
-                    className={`flex-1 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer flex items-center justify-center gap-2 ${
-                      txForm.tipo === 'ingreso' ? 'bg-white text-emerald-700 shadow-xs' : 'text-slate-500 hover:text-slate-900'
+                    className={`flex-1 py-2 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center justify-center gap-2 ${
+                      txForm.tipo === 'ingreso' ? 'bg-white text-emerald-700 shadow-2xs' : 'text-slate-500 hover:text-slate-900'
                     }`}
                   >
                     <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
@@ -846,8 +866,8 @@ export default function FinanceDashboard() {
                       });
                       setIsCustomCategory(false);
                     }}
-                    className={`flex-1 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer flex items-center justify-center gap-2 ${
-                      txForm.tipo === 'egreso' ? 'bg-white text-rose-700 shadow-xs' : 'text-slate-500 hover:text-slate-900'
+                    className={`flex-1 py-2 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center justify-center gap-2 ${
+                      txForm.tipo === 'egreso' ? 'bg-white text-rose-700 shadow-2xs' : 'text-slate-500 hover:text-slate-900'
                     }`}
                   >
                     <span className="w-2 h-2 rounded-full bg-rose-500"></span>
@@ -857,16 +877,16 @@ export default function FinanceDashboard() {
               )}
 
               {/* TARJETA PRINCIPAL TIPO COMPROBANTE FÍSICO */}
-              <div className="glass-panel rounded-2xl sm:rounded-[2rem] p-4 sm:p-8 border border-white/90 space-y-5 sm:space-y-6 shadow-sm relative overflow-hidden">
+              <Card className="rounded-3xl p-5 sm:p-8 space-y-5 sm:space-y-6 shadow-2xs relative overflow-hidden">
 
                 {/* Encabezado inspirado en el talonario físico */}
                 <div className="border-b border-slate-200/80 pb-5 text-center relative">
-                  <div className="flex items-center justify-center gap-2 text-[11px] font-extrabold uppercase tracking-widest text-slate-400 mb-1">
+                  <div className="flex items-center justify-center gap-2 text-[11px] font-black uppercase tracking-wider text-slate-400 mb-1">
                     <span>Iglesia Cristiana Luterana &ldquo;El Buen Pastor&rdquo;</span>
                   </div>
-                  <p className="text-[11px] font-medium text-slate-500 italic">San Pedro Sula, Honduras, C.A.</p>
+                  <p className="text-[11px] font-semibold text-slate-500 italic">San Pedro Sula, Honduras, C.A.</p>
 
-                  <h2 className="text-lg font-black text-slate-900 uppercase tracking-wider mt-2">
+                  <h2 className="text-lg sm:text-xl font-black text-slate-900 uppercase tracking-tight mt-2">
                     {txForm.tipo === 'ingreso' ? 'Comprobante de Ingresos' : 'Comprobante de Egresos'}
                   </h2>
 
@@ -879,7 +899,7 @@ export default function FinanceDashboard() {
                 {/* SECCIÓN 1: FUENTE DE INGRESOS (CHECKBOXES / BOTONES DIRECTOS) */}
                 {txForm.tipo === 'ingreso' ? (
                   <div>
-                    <label className="block text-[11px] font-extrabold text-slate-500 uppercase tracking-wider mb-2">
+                    <label className="block text-[11px] font-black text-slate-500 uppercase tracking-wider mb-2">
                       Ingresos Recibidos de: <span className="text-rose-500">*</span>
                     </label>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
@@ -895,8 +915,8 @@ export default function FinanceDashboard() {
                             }}
                             className={`flex items-center gap-3 p-3 rounded-2xl border text-xs font-bold transition-all text-left cursor-pointer ${
                               isSelected
-                                ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
-                                : 'bg-white/70 text-slate-700 border-white/90 hover:bg-white hover:border-slate-300'
+                                ? 'bg-slate-900 text-white border-slate-900 shadow-2xs'
+                                : 'bg-slate-50/70 text-slate-700 border-slate-200/80 hover:bg-white hover:border-slate-300'
                             }`}
                           >
                             <span className={`w-4 h-4 rounded-lg flex items-center justify-center border text-[10px] ${
@@ -920,8 +940,8 @@ export default function FinanceDashboard() {
                         }}
                         className={`flex items-center gap-3 p-3 rounded-2xl border text-xs font-bold transition-all text-left cursor-pointer ${
                           isCustomCategory
-                            ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
-                            : 'bg-white/70 text-slate-700 border-white/90 hover:bg-white hover:border-slate-300'
+                            ? 'bg-slate-900 text-white border-slate-900 shadow-2xs'
+                            : 'bg-slate-50/70 text-slate-700 border-slate-200/80 hover:bg-white hover:border-slate-300'
                         }`}
                       >
                         <span className={`w-4 h-4 rounded-lg flex items-center justify-center border text-[10px] ${
@@ -952,20 +972,20 @@ export default function FinanceDashboard() {
                             setCustomCategoryText(e.target.value);
                             setTxForm({ ...txForm, categoria: e.target.value });
                           }}
-                          className="glass-input w-full rounded-2xl px-4 py-2.5 text-xs font-bold text-slate-900 focus:outline-none"
+                          className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition-all shadow-2xs"
                         />
                       </motion.div>
                     )}
                   </div>
                 ) : (
                   <div>
-                    <label className="block text-[11px] font-extrabold text-slate-500 uppercase tracking-wider mb-2">
+                    <label className="block text-[11px] font-black text-slate-500 uppercase tracking-wider mb-2">
                       Categoría de Egreso / Gasto: <span className="text-rose-500">*</span>
                     </label>
                     <select
                       value={txForm.categoria}
                       onChange={e => setTxForm({ ...txForm, categoria: e.target.value })}
-                      className="glass-input w-full rounded-2xl px-4 py-3 text-xs font-bold text-slate-900 focus:outline-none cursor-pointer"
+                      className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 cursor-pointer shadow-2xs"
                     >
                       {categorias.map(c => (
                         <option key={c.id} value={c.nombre}>{c.nombre}</option>
@@ -978,7 +998,7 @@ export default function FinanceDashboard() {
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
                   {/* Lempiras */}
                   <div>
-                    <label className="block text-[11px] font-extrabold text-slate-500 uppercase tracking-wider mb-1.5">
+                    <label className="block text-[11px] font-black text-slate-500 uppercase tracking-wider mb-1.5">
                       Lempiras (L.) <span className="text-rose-500">*</span>
                     </label>
                     <div className="relative">
@@ -989,7 +1009,7 @@ export default function FinanceDashboard() {
                         placeholder="0.00"
                         value={txForm.monto}
                         onChange={e => setTxForm({ ...txForm, monto: e.target.value })}
-                        className="glass-input w-full rounded-2xl px-4 py-2.5 pl-9 text-sm font-extrabold text-slate-900 focus:outline-none"
+                        className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3.5 py-2 pl-9 text-sm font-black text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition-all shadow-2xs"
                       />
                       <span className="absolute left-3.5 top-2.5 text-xs font-black text-slate-400 pointer-events-none">L.</span>
                     </div>
@@ -997,7 +1017,7 @@ export default function FinanceDashboard() {
 
                   {/* Fecha */}
                   <div>
-                    <label className="block text-[11px] font-extrabold text-slate-500 uppercase tracking-wider mb-1.5">
+                    <label className="block text-[11px] font-black text-slate-500 uppercase tracking-wider mb-1.5">
                       Fecha <span className="text-rose-500">*</span>
                     </label>
                     <input
@@ -1005,14 +1025,14 @@ export default function FinanceDashboard() {
                       required
                       value={txForm.fecha}
                       onChange={e => setTxForm({ ...txForm, fecha: e.target.value })}
-                      className="glass-input w-full rounded-2xl px-4 py-2.5 text-xs font-bold text-slate-900 focus:outline-none cursor-pointer"
+                      className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 cursor-pointer shadow-2xs"
                     />
                   </div>
 
                   {/* No. Recibo */}
                   <div>
                     <div className="flex items-center justify-between mb-1.5">
-                      <label className="block text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">
+                      <label className="block text-[11px] font-black text-slate-500 uppercase tracking-wider">
                         No. Recibo
                       </label>
                       {txForm.recibo_no !== getSiguienteRecibo(txForm.tipo) && (
@@ -1030,16 +1050,16 @@ export default function FinanceDashboard() {
                       placeholder={`Ej. ${getSiguienteRecibo(txForm.tipo)}`}
                       value={txForm.recibo_no}
                       onChange={e => setTxForm({ ...txForm, recibo_no: e.target.value })}
-                      className="glass-input w-full rounded-2xl px-4 py-2.5 text-xs font-bold text-slate-900 focus:outline-none font-mono"
+                      className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 font-mono shadow-2xs"
                     />
                   </div>
                 </div>
 
                 {/* SECCIÓN 3: ASISTENTES & COMULGANTES (CAMPOS DEL TALONARIO OFICIAL) */}
                 {txForm.tipo === 'ingreso' && (
-                  <div className="p-4 rounded-2xl bg-white/60 border border-white/80 grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                  <div className="p-4 rounded-2xl bg-slate-50/80 border border-slate-200/80 grid grid-cols-1 sm:grid-cols-2 gap-3.5 shadow-2xs">
                     <div>
-                      <label className="block text-[11px] font-extrabold text-slate-600 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                      <label className="block text-[11px] font-black text-slate-600 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
                         <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="text-sky-600"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                         <span>Asistentes al Culto</span>
                       </label>
@@ -1049,11 +1069,11 @@ export default function FinanceDashboard() {
                         placeholder="Total presentes (Ej. 45)"
                         value={txForm.asistentes}
                         onChange={e => setTxForm({ ...txForm, asistentes: e.target.value })}
-                        className="glass-input w-full rounded-xl px-3.5 py-2 text-xs font-bold text-slate-900 focus:outline-none"
+                        className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 shadow-2xs"
                       />
                     </div>
                     <div>
-                      <label className="block text-[11px] font-extrabold text-slate-600 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                      <label className="block text-[11px] font-black text-slate-600 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
                         <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="text-indigo-600"><path d="M8 2h8l-1 9a4 4 0 0 1-8 0L6 2h2z"/><line x1="12" y1="15" x2="12" y2="22"/><line x1="8" y1="22" x2="16" y2="22"/></svg>
                         <span>Comulgantes (Santa Cena)</span>
                       </label>
@@ -1063,7 +1083,7 @@ export default function FinanceDashboard() {
                         placeholder="Total comulgantes (Ej. 30)"
                         value={txForm.comulgantes}
                         onChange={e => setTxForm({ ...txForm, comulgantes: e.target.value })}
-                        className="glass-input w-full rounded-xl px-3.5 py-2 text-xs font-bold text-slate-900 focus:outline-none"
+                        className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 shadow-2xs"
                       />
                     </div>
                   </div>
@@ -1073,23 +1093,23 @@ export default function FinanceDashboard() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                   {txForm.tipo === 'ingreso' ? (
                     <div>
-                      <label className="block text-[11px] font-extrabold text-slate-500 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                      <label className="block text-[11px] font-black text-slate-500 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
                         <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-400"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/></svg>
                         <span>Tesorera Oficial (Recibido Por)</span>
                       </label>
-                      <div className="glass-panel-subtle flex items-center justify-between px-4 py-2.5 rounded-2xl border border-white/80 bg-white/50 cursor-default select-none shadow-2xs">
+                      <div className="flex items-center justify-between px-4 py-2.5 rounded-xl border border-slate-200/80 bg-slate-50/70 cursor-default select-none shadow-2xs h-10">
                         <div className="flex items-center gap-2">
                           <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
                           <span className="text-xs font-bold text-slate-900">Dilcia Sáenz</span>
                         </div>
-                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 bg-white/90 px-2.5 py-0.5 rounded-lg border border-slate-200/70 shadow-2xs">
+                        <Badge variant="secondary" className="text-[10px]">
                           Tesorera
-                        </span>
+                        </Badge>
                       </div>
                     </div>
                   ) : (
                     <div>
-                      <label className="block text-[11px] font-extrabold text-slate-500 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                      <label className="block text-[11px] font-black text-slate-500 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
                         <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-400"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/></svg>
                         <span>Autorizado / Entregado Por</span>
                       </label>
@@ -1098,13 +1118,13 @@ export default function FinanceDashboard() {
                         placeholder="Nombre de quien entrega/autoriza..."
                         value={txForm.recibido_por}
                         onChange={e => setTxForm({ ...txForm, recibido_por: e.target.value })}
-                        className="glass-input w-full rounded-2xl px-4 py-2.5 text-xs font-semibold text-slate-900 focus:outline-none"
+                        className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 shadow-2xs"
                       />
                     </div>
                   )}
 
                   <div>
-                    <label className="block text-[11px] font-extrabold text-slate-500 uppercase tracking-wider mb-1.5">
+                    <label className="block text-[11px] font-black text-slate-500 uppercase tracking-wider mb-1.5">
                       Detalles / Observaciones <span className="font-normal normal-case text-slate-400">(opcional)</span>
                     </label>
                     <input
@@ -1112,40 +1132,40 @@ export default function FinanceDashboard() {
                       placeholder="Notas adicionales..."
                       value={txForm.descripcion}
                       onChange={e => setTxForm({ ...txForm, descripcion: e.target.value })}
-                      className="glass-input w-full rounded-2xl px-4 py-2.5 text-xs font-semibold text-slate-900 focus:outline-none"
+                      className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 shadow-2xs"
                     />
                   </div>
                 </div>
 
                 {/* BOTONES DE ACCIÓN */}
                 <div className="pt-4 border-t border-slate-200/80 flex flex-col-reverse sm:flex-row items-center justify-between gap-3">
-                  <button
+                  <Button
                     type="button"
+                    variant="outline"
                     onClick={closeForm}
-                    className="glass-button-secondary w-full sm:w-auto px-6 py-3 rounded-2xl text-slate-700 text-xs font-bold cursor-pointer"
+                    className="w-full sm:w-auto shadow-2xs"
                   >
                     Cancelar y Volver
-                  </button>
-                  <motion.button
+                  </Button>
+                  <Button
                     type="submit"
                     disabled={createTxMutation.isPending || updateTxMutation.isPending}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.97 }}
-                    transition={IOS_SPRING_FAST}
-                    className="w-full sm:w-auto px-8 py-3 rounded-2xl bg-slate-900 text-white text-xs font-extrabold shadow-[0_4px_14px_rgba(15,23,42,0.18)] hover:bg-slate-800 transition-colors disabled:opacity-60 cursor-pointer flex items-center justify-center gap-2"
+                    className="w-full sm:w-auto shadow-xs"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                    {createTxMutation.isPending || updateTxMutation.isPending
-                      ? 'Guardando...'
-                      : editingTx
-                      ? 'Guardar Modificaciones'
-                      : txForm.tipo === 'ingreso'
-                      ? 'Registrar Comprobante de Ingreso'
-                      : 'Registrar Comprobante de Egreso'}
-                  </motion.button>
+                    <span>
+                      {createTxMutation.isPending || updateTxMutation.isPending
+                        ? 'Guardando...'
+                        : editingTx
+                        ? 'Guardar Modificaciones'
+                        : txForm.tipo === 'ingreso'
+                        ? 'Registrar Comprobante de Ingreso'
+                        : 'Registrar Comprobante de Egreso'}
+                    </span>
+                  </Button>
                 </div>
 
-              </div>
+              </Card>
             </form>
           </motion.div>
         )}
@@ -1641,16 +1661,16 @@ function ConfirmModal({ isOpen, title, message, onConfirm, onCancel }: { isOpen:
   return (
     <AnimatePresence>
       {isOpen && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/30 backdrop-blur-md p-4" onClick={onCancel}>
-          <motion.div initial={{ scale: 0.94, opacity: 0, y: 12 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.94, opacity: 0, y: 12 }} transition={IOS_SPRING_FAST} className="glass-panel-elevated rounded-[2rem] w-full max-w-sm overflow-hidden p-7 text-center" onClick={(e) => e.stopPropagation()}>
-            <div className="mx-auto w-12 h-12 rounded-2xl bg-rose-50 border border-rose-100 flex items-center justify-center mb-4 text-rose-500 shadow-xs">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 p-4" onClick={onCancel}>
+          <motion.div initial={{ scale: 0.94, opacity: 0, y: 12 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.94, opacity: 0, y: 12 }} transition={IOS_SPRING_FAST} className="bg-white rounded-3xl border border-slate-200/90 shadow-2xl w-full max-w-sm overflow-hidden p-6 text-center" onClick={(e) => e.stopPropagation()}>
+            <div className="mx-auto w-12 h-12 rounded-2xl bg-rose-50 border border-rose-100 flex items-center justify-center mb-4 text-rose-500 shadow-2xs">
+              <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
             </div>
-            <h3 className="text-lg font-extrabold text-slate-900 mb-1.5">{title}</h3>
-            <p className="text-xs font-medium text-slate-500 mb-6 leading-relaxed">{message}</p>
+            <h3 className="text-base font-black text-slate-900 mb-1.5">{title}</h3>
+            <p className="text-xs font-medium text-slate-500 mb-5 leading-relaxed">{message}</p>
             <div className="flex gap-2.5">
-              <button onClick={onCancel} className="glass-button-secondary flex-1 rounded-2xl text-slate-700 text-xs font-bold py-3 cursor-pointer">Cancelar</button>
-              <button onClick={() => { onConfirm(); onCancel(); }} className="flex-1 rounded-2xl bg-rose-500 text-white text-xs font-bold py-3 hover:bg-rose-600 shadow-[0_4px_12px_rgba(244,63,94,0.25)] transition-all cursor-pointer">Eliminar</button>
+              <Button variant="outline" onClick={onCancel} className="flex-1 shadow-2xs">Cancelar</Button>
+              <Button variant="destructive" onClick={() => { onConfirm(); onCancel(); }} className="flex-1 shadow-2xs">Eliminar</Button>
             </div>
           </motion.div>
         </motion.div>

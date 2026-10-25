@@ -5,6 +5,7 @@ import api from '../lib/api';
 import { ConfirmModal, useConfirm } from './ConfirmModal';
 import { SPRING_SNAPPY, SPRING_FAST } from '../lib/animations';
 import { generarPDFEvento } from '../lib/pdfEventos';
+import { Button } from './ui/Button';
 
 interface EventoResumen {
   total_participantes: number;
@@ -405,14 +406,14 @@ export default function EventsView() {
       {/* ========== TOPBAR PRINCIPAL ========== */}
       <div className="mb-6 sm:mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/60 border border-white/80 shadow-xs mb-2.5 backdrop-blur-md">
-            <span className="w-2 h-2 rounded-full bg-amber-500"></span>
-            <span className="text-[11px] font-bold tracking-wider text-slate-600 uppercase">
-              Actividades &bull; Recaudación
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/80 border border-slate-200/80 shadow-2xs mb-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+            <span className="text-[11px] font-black uppercase tracking-wider text-slate-500">
+              Recaudación & Pro-Templo • ICLEB
             </span>
           </div>
 
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">
             Rifas & Eventos Pro-Templo
           </h1>
           <p className="text-xs sm:text-sm font-medium text-slate-500 mt-0.5">
@@ -428,7 +429,7 @@ export default function EventsView() {
               <select
                 value={activeEventoId || ''}
                 onChange={(e) => setSelectedEventoId(parseInt(e.target.value))}
-                className="glass-input w-full sm:w-auto h-10 rounded-2xl pl-3 pr-8 text-xs font-bold text-slate-800 focus:outline-none cursor-pointer appearance-none shadow-2xs"
+                className="w-full sm:w-auto h-10 rounded-xl bg-white border border-slate-200 pl-3 pr-8 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 cursor-pointer appearance-none shadow-2xs"
               >
                 {eventos.map(ev => (
                   <option key={ev.id} value={ev.id}>
@@ -444,69 +445,64 @@ export default function EventsView() {
 
           {/* Botón Descargar PDF */}
           {activeEvento && (
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.97 }}
-              transition={SPRING_FAST}
+            <Button
+              variant="outline"
+              size="sm"
               onClick={handleExportPDF}
-              className="h-10 px-3 sm:px-4 rounded-2xl bg-white/90 hover:bg-white text-slate-700 border border-white/80 shadow-xs text-xs font-bold inline-flex items-center gap-1.5 sm:gap-2 transition-colors cursor-pointer select-none active:scale-95"
+              className="gap-1.5"
               title="Descargar reporte completo en tamaño carta"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="text-indigo-600"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="text-indigo-600"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
               <span className="hidden sm:inline">Descargar</span> <span>PDF</span>
-            </motion.button>
+            </Button>
           )}
 
           {/* Botón Editar Actividad Actual */}
           {canWrite && activeEvento && (
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.97 }}
-              transition={SPRING_FAST}
+            <Button
+              variant="outline"
+              size="icon"
               onClick={() => openEditEvent(activeEvento)}
-              className="h-10 px-3 rounded-2xl bg-white/70 hover:bg-white text-slate-600 border border-white/80 shadow-2xs text-xs font-bold inline-flex items-center gap-1.5 transition-colors cursor-pointer select-none active:scale-95"
+              className="h-9 w-9 rounded-xl"
               title="Editar configuración de esta actividad"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
-            </motion.button>
+            </Button>
           )}
 
           {/* Botón Eliminar Actividad Actual */}
           {canWrite && activeEvento && (
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.97 }}
-              transition={SPRING_FAST}
+            <Button
+              variant="outline"
+              size="icon"
               onClick={() => confirmAction(
                 'Eliminar Actividad',
                 `¿Estás seguro de eliminar la actividad "${activeEvento.nombre}" y todos sus boletos registrados? Esta acción no se puede deshacer.`,
                 () => deleteEventoMutation.mutate(activeEvento.id)
               )}
-              className="h-10 px-3 rounded-2xl bg-white/70 hover:bg-rose-50 text-slate-400 hover:text-rose-600 border border-white/80 shadow-2xs text-xs font-bold inline-flex items-center gap-1.5 transition-colors cursor-pointer select-none active:scale-95"
+              className="h-9 w-9 rounded-xl text-slate-400 hover:text-rose-600 hover:border-rose-200"
               title="Eliminar esta actividad"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14H6L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M9 6V4h6v2"></path></svg>
-            </motion.button>
+            </Button>
           )}
 
           {/* Botón Nueva Actividad */}
           {canWrite && (
-            <motion.button
-              whileHover={{ scale: 1.02, y: -1 }}
-              whileTap={{ scale: 0.97 }}
-              transition={SPRING_FAST}
+            <Button
+              size="sm"
               onClick={openCreateEvent}
-              className="h-10 px-3.5 sm:px-4 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white shadow-[0_4px_14px_rgba(15,23,42,0.18)] text-xs font-bold inline-flex items-center gap-2 transition-all cursor-pointer select-none active:scale-95"
+              className="bg-slate-900 hover:bg-slate-800 text-white gap-2"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
               <span>Nueva Actividad</span>
-            </motion.button>
+            </Button>
           )}
         </div>
       </div>
 
       {isLoadingEventos ? (
-        <div className="glass-panel rounded-[2rem] p-16 text-center">
+        <div className="bg-white rounded-3xl p-16 text-center border border-slate-200/80 shadow-2xs">
           <p className="text-xs font-semibold text-slate-400">Cargando actividades y rifas...</p>
         </div>
       ) : eventos.length === 0 ? (
@@ -515,27 +511,25 @@ export default function EventsView() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={SPRING_SNAPPY}
-          className="glass-panel-elevated rounded-[2.5rem] p-12 sm:p-16 text-center max-w-lg mx-auto space-y-5"
+          className="bg-white rounded-3xl p-12 sm:p-16 text-center max-w-lg mx-auto space-y-5 border border-slate-200/80 shadow-2xs"
         >
           <div className="w-16 h-16 rounded-3xl bg-amber-50 border border-amber-200 flex items-center justify-center mx-auto text-amber-600 shadow-xs">
             <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/><line x1="9" y1="15" x2="9.01" y2="15"/><line x1="15" y1="15" x2="15.01" y2="15"/></svg>
           </div>
           <div>
-            <h2 className="text-xl font-extrabold text-slate-900">No hay actividades activas</h2>
+            <h2 className="text-xl font-black text-slate-900">No hay actividades activas</h2>
             <p className="text-xs font-medium text-slate-500 mt-1 max-w-sm mx-auto">
               Crea tu primera rifa, subasta o colecta para empezar a asignar boletos a las personas y controlar cobros de forma moderna.
             </p>
           </div>
           {canWrite && (
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.97 }}
+            <Button
               onClick={openCreateEvent}
-              className="px-6 py-3 rounded-2xl bg-slate-900 text-white text-xs font-extrabold shadow-md hover:bg-slate-800 transition-all cursor-pointer inline-flex items-center gap-2"
+              className="bg-slate-900 hover:bg-slate-800 text-white gap-2"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
               Crear Primera Actividad
-            </motion.button>
+            </Button>
           )}
         </motion.div>
       ) : (
@@ -548,19 +542,19 @@ export default function EventsView() {
             <motion.div
               whileHover={{ y: -2 }}
               transition={SPRING_FAST}
-              className="glass-panel rounded-2xl p-3 sm:p-4 flex items-center justify-between h-[84px] sm:h-[90px] cursor-default"
+              className="bg-white rounded-3xl p-4 sm:p-5 flex items-center justify-between border border-slate-200/80 shadow-2xs cursor-default"
             >
               <div className="min-w-0">
-                <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest leading-none">Boletos</p>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider leading-none">Boletos</p>
                 <p className="text-lg sm:text-2xl font-black text-slate-900 mt-1 sm:mt-1.5 leading-tight truncate">
                   {resumen.total_boletos}
                 </p>
-                <p className="text-[10px] font-bold text-slate-500 mt-0.5 leading-none truncate">
+                <p className="text-[11px] font-semibold text-slate-500 mt-0.5 leading-none truncate">
                   {resumen.total_participantes} {resumen.total_participantes === 1 ? 'comprador' : 'compradores'}
                 </p>
               </div>
-              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 shrink-0 shadow-2xs">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"/></svg>
+              <div className="w-10 h-10 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"/></svg>
               </div>
             </motion.div>
 
@@ -568,19 +562,19 @@ export default function EventsView() {
             <motion.div
               whileHover={{ y: -2 }}
               transition={SPRING_FAST}
-              className="glass-panel rounded-2xl p-3 sm:p-4 flex items-center justify-between h-[84px] sm:h-[90px] cursor-default"
+              className="bg-white rounded-3xl p-4 sm:p-5 flex items-center justify-between border border-slate-200/80 shadow-2xs cursor-default"
             >
               <div className="min-w-0">
-                <p className="text-[10px] font-extrabold text-emerald-600 uppercase tracking-widest leading-none">Recaudado</p>
+                <p className="text-[10px] font-black text-emerald-600 uppercase tracking-wider leading-none">Recaudado</p>
                 <p className="text-lg sm:text-2xl font-black text-emerald-700 mt-1 sm:mt-1.5 leading-tight truncate">
                   L. {Number(resumen.total_recaudado).toFixed(0)}
                 </p>
-                <p className="text-[10px] font-bold text-emerald-600 mt-0.5 leading-none truncate">
+                <p className="text-[11px] font-semibold text-emerald-600 mt-0.5 leading-none truncate">
                   {resumen.porcentaje_recaudado}% del total
                 </p>
               </div>
-              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shrink-0 shadow-2xs">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              <div className="w-10 h-10 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
               </div>
             </motion.div>
 
@@ -588,19 +582,19 @@ export default function EventsView() {
             <motion.div
               whileHover={{ y: -2 }}
               transition={SPRING_FAST}
-              className="glass-panel rounded-2xl p-3 sm:p-4 flex items-center justify-between h-[84px] sm:h-[90px] cursor-default"
+              className="bg-white rounded-3xl p-4 sm:p-5 flex items-center justify-between border border-slate-200/80 shadow-2xs cursor-default"
             >
               <div className="min-w-0">
-                <p className="text-[10px] font-extrabold text-amber-600 uppercase tracking-widest leading-none">Por Cobrar</p>
+                <p className="text-[10px] font-black text-amber-600 uppercase tracking-wider leading-none">Por Cobrar</p>
                 <p className="text-lg sm:text-2xl font-black text-amber-700 mt-1 sm:mt-1.5 leading-tight truncate">
                   L. {Number(resumen.total_pendiente).toFixed(0)}
                 </p>
-                <p className="text-[10px] font-bold text-amber-600 mt-0.5 leading-none truncate">
+                <p className="text-[11px] font-semibold text-amber-600 mt-0.5 leading-none truncate">
                   Pendiente
                 </p>
               </div>
-              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600 shrink-0 shadow-2xs">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <div className="w-10 h-10 rounded-2xl bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600 shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
               </div>
             </motion.div>
 
@@ -608,19 +602,19 @@ export default function EventsView() {
             <motion.div
               whileHover={{ y: -2 }}
               transition={SPRING_FAST}
-              className="glass-panel rounded-2xl p-3 sm:p-4 flex items-center justify-between h-[84px] sm:h-[90px] cursor-default"
+              className="bg-white rounded-3xl p-4 sm:p-5 flex items-center justify-between border border-slate-200/80 shadow-2xs cursor-default"
             >
               <div className="min-w-0">
-                <p className="text-[10px] font-extrabold text-sky-600 uppercase tracking-widest leading-none">Entregados</p>
+                <p className="text-[10px] font-black text-sky-600 uppercase tracking-wider leading-none">Entregados</p>
                 <p className="text-lg sm:text-2xl font-black text-slate-900 mt-1 sm:mt-1.5 leading-tight truncate">
                   {resumen.boletos_entregados} <span className="text-xs font-bold text-slate-400">/ {resumen.total_boletos}</span>
                 </p>
-                <p className="text-[10px] font-bold text-sky-600 mt-0.5 leading-none truncate">
+                <p className="text-[11px] font-semibold text-sky-600 mt-0.5 leading-none truncate">
                   {resumen.porcentaje_entregado}% entregados
                 </p>
               </div>
-              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-sky-50 border border-sky-100 flex items-center justify-center text-sky-600 shrink-0 shadow-2xs">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+              <div className="w-10 h-10 rounded-2xl bg-sky-50 border border-sky-100 flex items-center justify-center text-sky-600 shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
               </div>
             </motion.div>
 
@@ -628,15 +622,15 @@ export default function EventsView() {
 
           {/* ========== 2. BARRA DE REGISTRO RÁPIDO (QUICK-ADD) ========== */}
           {canWrite && (
-            <div className="glass-panel rounded-[2rem] p-4 sm:p-5 border border-white/80 shadow-xs relative">
+            <div className="bg-white rounded-3xl p-4 sm:p-5 border border-slate-200/80 shadow-2xs relative">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                  <span className="text-[11px] font-extrabold text-slate-700 uppercase tracking-wider">
+                  <span className="text-[10px] font-black text-slate-700 uppercase tracking-wider">
                     Asignación Rápida de Boletos
                   </span>
-                  <span className="text-[10px] font-medium text-slate-400 hidden sm:inline">
-                    &bull; Presiona Enter para guardar y registrar el siguiente
+                  <span className="text-[11px] font-medium text-slate-400 hidden sm:inline">
+                    • Presiona Enter para guardar y registrar el siguiente
                   </span>
                 </div>
 
@@ -656,7 +650,7 @@ export default function EventsView() {
               </div>
 
               <form onSubmit={handleQuickAddSubmit} className="flex flex-col lg:flex-row items-stretch lg:items-center gap-2.5 sm:gap-3">
-                {/* Campo 1: Nombre de la Persona (100% manual) */}
+                {/* Campo 1: Nombre de la Persona */}
                 <div className="relative flex-1">
                   <input
                     ref={nameInputRef}
@@ -665,25 +659,25 @@ export default function EventsView() {
                     placeholder="Nombre del comprador (ej. Edis, Enrique...)"
                     value={quickForm.nombre_persona}
                     onChange={(e) => setQuickForm({ ...quickForm, nombre_persona: e.target.value })}
-                    className="glass-input w-full h-11 rounded-2xl px-4 text-sm sm:text-xs font-bold text-slate-900 focus:outline-none pl-10"
+                    className="w-full h-10 rounded-xl border border-slate-200 bg-white px-4 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 shadow-2xs pl-10"
                   />
-                  <div className="absolute left-3.5 top-3.5 text-slate-400 pointer-events-none">
+                  <div className="absolute left-3.5 top-3 text-slate-400 pointer-events-none">
                     <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                   </div>
                 </div>
 
                 {/* Fila responsiva para Boletos y Números */}
                 <div className="flex flex-wrap sm:flex-nowrap items-center gap-2">
-                  {/* Campo 2: Stepper táctil [-] [cant] [+] sin superposiciones */}
+                  {/* Stepper táctil [-] [cant] [+] */}
                   <div className="flex items-center gap-1.5 shrink-0">
-                    <div className="flex items-center bg-white/90 rounded-2xl border border-white/90 shadow-2xs h-11 px-1">
+                    <div className="flex items-center bg-white rounded-xl border border-slate-200 shadow-2xs h-10 px-1">
                       <button
                         type="button"
                         onClick={() => setQuickForm(prev => {
                           const cur = typeof prev.cantidad_boletos === 'number' ? prev.cantidad_boletos : 1;
                           return { ...prev, cantidad_boletos: Math.max(1, cur - 1) };
                         })}
-                        className="w-8 h-8 rounded-xl flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-100 text-base font-bold transition-colors cursor-pointer select-none active:scale-95"
+                        className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-100 text-base font-bold transition-colors cursor-pointer select-none active:scale-95"
                         title="Restar 1 boleto"
                       >
                         -
@@ -711,7 +705,7 @@ export default function EventsView() {
                             };
                           });
                         }}
-                        className="w-12 h-8 text-center text-xs font-black text-slate-900 bg-transparent focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        className="w-12 h-7 text-center text-xs font-black text-slate-900 bg-transparent focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       />
                       <button
                         type="button"
@@ -719,7 +713,7 @@ export default function EventsView() {
                           const cur = typeof prev.cantidad_boletos === 'number' ? prev.cantidad_boletos : 1;
                           return { ...prev, cantidad_boletos: cur + 1 };
                         })}
-                        className="w-8 h-8 rounded-xl flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-100 text-base font-bold transition-colors cursor-pointer select-none active:scale-95"
+                        className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-100 text-base font-bold transition-colors cursor-pointer select-none active:scale-95"
                         title="Sumar 1 boleto"
                       >
                         +
@@ -727,7 +721,7 @@ export default function EventsView() {
                     </div>
 
                     {/* Botones de incremento rápido +5 y +10 */}
-                    <div className="inline-flex items-center gap-1 bg-white/70 p-1 rounded-2xl border border-white/80 shadow-2xs h-11">
+                    <div className="inline-flex items-center gap-1 bg-white p-1 rounded-xl border border-slate-200 shadow-2xs h-10">
                       {[5, 10].map(n => (
                         <button
                           key={n}
@@ -736,7 +730,7 @@ export default function EventsView() {
                             const cur = typeof prev.cantidad_boletos === 'number' ? prev.cantidad_boletos : 1;
                             return { ...prev, cantidad_boletos: cur + n };
                           })}
-                          className="px-2.5 py-1.5 rounded-xl text-[10px] font-black text-slate-700 hover:bg-slate-900 hover:text-white transition-colors cursor-pointer active:scale-95"
+                          className="px-2.5 py-1 rounded-lg text-[10px] font-black text-slate-700 hover:bg-slate-900 hover:text-white transition-colors cursor-pointer active:scale-95"
                           title={`Sumar ${n} boletos`}
                         >
                           +{n}
@@ -745,14 +739,14 @@ export default function EventsView() {
                     </div>
                   </div>
 
-                  {/* Campo 3: Rango o Números (Opcional) */}
+                  {/* Campo 3: Rango o Números */}
                   <div className="flex-1 sm:w-32 shrink-0 min-w-[110px]">
                     <input
                       type="text"
                       placeholder="Núms. (opcional)"
                       value={quickForm.numeros_boletos}
                       onChange={(e) => setQuickForm({ ...quickForm, numeros_boletos: e.target.value })}
-                      className="glass-input w-full h-11 rounded-2xl px-3 text-sm sm:text-xs font-semibold text-slate-900 focus:outline-none"
+                      className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 shadow-2xs"
                     />
                   </div>
                 </div>
@@ -760,7 +754,7 @@ export default function EventsView() {
                 {/* Fila responsiva para Total + Estados + Guardar */}
                 <div className="flex items-center justify-between sm:justify-start gap-2 shrink-0">
                   {/* Total Calculado en Vivo */}
-                  <div className="flex items-center justify-center px-3.5 h-11 rounded-2xl bg-slate-900/5 border border-white/80 text-xs font-extrabold text-slate-800 shrink-0">
+                  <div className="flex items-center justify-center px-3.5 h-10 rounded-xl bg-slate-50 border border-slate-200 text-xs font-black text-slate-800 shrink-0 shadow-2xs">
                     L. {Number((typeof quickForm.cantidad_boletos === 'number' ? quickForm.cantidad_boletos : 0) * (activeEvento?.precio_boleto || 0)).toFixed(0)}
                   </div>
 
@@ -769,10 +763,10 @@ export default function EventsView() {
                     <button
                       type="button"
                       onClick={() => setQuickForm(prev => ({ ...prev, pagado: !prev.pagado }))}
-                      className={`h-11 px-3 rounded-2xl text-[11px] font-extrabold border transition-all cursor-pointer flex items-center gap-1.5 select-none active:scale-95 ${
+                      className={`h-10 px-3 rounded-xl text-[10px] font-black uppercase tracking-wider border transition-all cursor-pointer flex items-center gap-1.5 select-none active:scale-95 ${
                         quickForm.pagado
-                          ? 'bg-emerald-500 text-white border-emerald-600 shadow-xs'
-                          : 'bg-white/80 text-slate-400 border-white/90 hover:text-slate-700'
+                          ? 'bg-emerald-600 text-white border-emerald-600 shadow-2xs'
+                          : 'bg-white text-slate-400 border-slate-200 hover:text-slate-700'
                       }`}
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
@@ -782,10 +776,10 @@ export default function EventsView() {
                     <button
                       type="button"
                       onClick={() => setQuickForm(prev => ({ ...prev, entregado: !prev.entregado }))}
-                      className={`h-11 px-3 rounded-2xl text-[11px] font-extrabold border transition-all cursor-pointer flex items-center gap-1.5 select-none active:scale-95 ${
+                      className={`h-10 px-3 rounded-xl text-[10px] font-black uppercase tracking-wider border transition-all cursor-pointer flex items-center gap-1.5 select-none active:scale-95 ${
                         quickForm.entregado
-                          ? 'bg-sky-500 text-white border-sky-600 shadow-xs'
-                          : 'bg-white/80 text-slate-400 border-white/90 hover:text-slate-700'
+                          ? 'bg-sky-600 text-white border-sky-600 shadow-2xs'
+                          : 'bg-white text-slate-400 border-slate-200 hover:text-slate-700'
                       }`}
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
@@ -794,26 +788,23 @@ export default function EventsView() {
                   </div>
 
                   {/* Botón Guardar */}
-                  <motion.button
+                  <Button
                     type="submit"
                     disabled={quickAddMutation.isPending}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.97 }}
-                    className="flex-1 sm:flex-none h-11 px-5 rounded-2xl bg-slate-900 text-white text-xs font-black shadow-[0_4px_14px_rgba(15,23,42,0.18)] hover:bg-slate-800 active:scale-95 transition-all disabled:opacity-60 cursor-pointer flex items-center justify-center gap-1.5"
+                    className="flex-1 sm:flex-none h-10 px-4 bg-slate-900 hover:bg-slate-800 text-white"
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                     <span>Guardar</span>
-                  </motion.button>
+                  </Button>
                 </div>
               </form>
             </div>
           )}
 
           {/* ========== 3. TABLA DE CONTROL DE PARTICIPANTES ========== */}
-          <div className="glass-panel rounded-[2rem] overflow-hidden">
+          <div className="bg-white rounded-3xl border border-slate-200/80 shadow-2xs overflow-hidden">
             
             {/* Barra de Filtros y Búsqueda */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 sm:px-6 sm:py-4.5 border-b border-white/60 gap-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 sm:px-6 sm:py-4.5 border-b border-slate-100 gap-3">
               {/* Buscador */}
               <div className="relative flex-1 max-w-none sm:max-w-sm">
                 <input
@@ -821,7 +812,7 @@ export default function EventsView() {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder="Buscar por nombre o número de boleto..."
-                  className="glass-input w-full h-10 rounded-2xl pl-10 pr-4 text-xs font-semibold focus:outline-none"
+                  className="w-full h-10 rounded-xl border border-slate-200 bg-white pl-10 pr-4 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 shadow-2xs"
                 />
                 <div className="absolute left-3.5 top-3 text-slate-400 pointer-events-none">
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -837,40 +828,40 @@ export default function EventsView() {
               <div className="flex items-center gap-1 overflow-x-auto custom-scrollbar pb-1 sm:pb-0">
                 <button
                   onClick={() => setFilterStatus('todos')}
-                  className={`px-3 py-1.5 rounded-xl text-[10px] font-bold transition-all cursor-pointer whitespace-nowrap ${
-                    filterStatus === 'todos' ? 'bg-slate-900 text-white shadow-2xs' : 'bg-white/70 text-slate-600 hover:bg-white'
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+                    filterStatus === 'todos' ? 'bg-slate-900 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
                   Todos ({participantes.length})
                 </button>
                 <button
                   onClick={() => setFilterStatus('pendientes_pago')}
-                  className={`px-3 py-1.5 rounded-xl text-[10px] font-bold transition-all cursor-pointer whitespace-nowrap ${
-                    filterStatus === 'pendientes_pago' ? 'bg-amber-600 text-white shadow-2xs' : 'bg-white/70 text-slate-600 hover:bg-white'
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+                    filterStatus === 'pendientes_pago' ? 'bg-amber-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
                   Sin Pagar
                 </button>
                 <button
                   onClick={() => setFilterStatus('pagados')}
-                  className={`px-3 py-1.5 rounded-xl text-[10px] font-bold transition-all cursor-pointer whitespace-nowrap ${
-                    filterStatus === 'pagados' ? 'bg-emerald-600 text-white shadow-2xs' : 'bg-white/70 text-slate-600 hover:bg-white'
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+                    filterStatus === 'pagados' ? 'bg-emerald-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
                   Pagados
                 </button>
                 <button
                   onClick={() => setFilterStatus('pendientes_entrega')}
-                  className={`px-3 py-1.5 rounded-xl text-[10px] font-bold transition-all cursor-pointer whitespace-nowrap ${
-                    filterStatus === 'pendientes_entrega' ? 'bg-slate-700 text-white shadow-2xs' : 'bg-white/70 text-slate-600 hover:bg-white'
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+                    filterStatus === 'pendientes_entrega' ? 'bg-slate-700 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
                   Por Entregar
                 </button>
                 <button
                   onClick={() => setFilterStatus('entregados')}
-                  className={`px-3 py-1.5 rounded-xl text-[10px] font-bold transition-all cursor-pointer whitespace-nowrap ${
-                    filterStatus === 'entregados' ? 'bg-sky-600 text-white shadow-2xs' : 'bg-white/70 text-slate-600 hover:bg-white'
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+                    filterStatus === 'entregados' ? 'bg-sky-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
                   Entregados
@@ -985,21 +976,21 @@ export default function EventsView() {
             </div>
 
             {/* VISTA DESKTOP / TABLET (>= 640px): Tabla completa */}
-            <div className="hidden sm:block relative w-full overflow-x-auto custom-scrollbar p-2 sm:p-4">
+            <div className="hidden sm:block relative w-full overflow-x-auto custom-scrollbar">
               <table className="w-full text-left text-sm min-w-[660px]">
                 <thead>
-                  <tr className="border-b border-white/60">
-                    <th className="h-11 px-4 font-bold text-slate-400 uppercase tracking-wider text-[10px]">#</th>
-                    <th className="h-11 px-4 font-bold text-slate-400 uppercase tracking-wider text-[10px]">Participante</th>
-                    <th className="h-11 px-4 font-bold text-slate-400 uppercase tracking-wider text-[10px] text-center">Boletos</th>
-                    <th className="h-11 px-4 font-bold text-slate-400 uppercase tracking-wider text-[10px]">Números</th>
-                    <th className="h-11 px-4 font-bold text-slate-400 uppercase tracking-wider text-[10px] text-right">Total</th>
-                    <th className="h-11 px-4 font-bold text-slate-400 uppercase tracking-wider text-[10px] text-center">Estado Pago</th>
-                    <th className="h-11 px-4 font-bold text-slate-400 uppercase tracking-wider text-[10px] text-center">Entrega Boletos</th>
-                    {canWrite && <th className="h-11 px-4 font-bold text-slate-400 uppercase tracking-wider text-[10px] text-right">Acciones</th>}
+                  <tr className="border-b border-slate-100 bg-slate-50/60 h-10">
+                    <th className="px-4 font-black text-slate-400 uppercase tracking-wider text-[10px]">#</th>
+                    <th className="px-4 font-black text-slate-400 uppercase tracking-wider text-[10px]">Participante</th>
+                    <th className="px-4 font-black text-slate-400 uppercase tracking-wider text-[10px] text-center">Boletos</th>
+                    <th className="px-4 font-black text-slate-400 uppercase tracking-wider text-[10px]">Números</th>
+                    <th className="px-4 font-black text-slate-400 uppercase tracking-wider text-[10px] text-right">Total</th>
+                    <th className="px-4 font-black text-slate-400 uppercase tracking-wider text-[10px] text-center">Estado Pago</th>
+                    <th className="px-4 font-black text-slate-400 uppercase tracking-wider text-[10px] text-center">Entrega Boletos</th>
+                    {canWrite && <th className="px-4 font-black text-slate-400 uppercase tracking-wider text-[10px] text-right">Acciones</th>}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-white/40">
+                <tbody className="divide-y divide-slate-100">
                   {isLoadingParticipantes ? (
                     <tr>
                       <td colSpan={canWrite ? 8 : 7} className="py-16 text-center text-xs font-semibold text-slate-400">
@@ -1009,7 +1000,7 @@ export default function EventsView() {
                   ) : filteredParticipantes.length === 0 ? (
                     <tr>
                       <td colSpan={canWrite ? 8 : 7} className="py-16 text-center">
-                        <div className="mx-auto w-12 h-12 rounded-2xl bg-white/80 border border-white flex items-center justify-center mb-2.5 text-slate-400 shadow-xs">
+                        <div className="mx-auto w-12 h-12 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center mb-2.5 text-slate-400 shadow-xs">
                           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                         </div>
                         <p className="text-sm font-bold text-slate-800">No se encontraron boletos asignados</p>
@@ -1022,10 +1013,10 @@ export default function EventsView() {
                     filteredParticipantes.map((p, idx) => (
                       <tr
                         key={p.id}
-                        className="group transition-colors duration-150 hover:bg-white/70 rounded-2xl"
+                        className="group transition-colors duration-150 hover:bg-slate-50/60"
                       >
                         {/* Índice */}
-                        <td className="px-4 py-3 align-middle text-xs font-bold text-slate-400 rounded-l-2xl">
+                        <td className="px-4 py-3 align-middle text-xs font-bold text-slate-400">
                           {idx + 1}
                         </td>
 
@@ -1036,7 +1027,7 @@ export default function EventsView() {
                               {p.nombre_persona.substring(0, 2)}
                             </div>
                             <div className="min-w-0">
-                              <span className="font-extrabold text-slate-900 text-xs block truncate leading-tight">
+                              <span className="font-black text-slate-900 text-xs block truncate leading-tight">
                                 {p.nombre_persona}
                               </span>
                               {p.telefono && (
@@ -1050,7 +1041,7 @@ export default function EventsView() {
 
                         {/* Cantidad de Boletos */}
                         <td className="px-4 py-3 align-middle text-center">
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-lg bg-slate-100 text-slate-800 font-black text-xs border border-white/60">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-lg bg-slate-100 text-slate-800 font-black text-xs">
                             {p.cantidad_boletos}
                           </span>
                         </td>
@@ -1079,7 +1070,7 @@ export default function EventsView() {
                             type="button"
                             onClick={() => canWrite && togglePagoMutation.mutate(p.id)}
                             disabled={!canWrite}
-                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[10px] font-extrabold uppercase tracking-wider transition-all border cursor-pointer select-none active:scale-95 ${
+                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border cursor-pointer select-none active:scale-95 ${
                               p.pagado
                                 ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 shadow-2xs'
                                 : 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100'
@@ -1097,7 +1088,7 @@ export default function EventsView() {
                             type="button"
                             onClick={() => canWrite && toggleEntregaMutation.mutate(p.id)}
                             disabled={!canWrite}
-                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[10px] font-extrabold uppercase tracking-wider transition-all border cursor-pointer select-none active:scale-95 ${
+                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border cursor-pointer select-none active:scale-95 ${
                               p.entregado
                                 ? 'bg-sky-50 text-sky-700 border-sky-200 hover:bg-sky-100 shadow-2xs'
                                 : 'bg-slate-100 text-slate-500 border-slate-200 hover:bg-slate-200'
@@ -1111,11 +1102,11 @@ export default function EventsView() {
 
                         {/* Acciones */}
                         {canWrite && (
-                          <td className="px-4 py-3 align-middle text-right rounded-r-2xl">
+                          <td className="px-4 py-3 align-middle text-right">
                             <div className="flex items-center justify-end gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                               <button
                                 onClick={() => openEditParticipante(p)}
-                                className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-900 hover:bg-white transition-colors cursor-pointer"
+                                className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer"
                                 title="Editar datos"
                               >
                                 <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
