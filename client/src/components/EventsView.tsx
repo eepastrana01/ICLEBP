@@ -6,6 +6,7 @@ import { ConfirmModal, useConfirm } from './ConfirmModal';
 import { SPRING_SNAPPY, SPRING_FAST } from '../lib/animations';
 import { generarPDFEvento } from '../lib/pdfEventos';
 import { Button } from './ui/Button';
+import { Badge } from './ui/Badge';
 
 interface EventoResumen {
   total_participantes: number;
@@ -70,13 +71,15 @@ export default function EventsView() {
     precio_boleto: number | '';
     meta_recaudacion: string;
     fecha_evento: string;
+    activo: boolean;
   }>({
     nombre: '',
     descripcion: '',
     tipo: 'rifa',
     precio_boleto: 50,
     meta_recaudacion: '',
-    fecha_evento: ''
+    fecha_evento: '',
+    activo: true
   });
   const [eventFormError, setEventFormError] = useState('');
 
@@ -165,6 +168,13 @@ export default function EventsView() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['eventos'] });
       setSelectedEventoId(null);
+    }
+  });
+
+  const toggleActivoMutation = useMutation({
+    mutationFn: ({ id, activo }: { id: number; activo: boolean }) => api.put(`/eventos/${id}`, { activo }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['eventos'] });
     }
   });
 
@@ -279,7 +289,8 @@ export default function EventsView() {
       tipo: 'rifa',
       precio_boleto: 50,
       meta_recaudacion: '',
-      fecha_evento: ''
+      fecha_evento: '',
+      activo: true
     });
     setEventFormError('');
   };
@@ -301,7 +312,8 @@ export default function EventsView() {
       tipo: ev.tipo || 'rifa',
       precio_boleto: ev.precio_boleto || 0,
       meta_recaudacion: ev.meta_recaudacion ? String(ev.meta_recaudacion) : '',
-      fecha_evento: fechaStr
+      fecha_evento: fechaStr,
+      activo: ev.activo ?? true
     });
     setEventFormError('');
     setIsEventModalOpen(true);
@@ -317,7 +329,8 @@ export default function EventsView() {
     const precio = typeof eventForm.precio_boleto === 'number' ? eventForm.precio_boleto : (parseFloat(eventForm.precio_boleto) || 0);
     const payload = {
       ...eventForm,
-      precio_boleto: precio
+      precio_boleto: precio,
+      activo: eventForm.activo
     };
     if (editingEvento) {
       updateEventoMutation.mutate({ id: editingEvento.id, data: payload });
@@ -406,11 +419,22 @@ export default function EventsView() {
       {/* ========== TOPBAR PRINCIPAL ========== */}
       <div className="mb-6 sm:mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/80 border border-slate-200/80 shadow-2xs mb-2">
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
-            <span className="text-[11px] font-black uppercase tracking-wider text-slate-500">
-              Recaudación & Pro-Templo • ICLEB
-            </span>
+          <div className="flex flex-wrap items-center gap-2 mb-2">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/80 border border-slate-200/80 shadow-2xs">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+              <span className="text-[11px] font-black uppercase tracking-wider text-slate-500">
+                Recaudación & Pro-Templo • ICLEB
+              </span>
+            </div>
+            {activeEvento && (
+              <Badge
+                variant={activeEvento.activo ? 'success' : 'secondary'}
+                className="gap-1.5 px-2.5 py-1 text-[11px]"
+              >
+                <span className={`w-1.5 h-1.5 rounded-full ${activeEvento.activo ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`} />
+                <span>{activeEvento.activo ? 'Actividad en curso' : 'Actividad cerrada'}</span>
+              </Badge>
+            )}
           </div>
 
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">
@@ -433,7 +457,7 @@ export default function EventsView() {
               >
                 {eventos.map(ev => (
                   <option key={ev.id} value={ev.id}>
-                    {ev.nombre} (L. {Number(ev.precio_boleto).toFixed(0)})
+                    {ev.nombre} {!ev.activo ? '• [Cerrada]' : ''} (L. {Number(ev.precio_boleto).toFixed(0)})
                   </option>
                 ))}
               </select>
@@ -441,6 +465,47 @@ export default function EventsView() {
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
               </div>
             </div>
+          )}
+
+          {/* Botón Cerrar / Reabrir Actividad Actual */}
+          {canWrite && activeEvento && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                if (activeEvento.activo) {
+                  confirmAction(
+                    'Cerrar Actividad',
+                    `¿Deseas dar por cerrada la actividad "${activeEvento.nombre}"? Ya no se podrán registrar nuevos boletos desde la barra rápida hasta que sea reabierta. Seguirás teniendo acceso a todos los balances, cobros pendientes y reporte PDF.`,
+                    () => toggleActivoMutation.mutate({ id: activeEvento.id, activo: false })
+                  );
+                } else {
+                  confirmAction(
+                    'Reabrir Actividad',
+                    `¿Deseas reactivar la actividad "${activeEvento.nombre}"? Volverá a habilitarse la asignación rápida de boletos.`,
+                    () => toggleActivoMutation.mutate({ id: activeEvento.id, activo: true })
+                  );
+                }
+              }}
+              className={`gap-1.5 h-10 rounded-xl transition-colors ${
+                activeEvento.activo
+                  ? 'text-slate-700 hover:text-amber-700 hover:bg-amber-50/70 hover:border-amber-200'
+                  : 'text-emerald-700 bg-emerald-50/60 border-emerald-200 hover:bg-emerald-100/70'
+              }`}
+              title={activeEvento.activo ? 'Cerrar y finalizar esta actividad' : 'Reabrir esta actividad'}
+            >
+              {activeEvento.activo ? (
+                <>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="text-amber-600"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                  <span className="hidden sm:inline">Cerrar</span> <span>Actividad</span>
+                </>
+              ) : (
+                <>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-600"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
+                  <span className="hidden sm:inline">Reabrir</span> <span>Actividad</span>
+                </>
+              )}
+            </Button>
           )}
 
           {/* Botón Descargar PDF */}
@@ -620,184 +685,218 @@ export default function EventsView() {
 
           </div>
 
-          {/* ========== 2. BARRA DE REGISTRO RÁPIDO (QUICK-ADD) ========== */}
+          {/* ========== 2. BARRA DE REGISTRO RÁPIDO (QUICK-ADD) O AVISO DE CIERRE ========== */}
           {canWrite && (
-            <div className="bg-white rounded-3xl p-4 sm:p-5 border border-slate-200/80 shadow-2xs relative">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                  <span className="text-[10px] font-black text-slate-700 uppercase tracking-wider">
-                    Asignación Rápida de Boletos
-                  </span>
-                  <span className="text-[11px] font-medium text-slate-400 hidden sm:inline">
-                    • Presiona Enter para guardar y registrar el siguiente
-                  </span>
-                </div>
-
-                {/* Toast feedback temporal de guardado */}
-                <AnimatePresence>
-                  {quickSavedToast && (
-                    <motion.span
-                      initial={{ opacity: 0, y: -4 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0 }}
-                      className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-lg border border-emerald-200"
-                    >
-                      {quickSavedToast}
-                    </motion.span>
-                  )}
-                </AnimatePresence>
-              </div>
-
-              <form onSubmit={handleQuickAddSubmit} className="flex flex-col lg:flex-row items-stretch lg:items-center gap-2.5 sm:gap-3">
-                {/* Campo 1: Nombre de la Persona */}
-                <div className="relative flex-1">
-                  <input
-                    ref={nameInputRef}
-                    type="text"
-                    required
-                    placeholder="Nombre del comprador (ej. Edis, Enrique...)"
-                    value={quickForm.nombre_persona}
-                    onChange={(e) => setQuickForm({ ...quickForm, nombre_persona: e.target.value })}
-                    className="w-full h-10 rounded-xl border border-slate-200 bg-white px-4 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 shadow-2xs pl-10"
-                  />
-                  <div className="absolute left-3.5 top-3 text-slate-400 pointer-events-none">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            activeEvento?.activo ? (
+              <div className="bg-white rounded-3xl p-4 sm:p-5 border border-slate-200/80 shadow-2xs relative">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                    <span className="text-[10px] font-black text-slate-700 uppercase tracking-wider">
+                      Asignación Rápida de Boletos
+                    </span>
+                    <span className="text-[11px] font-medium text-slate-400 hidden sm:inline">
+                      • Presiona Enter para guardar y registrar el siguiente
+                    </span>
                   </div>
+
+                  {/* Toast feedback temporal de guardado */}
+                  <AnimatePresence>
+                    {quickSavedToast && (
+                      <motion.span
+                        initial={{ opacity: 0, y: -4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0 }}
+                        className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-lg border border-emerald-200"
+                      >
+                        {quickSavedToast}
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
                 </div>
 
-                {/* Fila responsiva para Boletos y Números */}
-                <div className="flex flex-wrap sm:flex-nowrap items-center gap-2">
-                  {/* Stepper táctil [-] [cant] [+] */}
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <div className="flex items-center bg-white rounded-xl border border-slate-200 shadow-2xs h-10 px-1">
-                      <button
-                        type="button"
-                        onClick={() => setQuickForm(prev => {
-                          const cur = typeof prev.cantidad_boletos === 'number' ? prev.cantidad_boletos : 1;
-                          return { ...prev, cantidad_boletos: Math.max(1, cur - 1) };
-                        })}
-                        className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-100 text-base font-bold transition-colors cursor-pointer select-none active:scale-95"
-                        title="Restar 1 boleto"
-                      >
-                        -
-                      </button>
-                      <input
-                        type="number"
-                        inputMode="numeric"
-                        pattern="[0-9]*"
-                        min="1"
-                        required
-                        value={quickForm.cantidad_boletos}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          setQuickForm(prev => ({
-                            ...prev,
-                            cantidad_boletos: val === '' ? '' : Math.max(0, parseInt(val, 10) || 0)
-                          }));
-                        }}
-                        onBlur={() => {
-                          setQuickForm(prev => {
-                            const cur = prev.cantidad_boletos;
-                            return {
-                              ...prev,
-                              cantidad_boletos: typeof cur === 'number' && cur > 0 ? cur : 1
-                            };
-                          });
-                        }}
-                        className="w-12 h-7 text-center text-xs font-black text-slate-900 bg-transparent focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setQuickForm(prev => {
-                          const cur = typeof prev.cantidad_boletos === 'number' ? prev.cantidad_boletos : 1;
-                          return { ...prev, cantidad_boletos: cur + 1 };
-                        })}
-                        className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-100 text-base font-bold transition-colors cursor-pointer select-none active:scale-95"
-                        title="Sumar 1 boleto"
-                      >
-                        +
-                      </button>
+                <form onSubmit={handleQuickAddSubmit} className="flex flex-col lg:flex-row items-stretch lg:items-center gap-2.5 sm:gap-3">
+                  {/* Campo 1: Nombre de la Persona */}
+                  <div className="relative flex-1">
+                    <input
+                      ref={nameInputRef}
+                      type="text"
+                      required
+                      placeholder="Nombre del comprador (ej. Edis, Enrique...)"
+                      value={quickForm.nombre_persona}
+                      onChange={(e) => setQuickForm({ ...quickForm, nombre_persona: e.target.value })}
+                      className="w-full h-10 rounded-xl border border-slate-200 bg-white px-4 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 shadow-2xs pl-10"
+                    />
+                    <div className="absolute left-3.5 top-3 text-slate-400 pointer-events-none">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                     </div>
+                  </div>
 
-                    {/* Botones de incremento rápido +5 y +10 */}
-                    <div className="inline-flex items-center gap-1 bg-white p-1 rounded-xl border border-slate-200 shadow-2xs h-10">
-                      {[5, 10].map(n => (
+                  {/* Fila responsiva para Boletos y Números */}
+                  <div className="flex flex-wrap sm:flex-nowrap items-center gap-2">
+                    {/* Stepper táctil [-] [cant] [+] */}
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <div className="flex items-center bg-white rounded-xl border border-slate-200 shadow-2xs h-10 px-1">
                         <button
-                          key={n}
                           type="button"
                           onClick={() => setQuickForm(prev => {
                             const cur = typeof prev.cantidad_boletos === 'number' ? prev.cantidad_boletos : 1;
-                            return { ...prev, cantidad_boletos: cur + n };
+                            return { ...prev, cantidad_boletos: Math.max(1, cur - 1) };
                           })}
-                          className="px-2.5 py-1 rounded-lg text-[10px] font-black text-slate-700 hover:bg-slate-900 hover:text-white transition-colors cursor-pointer active:scale-95"
-                          title={`Sumar ${n} boletos`}
+                          className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-100 text-base font-bold transition-colors cursor-pointer select-none active:scale-95"
+                          title="Restar 1 boleto"
                         >
-                          +{n}
+                          -
                         </button>
-                      ))}
+                        <input
+                          type="number"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
+                          min="1"
+                          required
+                          value={quickForm.cantidad_boletos}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setQuickForm(prev => ({
+                              ...prev,
+                              cantidad_boletos: val === '' ? '' : Math.max(0, parseInt(val, 10) || 0)
+                            }));
+                          }}
+                          onBlur={() => {
+                            setQuickForm(prev => {
+                              const cur = prev.cantidad_boletos;
+                              return {
+                                ...prev,
+                                cantidad_boletos: typeof cur === 'number' && cur > 0 ? cur : 1
+                              };
+                            });
+                          }}
+                          className="w-12 h-7 text-center text-xs font-black text-slate-900 bg-transparent focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setQuickForm(prev => {
+                            const cur = typeof prev.cantidad_boletos === 'number' ? prev.cantidad_boletos : 1;
+                            return { ...prev, cantidad_boletos: cur + 1 };
+                          })}
+                          className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-100 text-base font-bold transition-colors cursor-pointer select-none active:scale-95"
+                          title="Sumar 1 boleto"
+                        >
+                          +
+                        </button>
+                      </div>
+
+                      {/* Botones de incremento rápido +5 y +10 */}
+                      <div className="inline-flex items-center gap-1 bg-white p-1 rounded-xl border border-slate-200 shadow-2xs h-10">
+                        {[5, 10].map(n => (
+                          <button
+                            key={n}
+                            type="button"
+                            onClick={() => setQuickForm(prev => {
+                              const cur = typeof prev.cantidad_boletos === 'number' ? prev.cantidad_boletos : 1;
+                              return { ...prev, cantidad_boletos: cur + n };
+                            })}
+                            className="px-2.5 py-1 rounded-lg text-[10px] font-black text-slate-700 hover:bg-slate-900 hover:text-white transition-colors cursor-pointer active:scale-95"
+                            title={`Sumar ${n} boletos`}
+                          >
+                            +{n}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Campo 3: Rango o Números */}
+                    <div className="flex-1 sm:w-32 shrink-0 min-w-[110px]">
+                      <input
+                        type="text"
+                        placeholder="Núms. (opcional)"
+                        value={quickForm.numeros_boletos}
+                        onChange={(e) => setQuickForm({ ...quickForm, numeros_boletos: e.target.value })}
+                        className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 shadow-2xs"
+                      />
                     </div>
                   </div>
 
-                  {/* Campo 3: Rango o Números */}
-                  <div className="flex-1 sm:w-32 shrink-0 min-w-[110px]">
-                    <input
-                      type="text"
-                      placeholder="Núms. (opcional)"
-                      value={quickForm.numeros_boletos}
-                      onChange={(e) => setQuickForm({ ...quickForm, numeros_boletos: e.target.value })}
-                      className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 shadow-2xs"
-                    />
+                  {/* Fila responsiva para Total + Estados + Guardar */}
+                  <div className="flex items-center justify-between sm:justify-start gap-2 shrink-0">
+                    {/* Total Calculado en Vivo */}
+                    <div className="flex items-center justify-center px-3.5 h-10 rounded-xl bg-slate-50 border border-slate-200 text-xs font-black text-slate-800 shrink-0 shadow-2xs">
+                      L. {Number((typeof quickForm.cantidad_boletos === 'number' ? quickForm.cantidad_boletos : 0) * (activeEvento?.precio_boleto || 0)).toFixed(0)}
+                    </div>
+
+                    {/* Switches Rápidos: Pagado & Entregado */}
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => setQuickForm(prev => ({ ...prev, pagado: !prev.pagado }))}
+                        className={`h-10 px-3 rounded-xl text-[10px] font-black uppercase tracking-wider border transition-all cursor-pointer flex items-center gap-1.5 select-none active:scale-95 ${
+                          quickForm.pagado
+                            ? 'bg-emerald-600 text-white border-emerald-600 shadow-2xs'
+                            : 'bg-white text-slate-400 border-slate-200 hover:text-slate-700'
+                        }`}
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        <span>Pagado</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setQuickForm(prev => ({ ...prev, entregado: !prev.entregado }))}
+                        className={`h-10 px-3 rounded-xl text-[10px] font-black uppercase tracking-wider border transition-all cursor-pointer flex items-center gap-1.5 select-none active:scale-95 ${
+                          quickForm.entregado
+                            ? 'bg-sky-600 text-white border-sky-600 shadow-2xs'
+                            : 'bg-white text-slate-400 border-slate-200 hover:text-slate-700'
+                        }`}
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                        <span>Entregado</span>
+                      </button>
+                    </div>
+
+                    {/* Botón Guardar */}
+                    <Button
+                      type="submit"
+                      disabled={quickAddMutation.isPending}
+                      className="flex-1 sm:flex-none h-10 px-4 bg-slate-900 hover:bg-slate-800 text-white"
+                    >
+                      <span>Guardar</span>
+                    </Button>
+                  </div>
+                </form>
+              </div>
+            ) : (
+              <div className="bg-slate-50/90 rounded-3xl p-5 border border-slate-200 shadow-2xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-3.5">
+                  <div className="w-10 h-10 rounded-2xl bg-slate-200/80 flex items-center justify-center text-slate-600 shrink-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h4 className="text-xs sm:text-sm font-black text-slate-800">
+                        Esta actividad se encuentra cerrada y finalizada
+                      </h4>
+                      <Badge variant="secondary">Cerrada</Badge>
+                    </div>
+                    <p className="text-[11px] sm:text-xs font-medium text-slate-500 mt-0.5">
+                      La asignación de nuevos boletos está deshabilitada en modo balance final. Puedes consultar las estadísticas, registrar cobros pendientes o reabrir la actividad en cualquier momento.
+                    </p>
                   </div>
                 </div>
-
-                {/* Fila responsiva para Total + Estados + Guardar */}
-                <div className="flex items-center justify-between sm:justify-start gap-2 shrink-0">
-                  {/* Total Calculado en Vivo */}
-                  <div className="flex items-center justify-center px-3.5 h-10 rounded-xl bg-slate-50 border border-slate-200 text-xs font-black text-slate-800 shrink-0 shadow-2xs">
-                    L. {Number((typeof quickForm.cantidad_boletos === 'number' ? quickForm.cantidad_boletos : 0) * (activeEvento?.precio_boleto || 0)).toFixed(0)}
-                  </div>
-
-                  {/* Switches Rápidos: Pagado & Entregado */}
-                  <div className="flex items-center gap-1.5">
-                    <button
-                      type="button"
-                      onClick={() => setQuickForm(prev => ({ ...prev, pagado: !prev.pagado }))}
-                      className={`h-10 px-3 rounded-xl text-[10px] font-black uppercase tracking-wider border transition-all cursor-pointer flex items-center gap-1.5 select-none active:scale-95 ${
-                        quickForm.pagado
-                          ? 'bg-emerald-600 text-white border-emerald-600 shadow-2xs'
-                          : 'bg-white text-slate-400 border-slate-200 hover:text-slate-700'
-                      }`}
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                      <span>Pagado</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => setQuickForm(prev => ({ ...prev, entregado: !prev.entregado }))}
-                      className={`h-10 px-3 rounded-xl text-[10px] font-black uppercase tracking-wider border transition-all cursor-pointer flex items-center gap-1.5 select-none active:scale-95 ${
-                        quickForm.entregado
-                          ? 'bg-sky-600 text-white border-sky-600 shadow-2xs'
-                          : 'bg-white text-slate-400 border-slate-200 hover:text-slate-700'
-                      }`}
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
-                      <span>Entregado</span>
-                    </button>
-                  </div>
-
-                  {/* Botón Guardar */}
-                  <Button
-                    type="submit"
-                    disabled={quickAddMutation.isPending}
-                    className="flex-1 sm:flex-none h-10 px-4 bg-slate-900 hover:bg-slate-800 text-white"
-                  >
-                    <span>Guardar</span>
-                  </Button>
-                </div>
-              </form>
-            </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => confirmAction(
+                    'Reabrir Actividad',
+                    `¿Deseas reactivar la actividad "${activeEvento?.nombre}" para permitir nuevas asignaciones de boletos?`,
+                    () => activeEvento && toggleActivoMutation.mutate({ id: activeEvento.id, activo: true })
+                  )}
+                  className="shrink-0 bg-white hover:bg-slate-50 text-slate-800 gap-1.5 font-bold"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-600"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
+                  <span>Reabrir Actividad</span>
+                </Button>
+              </div>
+            )
           )}
 
           {/* ========== 3. TABLA DE CONTROL DE PARTICIPANTES ========== */}
@@ -1272,6 +1371,28 @@ export default function EventsView() {
                     className="glass-input w-full rounded-xl p-3 text-xs font-medium text-slate-900 focus:outline-none resize-none"
                   />
                 </div>
+
+                {editingEvento && (
+                  <div className="flex items-center justify-between p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+                    <div>
+                      <span className="text-xs font-black text-slate-800">Estado de la Actividad</span>
+                      <p className="text-[10px] font-semibold text-slate-500">
+                        {eventForm.activo ? 'Abierta para registrar boletos y cobros' : 'Cerrada / Finalizada'}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setEventForm(prev => ({ ...prev, activo: !prev.activo }))}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer select-none active:scale-95 ${
+                        eventForm.activo
+                          ? 'bg-emerald-600 text-white shadow-2xs'
+                          : 'bg-slate-200 text-slate-700'
+                      }`}
+                    >
+                      {eventForm.activo ? 'Activa' : 'Cerrada'}
+                    </button>
+                  </div>
+                )}
 
                 {/* Acciones */}
                 <div className="flex gap-2.5 pt-3 border-t border-slate-200">

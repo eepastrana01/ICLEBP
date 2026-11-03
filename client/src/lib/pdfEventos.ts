@@ -9,6 +9,7 @@ export interface EventoPDFData {
   precio_boleto: number;
   fecha_evento?: string | null;
   meta_recaudacion?: number | null;
+  activo?: boolean;
   resumen?: {
     total_participantes: number;
     total_boletos: number;
@@ -110,7 +111,8 @@ export function generarPDFEvento(evento: EventoPDFData, participantes: Participa
     fechaEventoTexto = ` | Fecha Programada: ${local.toLocaleDateString('es-HN', { day: '2-digit', month: '2-digit', year: 'numeric' })}`;
   }
 
-  doc.text(`Tipo: ${tipoTexto} | ${precioTexto}${metaTexto}${fechaEventoTexto}`, margin, y);
+  const estadoTexto = evento.activo !== undefined ? ` | Estado: ${evento.activo ? 'ACTIVA' : 'CERRADA / FINALIZADA'}` : '';
+  doc.text(`Tipo: ${tipoTexto} | ${precioTexto}${metaTexto}${fechaEventoTexto}${estadoTexto}`, margin, y);
 
   // 4. Bloque Resumen Ejecutivo / KPIs (Cajas compactas con bordes definidos)
   y += 6;
