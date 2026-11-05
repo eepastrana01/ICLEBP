@@ -20,6 +20,7 @@ import {
 import { Button } from './ui/Button';
 import { Badge } from './ui/Badge';
 import { Card } from './ui/Card';
+import { Select } from './ui/Select';
 import { ActivityModal, getCategoryTag, type Actividad } from './ActivityModal';
 
 interface Miembro { 
@@ -156,18 +157,12 @@ function AgendaTab({
             ))}
           </div>
 
-          <div className="relative flex-1 sm:flex-initial">
-            <select 
-              value={yearFilter} 
-              onChange={e => setYearFilter(Number(e.target.value))}
-              className="w-full sm:w-auto h-10 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 cursor-pointer appearance-none pr-8 shadow-2xs"
-            >
-              {[2024, 2025, 2026, 2027, 2028].map(y => (
-                <option key={y} value={y}>{y}</option>
-              ))}
-            </select>
-            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"><polyline points="6 9 12 15 18 9"/></svg>
-          </div>
+          <Select
+            value={yearFilter}
+            onChange={(val) => setYearFilter(Number(val))}
+            options={[2024, 2025, 2026, 2027, 2028].map(y => ({ value: y, label: String(y) }))}
+            className="flex-1 sm:flex-initial min-w-[95px]"
+          />
         </div>
 
         {/* Acciones del Período */}

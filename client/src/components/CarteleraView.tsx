@@ -24,6 +24,7 @@ import api from '../lib/api';
 import { LOGO_WHITE_BASE64 } from '../lib/logoWhiteBase64';
 import { detectCategoryFromTitle, type Actividad } from './ActivityModal';
 import { Button } from './ui/Button';
+import { Select } from './ui/Select';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
@@ -60,6 +61,30 @@ interface ThemeOption {
 }
 
 const THEMES: Record<string, ThemeOption> = {
+  slate: {
+    id: 'slate',
+    name: 'Editorial Moderno',
+    tagline: 'Minimalista & Limpio',
+    accentColor: '#0F172A',
+    headerBgStyle: { background: 'linear-gradient(to right, #020617, #0f172a, #020617)' },
+    headerBg: 'bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950',
+    headerText: 'text-white',
+    paperBgStyle: { backgroundColor: '#F8FAFC' },
+    paperBg: 'bg-[#F8FAFC]',
+    cardBgStyle: { backgroundColor: '#FFFFFF', borderColor: '#E2E8F0' },
+    cardBg: 'bg-white',
+    cardBorder: 'border-slate-200',
+    dayBadgeBgStyle: { backgroundColor: '#0F172A', color: '#FFFFFF' },
+    dayBadgeBg: 'bg-slate-900 text-white',
+    dayBadgeText: 'text-slate-900',
+    titleColor: 'text-slate-900',
+    mutedColor: 'text-slate-600',
+    verseBgStyle: { backgroundColor: '#F1F5F9', borderColor: '#E2E8F0', color: '#0F172A' },
+    verseBg: 'bg-slate-100',
+    verseBorder: 'border-slate-200',
+    verseText: 'text-slate-900',
+    tagDot: 'bg-slate-800'
+  },
   navy: {
     id: 'navy',
     name: 'Azul Clásico',
@@ -88,7 +113,7 @@ const THEMES: Record<string, ThemeOption> = {
     id: 'sage',
     name: 'Salvia & Menta',
     tagline: 'Natural & Pacífico',
-    accentColor: '#2D6A4F',
+    accentColor: '#065F46',
     headerBgStyle: { background: 'linear-gradient(to right, #022c22, #042f2e, #022c22)' },
     headerBg: 'bg-gradient-to-r from-emerald-950 via-teal-950 to-emerald-950',
     headerText: 'text-white',
@@ -183,7 +208,7 @@ export default function CarteleraView() {
   const [selectedMonth, setSelectedMonth] = useState<number>(now.getMonth());
   const [selectedYear, setSelectedYear] = useState<number>(now.getFullYear());
   const [orientation, setOrientation] = useState<'portrait' | 'landscape'>('portrait');
-  const [themeKey, setThemeKey] = useState<string>('navy');
+  const [themeKey, setThemeKey] = useState<string>('slate');
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [verseText, setVerseText] = useState<string>(
     '«El Señor es mi pastor; nada me faltará.» — Salmo 23:1'
@@ -221,7 +246,7 @@ export default function CarteleraView() {
     return monthActivities.filter(a => selectedIds.includes(a.id));
   }, [monthActivities, selectedIds]);
 
-  const theme = THEMES[themeKey] || THEMES.navy;
+  const theme = THEMES[themeKey] || THEMES.slate;
 
   const toggleSelectId = (id: number) => {
     setSelectedIds(prev => 
@@ -248,7 +273,6 @@ export default function CarteleraView() {
     const targetWidth = isLandscape ? 1056 : 816;
     const targetHeight = isLandscape ? 816 : 1056;
 
-    // Canvas 1x1 auxiliar para transformar colores modernos (oklab, oklch, color-mix) a rgba nativo
     const helperCanvas = document.createElement('canvas');
     helperCanvas.width = 1;
     helperCanvas.height = 1;
@@ -302,7 +326,6 @@ export default function CarteleraView() {
       });
     };
 
-    // Interceptar getComputedStyle en el window principal mientras corre html2canvas
     const origWindowGetComputedStyle = window.getComputedStyle;
     window.getComputedStyle = function (elt: Element, pseudoElt?: string | null) {
       const style = origWindowGetComputedStyle.call(this, elt, pseudoElt);
@@ -348,29 +371,28 @@ export default function CarteleraView() {
             allCloned.forEach((node) => {
               if (!node.style) return;
               node.style.filter = 'none';
-              (node.style as any).backdropFilter = 'none';
-              (node.style as any).webkitBackdropFilter = 'none';
-              node.style.boxShadow = 'none';
-              node.style.textShadow = 'none';
             });
           }
         }
       });
 
-      return canvas;
-    } finally {
       window.getComputedStyle = origWindowGetComputedStyle;
+      return canvas;
+    } catch (error) {
+      window.getComputedStyle = origWindowGetComputedStyle;
+      throw error;
     }
   };
 
-  // 2. Descargar como PDF listo para imprimir
+  // 2. Exportar como Documento PDF
   const handleDownloadPdf = async () => {
     if (!printSheetRef.current) return;
     setExportingType('pdf');
+
     try {
       const canvas = await generateSheetCanvas(printSheetRef.current);
-      const imgData = canvas.toDataURL('image/jpeg', 0.95);
       const isLandscape = orientation === 'landscape';
+
       const pdf = new jsPDF({
         orientation: isLandscape ? 'landscape' : 'portrait',
         unit: 'mm',
@@ -380,21 +402,24 @@ export default function CarteleraView() {
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
 
-      pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
-      pdf.save(`Cartelera_${MONTH_NAMES[selectedMonth]}_${selectedYear}.pdf`);
-      console.log('PDF de cartelera generado y descargado exitosamente');
+      const imgData = canvas.toDataURL('image/png', 1.0);
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+
+      const fileName = `Cartelera_${MONTH_NAMES[selectedMonth]}_${selectedYear}.pdf`;
+      pdf.save(fileName);
     } catch (err: any) {
       console.error('Error generando PDF de cartelera:', err);
-      alert('Hubo un inconveniente al generar el PDF. Puedes usar el botón "Imprimir Hoja" para guardarla como PDF directamente.');
+      alert('Hubo un inconveniente al generar el PDF. Puedes usar el botón "Imprimir Hoja" como alternativa.');
     } finally {
       setExportingType(null);
     }
   };
 
-  // 3. Descargar como Imagen PNG de alta calidad
+  // 3. Exportar como Imagen PNG
   const handleDownloadImage = async () => {
     if (!printSheetRef.current) return;
     setExportingType('image');
+
     try {
       const canvas = await generateSheetCanvas(printSheetRef.current);
 
@@ -413,7 +438,6 @@ export default function CarteleraView() {
           link.href = url;
           link.click();
           setTimeout(() => URL.revokeObjectURL(url), 1000);
-          console.log('Imagen de cartelera guardada exitosamente');
         } finally {
           setExportingType(null);
         }
@@ -425,7 +449,7 @@ export default function CarteleraView() {
     }
   };
 
-  // Cantidad de columnas óptima según cantidad y orientación
+  // Columnas óptimas según cantidad de actividades y orientación
   const gridColsClass = useMemo(() => {
     const count = displayedActivities.length;
     if (orientation === 'landscape') {
@@ -440,7 +464,7 @@ export default function CarteleraView() {
   }, [displayedActivities.length, orientation]);
 
   return (
-    <div className="space-y-6 pb-16">
+    <div className="space-y-6 pb-16 font-sans text-slate-900">
       {/* Estilos específicos para impresión directa en papel tamaño Carta */}
       <style>{`
         @media print {
@@ -470,11 +494,11 @@ export default function CarteleraView() {
         }
       `}</style>
 
-      {/* Cabecera del Módulo */}
+      {/* Cabecera del Módulo (Material Surface Header) */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/80 border border-slate-200/80 shadow-2xs mb-2">
-            <span className="w-1.5 h-1.5 rounded-full bg-blue-600" />
+            <span className="w-1.5 h-1.5 rounded-full bg-slate-700" />
             <span className="text-[11px] font-black uppercase tracking-wider text-slate-500">
               Cartelera Mural • ICLEB
             </span>
@@ -492,7 +516,7 @@ export default function CarteleraView() {
           <Button
             onClick={handlePrint}
             disabled={exportingType !== null || displayedActivities.length === 0}
-            className="gap-2 bg-slate-900 hover:bg-slate-800 text-white"
+            className="gap-2 bg-slate-900 hover:bg-slate-850 text-white shadow-2xs"
           >
             <Printer className="w-4 h-4" />
             <span>Imprimir Hoja</span>
@@ -502,9 +526,9 @@ export default function CarteleraView() {
             variant="outline"
             onClick={handleDownloadPdf}
             disabled={exportingType !== null || displayedActivities.length === 0}
-            className="gap-2"
+            className="gap-2 shadow-2xs"
           >
-            <Download className={`w-4 h-4 text-blue-600 ${exportingType === 'pdf' ? 'animate-bounce' : ''}`} />
+            <Download className={`w-4 h-4 text-slate-700 ${exportingType === 'pdf' ? 'animate-bounce' : ''}`} />
             <span>{exportingType === 'pdf' ? 'Generando PDF...' : 'Descargar PDF'}</span>
           </Button>
 
@@ -512,9 +536,9 @@ export default function CarteleraView() {
             variant="outline"
             onClick={handleDownloadImage}
             disabled={exportingType !== null || displayedActivities.length === 0}
-            className="gap-2"
+            className="gap-2 shadow-2xs"
           >
-            <ImageIcon className={`w-4 h-4 text-emerald-600 ${exportingType === 'image' ? 'animate-bounce' : ''}`} />
+            <ImageIcon className={`w-4 h-4 text-slate-700 ${exportingType === 'image' ? 'animate-bounce' : ''}`} />
             <span>{exportingType === 'image' ? 'Guardando imagen...' : 'Guardar Imagen'}</span>
           </Button>
         </div>
@@ -526,70 +550,66 @@ export default function CarteleraView() {
         {/* PANEL DE CONTROL / HERRAMIENTAS */}
         <div className="lg:col-span-4 space-y-5 no-print">
           
-          {/* 1. Selector de Mes y Año */}
-          <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-2xs space-y-3">
+          {/* 1. Selector de Mes y Año (Custom Dropdowns) */}
+          <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-2xs space-y-3">
             <label className="text-[10px] font-black uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-              <Calendar className="w-3.5 h-3.5 text-blue-600" />
+              <Calendar className="w-3.5 h-3.5 text-slate-600" />
               Período a Imprimir
             </label>
             <div className="grid grid-cols-2 gap-2.5">
-              <select
+              <Select
                 value={selectedMonth}
-                onChange={(e) => setSelectedMonth(Number(e.target.value))}
-                className="w-full h-10 px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 shadow-2xs cursor-pointer"
-              >
-                {MONTH_NAMES.map((m, idx) => (
-                  <option key={idx} value={idx}>{m}</option>
-                ))}
-              </select>
-              <select
+                onChange={(val) => setSelectedMonth(Number(val))}
+                options={MONTH_NAMES.map((m, idx) => ({ value: idx, label: m }))}
+              />
+              <Select
                 value={selectedYear}
-                onChange={(e) => setSelectedYear(Number(e.target.value))}
-                className="w-full h-10 px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 shadow-2xs cursor-pointer"
-              >
-                {[selectedYear - 1, selectedYear, selectedYear + 1].map((y) => (
-                  <option key={y} value={y}>{y}</option>
-                ))}
-              </select>
+                onChange={(val) => setSelectedYear(Number(val))}
+                options={[2024, 2025, 2026, 2027, 2028].map((y) => ({ value: y, label: String(y) }))}
+              />
             </div>
           </div>
 
           {/* 2. Orientación y Paleta de Colores */}
-          <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-2xs space-y-4">
+          <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-2xs space-y-4">
+            {/* Orientación */}
             <div>
               <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5 mb-2.5">
-                <Layers className="w-3.5 h-3.5 text-blue-900" />
+                <Layers className="w-3.5 h-3.5 text-slate-700" />
                 Orientación del Papel (Carta)
               </label>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-2 bg-slate-100 p-1 rounded-xl border border-slate-200/60">
                 <button
                   type="button"
                   onClick={() => setOrientation('portrait')}
-                  className={`py-2 px-3 rounded-xl text-xs font-bold border transition-all text-center ${
+                  className={`py-2 px-3 rounded-lg text-xs font-bold transition-all text-center flex items-center justify-center gap-2 cursor-pointer ${
                     orientation === 'portrait'
-                      ? 'bg-blue-900 text-white border-blue-900 shadow-xs'
-                      : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                      ? 'bg-white text-slate-900 shadow-2xs font-black'
+                      : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
-                  📄 Vertical (Retrato)
+                  <svg className="w-3.5 h-3.5 text-slate-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><rect x="5" y="3" width="14" height="18" rx="2"/><line x1="9" y1="7" x2="15" y2="7"/></svg>
+                  <span>Vertical</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setOrientation('landscape')}
-                  className={`py-2 px-3 rounded-xl text-xs font-bold border transition-all text-center ${
+                  className={`py-2 px-3 rounded-lg text-xs font-bold transition-all text-center flex items-center justify-center gap-2 cursor-pointer ${
                     orientation === 'landscape'
-                      ? 'bg-blue-900 text-white border-blue-900 shadow-xs'
-                      : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                      ? 'bg-white text-slate-900 shadow-2xs font-black'
+                      : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
-                  📃 Horizontal (Paisaje)
+                  <svg className="w-3.5 h-3.5 text-slate-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><rect x="3" y="5" width="18" height="14" rx="2"/><line x1="7" y1="9" x2="13" y2="9"/></svg>
+                  <span>Horizontal</span>
                 </button>
               </div>
             </div>
 
+            {/* Temas / Paletas */}
             <div>
               <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5 mb-2.5">
-                <Palette className="w-3.5 h-3.5 text-blue-900" />
+                <Palette className="w-3.5 h-3.5 text-slate-700" />
                 Estilo & Paleta de Impresión
               </label>
               <div className="grid grid-cols-2 gap-2">
@@ -600,9 +620,9 @@ export default function CarteleraView() {
                       key={t.id}
                       type="button"
                       onClick={() => setThemeKey(t.id)}
-                      className={`p-2.5 rounded-xl border text-left transition-all relative ${
+                      className={`p-2.5 rounded-xl border text-left transition-all relative cursor-pointer ${
                         isActive
-                          ? 'border-slate-900 bg-slate-50 ring-2 ring-slate-900/10'
+                          ? 'border-slate-900 bg-slate-50 ring-2 ring-slate-900/10 shadow-2xs'
                           : 'border-slate-200 bg-white hover:border-slate-300'
                       }`}
                     >
@@ -615,7 +635,7 @@ export default function CarteleraView() {
                           {t.name}
                         </span>
                       </div>
-                      <p className="text-[10px] text-slate-500 mt-1 pl-5 truncate">
+                      <p className="text-[10px] text-slate-500 mt-1 pl-5.5 truncate">
                         {t.tagline}
                       </p>
                     </button>
@@ -629,7 +649,7 @@ export default function CarteleraView() {
           <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-2xs space-y-3">
             <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center justify-between">
               <span className="flex items-center gap-1.5">
-                <Quote className="w-3.5 h-3.5 text-blue-900" />
+                <Quote className="w-3.5 h-3.5 text-slate-700" />
                 Lema o Versículo del Mes
               </span>
               <span className="text-[10px] font-normal text-slate-400">Editable</span>
@@ -638,22 +658,22 @@ export default function CarteleraView() {
               rows={2}
               value={verseText}
               onChange={(e) => setVerseText(e.target.value)}
-              className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-900/20 leading-relaxed resize-none"
+              className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:bg-white focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 leading-relaxed resize-none shadow-2xs"
               placeholder="Escribe un versículo bíblico o lema..."
             />
             
             {/* Sugerencias Rápidas */}
-            <div className="space-y-1 pt-1">
-              <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block">
-                Sugerencias rápidas:
+            <div className="space-y-1.5 pt-1">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                Sugerencias bíblicas:
               </span>
-              <div className="flex flex-col gap-1">
+              <div className="flex flex-col gap-1.5">
                 {VERSE_SUGGESTIONS.slice(0, 3).map((v, i) => (
                   <button
                     key={i}
                     type="button"
                     onClick={() => setVerseText(v)}
-                    className="text-left text-[11px] text-slate-600 hover:text-blue-900 hover:bg-blue-50/50 p-1.5 rounded-lg transition-colors truncate"
+                    className="text-left text-[11px] font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 p-2 rounded-xl transition-colors truncate border border-slate-200/60 cursor-pointer"
                   >
                     {v}
                   </button>
@@ -666,14 +686,14 @@ export default function CarteleraView() {
           <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-2xs space-y-3">
             <div className="flex items-center justify-between">
               <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-blue-900" />
+                <Sparkles className="w-3.5 h-3.5 text-slate-700" />
                 Actividades en Cartelera ({displayedActivities.length}/{monthActivities.length})
               </label>
               <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={handleSelectAll}
-                  className="text-[11px] font-bold text-blue-900 hover:underline"
+                  className="text-[11px] font-bold text-slate-800 hover:underline cursor-pointer"
                 >
                   Todas
                 </button>
@@ -681,7 +701,7 @@ export default function CarteleraView() {
                 <button
                   type="button"
                   onClick={handleDeselectAll}
-                  className="text-[11px] font-medium text-slate-500 hover:underline"
+                  className="text-[11px] font-medium text-slate-500 hover:underline cursor-pointer"
                 >
                   Ninguna
                 </button>
@@ -711,25 +731,25 @@ export default function CarteleraView() {
                       onClick={() => toggleSelectId(act.id)}
                       className={`flex items-center gap-2.5 p-2 rounded-xl border text-xs cursor-pointer select-none transition-all ${
                         isChecked
-                          ? 'bg-blue-50/50 border-blue-200 text-slate-900'
-                          : 'bg-white border-slate-200/70 text-slate-400 hover:bg-slate-50'
+                          ? 'bg-slate-50 border-slate-300 text-slate-900 shadow-2xs'
+                          : 'bg-white border-slate-200/70 text-slate-400 hover:bg-slate-50/70'
                       }`}
                     >
                       <div
                         className={`w-4 h-4 rounded-md flex items-center justify-center border transition-colors shrink-0 ${
                           isChecked
-                            ? 'bg-blue-900 border-blue-900 text-white'
+                            ? 'bg-slate-900 border-slate-900 text-white'
                             : 'border-slate-300 bg-white'
                         }`}
                       >
                         {isChecked && <Check className="w-3 h-3 stroke-[3]" />}
                       </div>
 
-                      <span className="font-bold text-[11px] text-slate-700 shrink-0 w-12">
+                      <span className="font-bold text-[11px] text-slate-700 shrink-0 w-12 bg-slate-100 px-1.5 py-0.5 rounded-md text-center">
                         {dayName} {dayNum}
                       </span>
 
-                      <span className="font-medium truncate flex-1">
+                      <span className="font-semibold truncate flex-1 text-slate-800">
                         {act.actividad}
                       </span>
                     </div>
@@ -739,9 +759,9 @@ export default function CarteleraView() {
             )}
 
             {displayedActivities.length > 12 && (
-              <p className="text-[11px] text-amber-700 bg-amber-50 p-2 rounded-xl flex items-center gap-1.5 border border-amber-200/60">
+              <p className="text-[11px] text-amber-700 bg-amber-50 p-2.5 rounded-xl flex items-center gap-1.5 border border-amber-200/60">
                 <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                <span>Tip: Para que las letras no se achiquen demasiado en la pizarra, se recomienda de 4 a 10 actividades.</span>
+                <span>Tip: Para que las letras sean fácilmente legibles en la pizarra, se recomienda seleccionar de 4 a 10 actividades principales.</span>
               </p>
             )}
           </div>
@@ -754,7 +774,7 @@ export default function CarteleraView() {
             
             {/* Mensaje de proporción para pantalla */}
             <div className="text-xs text-slate-500 mb-2 flex items-center gap-2 no-print">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="w-2 h-2 rounded-full bg-emerald-500" />
               <span>Vista previa en proporción real de papel <strong>Carta (8.5 × 11 in)</strong></span>
             </div>
 
@@ -845,7 +865,7 @@ export default function CarteleraView() {
                 </div>
               )}
 
-              {/* CUERPO DEL CALENDARIO: GRID DE TARJETAS */}
+              {/* CUERPO DEL CALENDARIO: GRID DE TARJETAS (MATERIAL SURFACE DESIGN) */}
               <div className="flex-1 p-5 sm:p-6 overflow-hidden flex flex-col justify-start">
                 {displayedActivities.length === 0 ? (
                   <div className="flex-1 flex flex-col items-center justify-center text-center p-8 border-2 border-dashed border-slate-300 rounded-2xl bg-white/50">
@@ -871,15 +891,15 @@ export default function CarteleraView() {
                           style={theme.cardBgStyle}
                           className={`${theme.cardBg} rounded-xl border ${theme.cardBorder} p-3 sm:p-3.5 shadow-2xs flex items-center gap-3.5 transition-all`}
                         >
-                          {/* Bloque de fecha: Gran número y día de la semana */}
+                          {/* Chip de Fecha Proporcionado */}
                           <div
                             style={theme.dayBadgeBgStyle}
-                            className={`w-14 sm:w-16 h-14 sm:h-16 rounded-xl ${theme.dayBadgeBg} flex flex-col items-center justify-center shrink-0 shadow-xs`}
+                            className={`w-13 h-13 sm:w-14 sm:h-14 rounded-xl ${theme.dayBadgeBg} flex flex-col items-center justify-center shrink-0 shadow-xs`}
                           >
                             <span className="text-[10px] sm:text-[11px] font-black tracking-wider uppercase opacity-90 leading-none">
                               {dayName}
                             </span>
-                            <span className="text-xl sm:text-2xl font-black leading-none mt-1">
+                            <span className="text-lg sm:text-xl font-black leading-none mt-1">
                               {dayNum}
                             </span>
                           </div>
@@ -890,7 +910,7 @@ export default function CarteleraView() {
                               <span className="p-1 rounded-md bg-slate-100 text-slate-700 shrink-0">
                                 <IconComponent className="w-3 h-3" />
                               </span>
-                              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider truncate">
+                              <span className="text-[10px] font-bold text-slate-600 uppercase tracking-wider truncate">
                                 {catId.toUpperCase()}
                               </span>
                             </div>
@@ -900,7 +920,7 @@ export default function CarteleraView() {
                             </h4>
 
                             {act.detalles ? (
-                              <p className={`text-[11px] ${theme.mutedColor} mt-1 line-clamp-1 flex items-center gap-1`}>
+                              <p className={`text-[11px] ${theme.mutedColor} mt-1 line-clamp-1 flex items-center gap-1 font-medium`}>
                                 <Clock className="w-3 h-3 shrink-0 opacity-70" />
                                 <span>{act.detalles}</span>
                               </p>
