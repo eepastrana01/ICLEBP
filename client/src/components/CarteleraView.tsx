@@ -341,8 +341,10 @@ export default function CarteleraView() {
         backgroundColor: '#FFFFFF',
         scrollX: 0,
         scrollY: 0,
-        windowWidth: targetWidth + 100,
-        windowHeight: targetHeight + 100,
+        width: targetWidth,
+        height: targetHeight,
+        windowWidth: targetWidth,
+        windowHeight: targetHeight,
         onclone: (clonedDoc) => {
           const clonedWin = clonedDoc.defaultView;
           if (clonedWin && clonedWin.getComputedStyle) {
@@ -356,6 +358,7 @@ export default function CarteleraView() {
           const clonedEl = clonedDoc.getElementById('lienzo-cartelera-imprimible');
           if (clonedEl) {
             clonedEl.style.width = `${targetWidth}px`;
+            clonedEl.style.height = `${targetHeight}px`;
             clonedEl.style.minHeight = `${targetHeight}px`;
             clonedEl.style.maxHeight = `${targetHeight}px`;
             clonedEl.style.boxShadow = 'none';
@@ -371,6 +374,13 @@ export default function CarteleraView() {
             allCloned.forEach((node) => {
               if (!node.style) return;
               node.style.filter = 'none';
+
+              // Sanitizar fuentes y eliminar recortes agresivos
+              if (node.tagName === 'H4' || node.tagName === 'P' || node.tagName === 'SPAN') {
+                node.style.overflow = 'visible';
+                (node.style as any).webkitLineClamp = 'unset';
+                (node.style as any).webkitBoxOrient = 'unset';
+              }
             });
           }
         }
@@ -403,7 +413,7 @@ export default function CarteleraView() {
       const pdfHeight = pdf.internal.pageSize.getHeight();
 
       const imgData = canvas.toDataURL('image/png', 1.0);
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
 
       const fileName = `Cartelera_${MONTH_NAMES[selectedMonth]}_${selectedYear}.pdf`;
       pdf.save(fileName);
@@ -449,17 +459,78 @@ export default function CarteleraView() {
     }
   };
 
-  // Columnas óptimas según cantidad de actividades y orientación
-  const gridColsClass = useMemo(() => {
+  // Dimensiones dinámicas y proporcionadas según cantidad de actividades (evita vacíos y recortes)
+  const cardSizeConfig = useMemo(() => {
     const count = displayedActivities.length;
     if (orientation === 'landscape') {
-      if (count <= 4) return 'grid-cols-2';
-      if (count <= 9) return 'grid-cols-3';
-      return 'grid-cols-4';
+      if (count <= 4) {
+        return { 
+          cols: 'grid-cols-2', 
+          pad: 'p-4 sm:p-5', 
+          gap: 'gap-4', 
+          dateSize: 'w-16 h-16 sm:w-18 sm:h-18', 
+          titleSize: 'text-base font-bold', 
+          descSize: 'text-xs' 
+        };
+      }
+      if (count <= 8) {
+        return { 
+          cols: 'grid-cols-3', 
+          pad: 'p-3.5 sm:p-4', 
+          gap: 'gap-3', 
+          dateSize: 'w-14 h-14', 
+          titleSize: 'text-sm font-bold', 
+          descSize: 'text-[11px]' 
+        };
+      }
+      return { 
+        cols: 'grid-cols-4', 
+        pad: 'p-2.5 sm:p-3', 
+        gap: 'gap-2.5', 
+        dateSize: 'w-12 h-12', 
+        titleSize: 'text-xs font-bold', 
+        descSize: 'text-[10px]' 
+      };
     } else {
-      if (count <= 5) return 'grid-cols-1';
-      if (count <= 12) return 'grid-cols-2';
-      return 'grid-cols-2';
+      // Orientación Vertical (Retrato)
+      if (count <= 3) {
+        return { 
+          cols: 'grid-cols-1', 
+          pad: 'p-6 sm:p-7', 
+          gap: 'gap-5 sm:gap-6', 
+          dateSize: 'w-20 h-20', 
+          titleSize: 'text-lg sm:text-xl font-black', 
+          descSize: 'text-sm' 
+        };
+      }
+      if (count <= 5) {
+        return { 
+          cols: 'grid-cols-1', 
+          pad: 'p-4.5 sm:p-5', 
+          gap: 'gap-4 sm:gap-4.5', 
+          dateSize: 'w-16 h-16 sm:w-18 sm:h-18', 
+          titleSize: 'text-base sm:text-lg font-bold', 
+          descSize: 'text-xs sm:text-sm' 
+        };
+      }
+      if (count <= 7) {
+        return { 
+          cols: 'grid-cols-1', 
+          pad: 'p-3.5 sm:p-4', 
+          gap: 'gap-3 sm:gap-3.5', 
+          dateSize: 'w-14 h-14 sm:w-15 sm:h-15', 
+          titleSize: 'text-sm sm:text-base font-bold', 
+          descSize: 'text-xs' 
+        };
+      }
+      return { 
+        cols: 'grid-cols-2', 
+        pad: 'p-3 sm:p-3.5', 
+        gap: 'gap-3', 
+        dateSize: 'w-13 h-13 sm:w-14 sm:h-14', 
+        titleSize: 'text-xs sm:text-sm font-bold', 
+        descSize: 'text-[11px]' 
+      };
     }
   }, [displayedActivities.length, orientation]);
 
@@ -854,19 +925,19 @@ export default function CarteleraView() {
                     backgroundColor: theme.verseBgStyle.backgroundColor,
                     borderBottom: `1px solid ${theme.verseBgStyle.borderColor}`
                   }}
-                  className="px-6 py-2.5 shrink-0 text-center"
+                  className="px-6 py-3 shrink-0 text-center"
                 >
                   <p
                     style={{ color: theme.verseBgStyle.color }}
-                    className="text-xs sm:text-sm font-semibold italic leading-snug tracking-tight"
+                    className="text-xs sm:text-sm font-semibold italic leading-relaxed tracking-tight"
                   >
                     {verseText}
                   </p>
                 </div>
               )}
 
-              {/* CUERPO DEL CALENDARIO: GRID DE TARJETAS (MATERIAL SURFACE DESIGN) */}
-              <div className="flex-1 p-5 sm:p-6 overflow-hidden flex flex-col justify-start">
+              {/* CUERPO DEL CALENDARIO: GRID DE TARJETAS PROPORCIONADAS */}
+              <div className="flex-1 p-5 sm:p-7 flex flex-col justify-start overflow-hidden">
                 {displayedActivities.length === 0 ? (
                   <div className="flex-1 flex flex-col items-center justify-center text-center p-8 border-2 border-dashed border-slate-300 rounded-2xl bg-white/50">
                     <Calendar className="w-10 h-10 text-slate-300 mb-2" />
@@ -876,7 +947,7 @@ export default function CarteleraView() {
                     </p>
                   </div>
                 ) : (
-                  <div className={`grid ${gridColsClass} gap-3 sm:gap-3.5 w-full`}>
+                  <div className={`grid ${cardSizeConfig.cols} ${cardSizeConfig.gap} w-full`}>
                     {displayedActivities.map((act) => {
                       const f = new Date(act.fecha);
                       const local = new Date(f.getTime() + f.getTimezoneOffset() * 60000);
@@ -889,43 +960,43 @@ export default function CarteleraView() {
                         <div
                           key={act.id}
                           style={theme.cardBgStyle}
-                          className={`${theme.cardBg} rounded-xl border ${theme.cardBorder} p-3 sm:p-3.5 shadow-2xs flex items-center gap-3.5 transition-all`}
+                          className={`${theme.cardBg} rounded-2xl border ${theme.cardBorder} ${cardSizeConfig.pad} shadow-2xs flex items-center gap-4 transition-all`}
                         >
-                          {/* Chip de Fecha Proporcionado */}
+                          {/* Chip de Fecha Proporcionado sin recortes */}
                           <div
                             style={theme.dayBadgeBgStyle}
-                            className={`w-13 h-13 sm:w-14 sm:h-14 rounded-xl ${theme.dayBadgeBg} flex flex-col items-center justify-center shrink-0 shadow-xs`}
+                            className={`${cardSizeConfig.dateSize} rounded-2xl ${theme.dayBadgeBg} flex flex-col items-center justify-center shrink-0 shadow-xs py-2 px-1 text-center`}
                           >
-                            <span className="text-[10px] sm:text-[11px] font-black tracking-wider uppercase opacity-90 leading-none">
+                            <span className="text-[10px] sm:text-[11px] font-extrabold tracking-wider uppercase opacity-90 leading-tight block">
                               {dayName}
                             </span>
-                            <span className="text-lg sm:text-xl font-black leading-none mt-1">
+                            <span className="text-xl sm:text-2xl font-black leading-tight mt-0.5 block">
                               {dayNum}
                             </span>
                           </div>
 
-                          {/* Contenido: Título, categoría y notas */}
+                          {/* Contenido: Título, categoría y notas con line-height natural */}
                           <div className="flex-1 min-w-0 pr-1">
-                            <div className="flex items-center gap-1.5 mb-1">
-                              <span className="p-1 rounded-md bg-slate-100 text-slate-700 shrink-0">
+                            <div className="flex items-center gap-1.5 mb-1.5">
+                              <span className="w-5 h-5 rounded-md bg-slate-100 text-slate-700 flex items-center justify-center shrink-0">
                                 <IconComponent className="w-3 h-3" />
                               </span>
-                              <span className="text-[10px] font-bold text-slate-600 uppercase tracking-wider truncate">
+                              <span className="text-[10px] sm:text-[11px] font-bold text-slate-600 uppercase tracking-wider leading-tight">
                                 {catId.toUpperCase()}
                               </span>
                             </div>
 
-                            <h4 className={`text-xs sm:text-sm font-bold ${theme.titleColor} leading-snug line-clamp-2`}>
+                            <h4 className={`${cardSizeConfig.titleSize} ${theme.titleColor} leading-normal mb-1`}>
                               {act.actividad}
                             </h4>
 
                             {act.detalles ? (
-                              <p className={`text-[11px] ${theme.mutedColor} mt-1 line-clamp-1 flex items-center gap-1 font-medium`}>
-                                <Clock className="w-3 h-3 shrink-0 opacity-70" />
+                              <div className={`${cardSizeConfig.descSize} ${theme.mutedColor} flex items-center gap-1.5 font-medium leading-normal`}>
+                                <Clock className="w-3.5 h-3.5 shrink-0 opacity-70" />
                                 <span>{act.detalles}</span>
-                              </p>
+                              </div>
                             ) : (
-                              <p className="text-[10px] text-slate-400 italic mt-0.5">
+                              <p className="text-[11px] text-slate-400 italic leading-normal">
                                 Actividad congregacional
                               </p>
                             )}
@@ -938,12 +1009,12 @@ export default function CarteleraView() {
               </div>
 
               {/* PIE DE PÁGINA INSTITUCIONAL DEL BOLETÍN */}
-              <div className="px-6 py-3 bg-white border-t border-slate-200 flex items-center justify-between text-[11px] text-slate-500 shrink-0">
-                <div className="flex items-center gap-1.5 font-medium">
-                  <MapPin className="w-3.5 h-3.5 text-slate-400" />
+              <div className="px-6 py-3.5 bg-white border-t border-slate-200 flex items-center justify-between text-[11px] text-slate-500 shrink-0">
+                <div className="flex items-center gap-1.5 font-medium leading-normal">
+                  <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                   <span>Colonia Unión, San Pedro Sula • Iglesia Cristiana Luterana El Buen Pastor</span>
                 </div>
-                <div className="font-semibold text-slate-600 hidden sm:block">
+                <div className="font-semibold text-slate-600 hidden sm:block leading-normal">
                   «Una iglesia que ama, sirve y proclama»
                 </div>
               </div>
